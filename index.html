@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banco de Questões</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Questões">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+  :root,:root[data-theme="light"]{--bg:#f4f6f9;--card:#fff;--txt:#1d2330;--mut:#6b7280;--bd:#dadfe7;--ok:#15803d;--okbg:#dcfce7;--err:#b91c1c;--errbg:#fee2e2;--acc:#1e3a8a;--warn:#b45309;--warnbg:#fef3c7}
+  :root[data-theme="dark"]{--bg:#111418;--card:#1a1f27;--txt:#e6e9ef;--mut:#9aa3b2;--bd:#2c333e;--ok:#4ade80;--okbg:#14321f;--err:#f87171;--errbg:#3a1717;--acc:#93c5fd;--warn:#fbbf24;--warnbg:#3a2c0a}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1a1f27;--txt:#e6e9ef;--mut:#9aa3b2;--bd:#2c333e;--ok:#4ade80;--okbg:#14321f;--err:#f87171;--errbg:#3a1717;--acc:#93c5fd;--warn:#fbbf24;--warnbg:#3a2c0a}}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5}
+  main{max-width:920px;margin:0 auto;padding:16px 16px 60px}
+  .estado{position:fixed;right:10px;bottom:8px;font-size:12px;color:var(--mut);background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;z-index:5}
+  .estado:empty{display:none}
+  h2{font-size:20px;margin:6px 0 14px}h3{font-size:15px;margin:20px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+  button,select,input,textarea{font:inherit;font-size:14px;color:var(--txt)}
+  button{padding:7px 12px;border-radius:7px;border:1px solid var(--bd);background:var(--card);cursor:pointer}
+  button:hover:not(:disabled){border-color:var(--acc)}
+  button:disabled{opacity:.45;cursor:default}
+  button.primary{background:var(--acc);color:#fff;border-color:var(--acc)}
+  button.sm{padding:4px 9px;font-size:13px}
+  select,input,textarea{padding:7px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--card);width:100%}
+  input[type=checkbox]{width:auto}
+  textarea{min-height:120px;resize:vertical}
+  textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;min-height:260px}
+  label{font-size:12px;color:var(--mut);display:block;margin-bottom:10px}
+  label>span{display:block;margin-bottom:3px}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .row>label{flex:1 1 180px;margin:0}
+  .acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .topo{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
+  .topo h2{margin:0}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .dcard{text-align:left;padding:18px;border-radius:10px;background:var(--card);border:1px solid var(--bd)}
+  .dcard b{display:block;font-size:17px;color:var(--acc);margin-bottom:6px}
+  .meta{font-size:12px;color:var(--mut)}
+  .cod{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--mut)}
+  .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:10px;border:1px solid var(--bd);margin-left:4px}
+  .tag.r{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}
+  .tag.f{background:var(--errbg);color:var(--err);border-color:var(--err)}
+  .tag.e{background:var(--okbg);color:var(--ok);border-color:var(--ok)}
+  .msg{padding:9px 11px;border-radius:7px;background:var(--warnbg);color:var(--warn);font-size:13px;margin:12px 0}
+  .empty{color:var(--mut);padding:28px 0;text-align:center}
+  details.card>summary{cursor:pointer;font-size:15px;list-style:none}
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary::before{content:"▸ ";color:var(--mut)}
+  details.card[open]>summary::before{content:"▾ "}
+  .lin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--bd)}
+  .lin>.nome{flex:1 1 210px;display:flex;align-items:center;gap:7px}
+  .bar{height:6px;width:96px;background:var(--bd);border-radius:3px;overflow:hidden;flex:0 0 auto}
+  .bar>i{display:block;height:100%;background:var(--ok)}
+  .pri{color:var(--err);font-weight:700;font-size:12px}
+  .barra{position:sticky;bottom:0;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:11px;margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+  .barra>label{flex:0 1 170px;margin:0}
+  .enun{white-space:pre-line;margin:8px 0 10px}
+  .fig{max-width:100%;border-radius:7px;border:1px solid var(--bd);margin:6px 0 10px}
+  .opt{display:flex;gap:10px;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:8px}
+  .opt>.l{font-weight:700;min-width:22px}
+  .opt.correct{background:var(--okbg);border-color:var(--ok)}
+  .opt.wrong{background:var(--errbg);border-color:var(--err)}
+  .opt:disabled{opacity:1;cursor:default;color:var(--txt)}
+  .opt.correct>.l{color:var(--ok)}.opt.wrong>.l{color:var(--err)}
+  .res{font-size:13px;font-weight:600;margin-top:6px}
+  .res.ok{color:var(--ok)}.res.err{color:var(--err)}
+  .gab{font-size:13px;color:var(--ok);margin-top:4px;display:none}
+  body.gabOn .gab{display:block}
+  pre{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:10px;font-size:12px;overflow:auto;white-space:pre-wrap}
+  .dropz{border:1px dashed var(--bd);border-radius:8px;padding:10px;margin-bottom:10px;display:grid;gap:7px}
+  .dropz.over{border-color:var(--acc);background:var(--okbg)}
+  .dropz img{max-height:150px;width:auto}
+  .kbd{font-family:ui-monospace,Menlo,monospace;font-size:11px;border:1px solid var(--bd);border-radius:4px;padding:1px 5px;background:var(--bg)}
+  .conf{display:flex;gap:7px;align-items:center;margin-top:8px;font-size:13px;color:var(--mut)}
+  .aba{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .aba>button[aria-selected=true]{background:var(--acc);color:#fff;border-color:var(--acc)}
+  body.uma main{max-width:760px}
+  .cron{font-variant-numeric:tabular-nums;font-size:15px;color:var(--acc);font-weight:700}
+  .opt.pick{border-color:var(--acc);border-width:2px}
+  .mapa{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .tile{display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:72px;border:none;border-radius:8px;padding:8px;color:#fff}
+  .tile span{font-size:12px;font-weight:600;line-height:1.25}
+  .tile b{font-size:18px}
+  .tile.nd{background:var(--bd);color:var(--txt)}
+  .legenda{height:8px;border-radius:4px;background:linear-gradient(90deg,hsl(0 62% 42%),hsl(60 62% 42%),hsl(120 62% 42%));margin:8px 0 4px}
+  table.tab{width:100%;border-collapse:collapse;font-size:13px}
+  table.tab th,table.tab td{border-bottom:1px solid var(--bd);padding:6px;text-align:left;vertical-align:top}
+  table.tab tr.ruim td{background:var(--errbg)}
+  .sessao{border-left:4px solid var(--acc)}
+  @media print{.topo button,.acoes,.barra{display:none}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="estado" class="estado"></div>
+<script>
+const RAW_CM = [
+[1,"Pneumologia","Doenças obstrutivas","DPOC e enfisema",`Homem de 52 anos, fumante de 40 maços/ano, com história atual de dispneia progressiva a mínimos esforços, realiza prova de função respiratória que mostra os seguintes resultados: CVF = 2,20 (normal = 3,13), VEF1seg = 1,1 (normal = 2,40), FEF25-75% = 0,61 (normal = 2,6). Foi feito 300ug de salbutamol e o VEF1seg não se modificou. A tomografia computorizada mostra sinais de aprisionamento aéreo e acometimento predominante em regiões superiores dos pulmões. Em relação ao caso apresentado, é correto afirmar que o(a):`,
+ ["Uso de broncodilatadores, nesse caso, não é indicado.","Prova de função respiratória mostra padrão obstrutivo sem reversibilidade com drogas.","Enfisema precoce com envolvimento apical é achado na deficiência de alfa-1-antitripsina.","Corticoide por via inalatória está indicado, nesse caso, e pela faixa etária não realizar qualquer tipo de vacina."],"B"],
+[2,"Pneumologia","Doenças obstrutivas","Asma",`Mulher de 35 anos, portadora de asma persistente moderada, em uso de beclometasona via inalatória 100 ug/puff 2x/dia e salbutamol 100 mcg 4x/dia, vem evoluindo com episódios de dispneia noturna aos médios esforços. Nega febre e estado gripal, mas refere tosse seca associada aos períodos de dispneia. Está em bom estado geral e, durante a consulta, apresenta sibilos esparsos. Nesse caso, a melhor conduta visando a otimização do seu tratamento é:`,
+ ["Iniciar salmeterol associado à beclometasona 400 mcg/dia.","Iniciar montelucaste 10 mg e suspender tratamento prévio.","Aumentar a beclometasona para 800 mcg/dia.","Trocar para fluticasona 44 μg/puff 2x/dia."],"A"],
+[3,"Pneumologia","Doenças intersticiais","Sarcoidose x tuberculose",`Homem de 50 anos refere que, há sete dias, apareceram em seus membros inferiores lesões nodulares, simétricas e eritematosas, associadas com febre e artralgias de tornozelos e joelhos. Ele apresenta astenia e mal-estar, mas nega emagrecimento. É realizada tomografia computorizada do tórax que mostra linfonodomegalia hilar bilateral e paratraqueal direita, sem evidências de envolvimento do parênquima pulmonar. O PPD é não reator e evidencia lesões maculopapulosas na face e no tronco. Não existem evidências de anemia e o cálcio sérico é normal. Há história de hiperemia ocular e o exame com lâmpada de fenda só mostra uveíte anterior. Nesse caso, o diagnóstico mais provável e a melhor orientação de tratamento, respectivamente, são:`,
+ ["Sarcoidose / corticoide em dose imunossupressora.","Tuberculose / RIPE e corticoide.","Sarcoidose / corticoide tópico.","Tuberculose / RIPE."],"C"],
+[4,"Pneumologia","Doenças pleurais","Derrame pleural",`Mulher de 30 anos, previamente hígida, está em investigação diagnóstica de febre e dor torácica tipo pleurítica. Nega tabagismo, etilismo e emagrecimento. No exame físico, apresenta alteração na ausculta pulmonar com diminuição da expansibilidade do lado direito, associada à submacicez à percussão e diminuição do murmúrio vesicular. O exame de imagem mostra velamento em base direita com parábola de Damoiseau. Nesse caso, o próximo passo da investigação que mais ajudará na definição do diagnóstico é:`,
+ ["Angio-TC de tórax e hemograma.","Toracocentese e biópsia pleural.","PPD e ressonância magnética de tórax.","Toracocentese e adenosina deaminase do líquido pleural."],"B"],
+[5,"Infectologia","Infecções respiratórias","Pneumonias atípicas",`Homem de 25 anos, hígido, inicia quadro insidioso há 3 dias, apresentando mialgia, cefaleia e febre de 38°C, associadas com diarreia aquosa e faringite acompanhada de otalgia. Há 24 horas, desenvolveu tosse seca, irritativa, predominantemente noturna, e leve broncoespasmo. Nega dor torácica e dispneia. Foi realizado exame de imagem que mostrou infiltrado intersticial pulmonar em bases. Nesse caso, é correto afirmar que:`,
+ ["Esse paciente, apesar de ser jovem, deve ser internado.","O uso da ciprofloxacina costuma apresentar boa resposta.","Presença de eritema multiforme ajuda na identificação do agente infeccioso.","A pesquisa de antígeno urinário para Streptococcus pneumoniae deve ser positiva."],"C"],
+[6,"Oncologia","Neoplasias torácicas","Síndrome da veia cava superior",`Homem de 60 anos, tabagista e etilista, referindo quadro febril ocasional, há 30 dias, e emagrecimento de 5 kg nesse período, evolui com aparecimento de edema facial, fossa supraclavicular e de membros superiores. No exame físico, nega dispneia, mas apresenta turgência jugular a 90° fixa, não móvel com a respiração na posição sentada, e discreta cianose facial. Esse quadro terá como causa mais provável:`,
+ ["Linfoma de Hodgkin tipo predomínio linfocitário.","Câncer de pulmão tipo pequenas células.","Câncer de pulmão tipo adenocarcinoma.","Linfoma não Hodgkin tipo MALT."],"B"],
+[7,"Oncologia","Rastreamento","Câncer de pulmão",`Mulher de 59 anos, fumante de 40 maços/ano, assintomática, não consegue deixar o tabagismo e gostaria de saber mais sobre screening de câncer de pulmão. Nesse caso, é correto afirmar que:`,
+ ["Não existe screening efetivo para câncer de pulmão.","Há indicação para screening, fazendo em caráter anual TC de baixa dose.","O screening não mostra benefício de redução de mortalidade em casos como o descrito.","O screening é indicado para idade acima de 60 anos, quando a carga tabágica for maior de 40 maços/ano."],"B"],
+[8,"Oncologia","Neoplasias de tireoide","Carcinoma de tireoide",`Mulher de 55 anos apresenta dor localizada em antebraço esquerdo, com piora progressiva nas últimas semanas, e emagrecimento. O exame físico mostra nódulo indolor endurecido no lobo esquerdo da tireoide, mas sem linfadenopatias em pescoço. É realizado exame de imagem que revela lesão lítica insuflante no rádio em terço proximal. Nesse caso, o diagnóstico mais provável deve ser carcinoma da tireoide do tipo:`,
+ ["Folicular.","Papilífero.","Anaplásico.","Células de Hurthle."],"A"],
+[9,"Gastroenterologia","Doenças gástricas","Câncer gástrico",`Mulher de 65 anos, com história pregressa de dispepsia de longa data, em uso de inibidor de bomba de prótons com resposta parcial, apresenta endoscopia digestiva que mostra gastrite crônica atrófica com metaplasia intestinal. Relata que, há seis meses, houve piora da dispepsia, aparecimento de saciedade precoce e plenitude pós-prandial. Uma nova endoscopia digestiva alta é realizada e mostra lesão ulcerada localizada no antro, em parede anterior, com teste da uréase positivo. A lesão ulcerada tinha 2,5 cm e as bordas estavam elevadas e infiltradas. São realizadas várias biópsias e o escovado da lesão. Nesse caso, o provável tipo histológico é:`,
+ ["Linfoma MALT.","Úlcera péptica Johnson III.","Adenocarcinoma do tipo difuso de Lauren.","Adenocarcinoma do tipo intestinal de Lauren."],"D"],
+[10,"Gastroenterologia","Colorretal","Pólipos colorretais",`Mulher de 62 anos, assintomática, com história familiar de câncer de cólon, realizou screening com colonoscopia que revelou pólipo séssil de 2 cm em cólon transverso. A biópsia mostra histologia de adenoma viloso. Nesse caso, a melhor conduta é realizar:`,
+ ["Observação com colonoscopias periódicas.","Colectomia total com ileorretoanastomose.","Ressecção endoscópica do pólipo.","Ressecção segmentar do cólon."],"C"],
+[11,"Neurologia","Neuro-oftalmologia","Oftalmoneurologia (III par / fascículo longitudinal medial)",`Mulher de 30 anos apresenta história de hemiparesia à direita, com evolução em alguns dias, associada com diplopia. Na mirada lateral, o olho esquerdo não consegue aduzir e o olho direito apresenta abdução normal, com nistagmo. O exame neurológico mostra síndrome piramidal em dimídio direito. Esses dados oftalmológicos são interpretados como um tipo de disfunção neurológica e sugerem o diagnóstico de:`,
+ ["Fascículo longitudinal medial à esquerda e esclerose múltipla.","Fascículo longitudinal medial à direita e neurosífilis.","III par à esquerda e variante de Miller Fisher.","III par à direita e diabetes mellitus."],"A"],
+[12,"Neurologia","Doenças cerebrovasculares","AVC isquêmico",`Homem de 50 anos, portador de hipertensão arterial e diabetes mellitus, em uso irregular de enalapril, anlodipino e metformina, inicia quadro súbito de hemiparesia à direita e paralisia facial central à direita, seguida de afasia e hemianopsia homônima. Nega febre e apresenta história de emagrecimento. A PA é de 150 x 100 mmHg e a hemoglobina glicada de 10%. Nesse caso, o diagnóstico e o provável sítio da lesão, respectivamente, são:`,
+ ["Acidente vascular encefálico / artéria cerebral anterior esquerda.","Acidente vascular encefálico / artéria cerebral média esquerda.","Glioblastoma multiforme / lobo temporal esquerdo.","Glioblastoma multiforme / lobo parietal esquerdo."],"B"],
+[13,"Infectologia","Infecções do sistema nervoso central","Meningite / abscesso em usuário de drogas",`Homem de 22 anos, viciado em drogas, inicia quadro de cefaleia, com piora progressiva nos últimos dias, e febre que muitas vezes chegava a 39°C. Evoluiu, em alguns dias, com hemiparesia progressiva à direita e certo grau de confusão mental. Ao exame físico, não havia rigidez de nuca, mas foram observadas marcas de picadas de agulha nos braços, emagrecimento, anemia e monilíase oral. O restante do exame estava normal. Nessas condições, os exames seguintes mais indicados, que serão importantes para a definição da terapêutica, são:`,
+ ["Sorologia para toxoplasmose e TC de tórax com contraste.","Sorologia para toxoplasmose e punção lombar.","Hemoculturas e TC de crânio com contraste.","Hemoculturas e punção lombar."],"C"],
+[14,"Neurologia","Emergências hipertensivas","Síndrome de encefalopatia posterior reversível",`Homem de 62 anos, portador de doença renal crônica, em tratamento irregular para hipertensão arterial, usando enalapril e hidroclorotiazida, iniciou há algumas horas, quadro de cefaleia de forte intensidade, com diminuição acentuada da acuidade visual bilateral e dois episódios de convulsões tônico-clônicas generalizadas. No exame físico, estava sonolento, mas facilmente despertável, sem déficit motor ou alteração de par craniano. A PA estava em 200 x 130 mmHg, e os pulsos carotídeos não mostravam alteração de amplitude e nem sopros. Havia B4 na ausculta cardíaca, mas o ritmo era regular e sem sopros. A ressonância magnética de perfusão evidenciou edema cerebral vasogênico na substância branca em regiões subcorticais dos lobos occipitais. Após alguns dias de tratamento clínico, houve completa reversão do quadro, sem qualquer sequela neurológica. Nesse caso, o diagnóstico mais provável é:`,
+ ["Síndrome de encefalopatia posterior reversível.","Isquemia cerebral por embolia da artéria cerebral média.","Acidente vascular encefálico lacunar por lesão da artéria lenticuloestriada.","Acidente vascular cerebral de Weber por lesão da artéria cerebral posterior."],"A"],
+[15,"Neurologia","Cefaleias","Enxaqueca",`Mulher de 30 anos apresenta, há vários anos, episódios de alteração da concentração, irritabilidade, pontos brilhantes em ziguezague, formigamento da hemiface, seguidos por cefaleia hemicraniana pulsátil, acompanhada de náuseas, vômitos e fono e fotofobia. O quadro costuma ser desencadeado por estresse, uso de álcool, ciclo menstrual ou exercício físico, e ocorre com frequência de dois a três episódios a cada três meses. A paciente faz uso de naproxeno nas crises, com boa resposta. Nesse caso, o tipo de enxaqueca e a melhor conduta, pensando na profilaxia, respectivamente, devem ser:`,
+ ["Tipo clássica / uso de fluoxetina.","Tipo comum / uso de betabloqueador.","Tipo comum / uso de valproato de sódio.","Tipo clássica / sem indicação de profilaxia."],"D"],
+[16,"Reumatologia","Doenças sistêmicas do tecido conjuntivo","Lúpus eritematoso sistêmico",`Mulher de 40 anos apresenta história de fotossensibilidade, dispneia, dificuldade de subir escadas e de pentear os cabelos. No exame físico, havia crepitação em velcro bilateral e rash em asa de borboleta que acometia nariz e bochechas, com eritema e edema nas pálpebras superiores. Há história pregressa de artrite não deformante, e os exames mostram fator antinuclear positivo em alto título, escórias nitrogenadas dentro da normalidade e exame de urina com 2 a 3 piócitos e 3 a 4 hemácias, por campo. Nesse caso, o diagnóstico mais provável deve ser:`,
+ ["Lúpus eritematoso sistêmico.","Polimialgia reumática.","Artrite reumatoide.","Dermatomiosite."],"A"],
+[17,"Reumatologia","Doenças sistêmicas do tecido conjuntivo","Lúpus eritematoso sistêmico x tuberculose",`Mulher de 26 anos relata que, há 45 dias, apresenta febre e dor tipo pleurítica em base esquerda. A TC de tórax mostrou derrame pleural e a toracocentese evidenciou líquido amarelo-citrino com LDH = 450 U/L e proteína = 3,5 g/dL. A dosagem de adenosina deaminase era de 50 U/L. Foi iniciado esquema com RIPE e, após 40 dias, não houve melhora, aparecendo poliartrite, FAN positivo com padrão homogêneo e sedimento urinário telescopado, com hematúria glomerular, proteinúria e presença de cilindros hemáticos. O diagnóstico mais provável, nesse caso, será de:`,
+ ["Tuberculose com doença por imunocomplexos.","Lúpus eritematoso induzido por drogas.","Tuberculose com artrite de Poncet.","Lúpus eritematoso sistêmico."],"D"],
+[18,"Reumatologia","Doenças sistêmicas do tecido conjuntivo","Doenças sistêmicas com anemia hemolítica e nefrite",`Mulher de 30 anos relata que, há algumas semanas, apresenta artrite de interfalangianas proximais, hipertensão arterial de difícil controle, dispneia com crepitações em velcro nas bases, lesões de pele e atrito tendíneo. O exame físico revela palidez cutaneomucosa, com PA = 180 x 120 mmHg e FC = 100 bpm. O exame laboratorial mostrava: Hb = 7 g/dL, leucócitos = 6.500/mm³, plaquetas = 85.000/mm³, ureia = 90 mg/dL, creatinina = 2,1 mg/dL, LDH = 900 U/L, bilirrubina total = 3,5 mg/dL, bilirrubina direta = 1,0 mg/dL, CK = 15 U/L, FAN = 1:320 e teste de Coombs negativo. O exame de imagem do tórax mostrava infiltrado intersticial pulmonar em bases. Os achados presentes, nesse caso, são mais encontrados no(a):`,
+ ["Lúpus eritematoso sistêmico.","Esclerodermia sistêmica.","Síndrome antissintetase.","Dermatomiosite."],"B"],
+[19,"Gastroenterologia","Doenças inflamatórias intestinais","Doença de Crohn e manifestações articulares",`Homem de 36 anos apresenta quadro de febre, artralgia e nódulos avermelhados em superfície anterior das pernas, que foram diagnosticados como eritema nodoso e tiveram resolução espontânea após alguns dias. Há algumas semanas, a febre voltou, associada com dor abdominal, diarreia mucossanguinolenta, tenesmo e emagrecimento. Na anamnese dirigida, verificou-se lombalgia e, no exame físico, na manobra de Patrick-Fabere, constatou-se dor intensa na articulação sacroilíaca bilateral. Nesse caso, o diagnóstico mais provável é:`,
+ ["Sarcoidose com envolvimento articular e intestinal.","Doença de Crohn associada com artrite reativa.","Retocolite ulcerativa e espondilite anquilosante.","Tuberculose sacroilíaca e ileocecal."],"C"],
+[20,"Reumatologia","Artrites","Monoartrite inflamatória / pseudogota",`Paciente de 50 anos queixa-se de dor no joelho direito que limita sua capacidade laborativa como eletricista. Ao exame físico, apresenta articulação do joelho levemente edemaciada com pequeno aumento de temperatura em relação à junta homóloga. Na punção articular, o líquido sinovial está ligeiramente turvo, com pequeno coágulo de mucina, contendo 1.000 leucócitos/mm³, sendo 10% de leucócitos polimorfonucleares e 90% de leucócitos mononucleares. A concentração da glicose do líquido é de 79 mg/dL e a dosagem do fator antinuclear é negativa. Diante desse quadro, o diagnóstico mais provável é:`,
+ ["Artrite reumatoide.","Artrite reativa.","Osteoartrite.","Pseudogota."],"D"],
+[21,"Nefrologia","Doença renal crônica","DRC em diabético",`Mulher de 72 anos diabética de longa data, hipertensa, com 1,60 m de altura e 68 kg, vem perdendo peso. Está em uso de insulina e metformina, mantendo hemoglobina glicada de 7,2%. É acompanhada por oftalmologista, pois apresenta retinopatia proliferativa. Os exames mostram: albumina sérica atual de 3,0 g/dL, glicemia = 103 mg/dL, ureia = 65 mg/dL, creatinina = 1,9 mg/dL; proteinúria = 800 mg em 24h. De acordo com o caso descrito, é correto afirmar que:`,
+ ["É necessário realizar biópsia renal e manter o esquema do tratamento do DM2.","O clearance de creatinina estimado está abaixo de 30 mL/min.","Aumentar a ingesta proteica ajudará na melhora do quadro.","O uso de IECA é contraindicado nesse tipo de caso."],"B"],
+[22,"Nefrologia","Lesão renal aguda","Síndrome de lise tumoral",`Homem de 30 anos, portador de linfoma de Burkitt, internado para iniciar o primeiro ciclo de poliquimioterapia, está assintomático e nega febre. Refere diminuição do débito urinário nas últimas 24 horas. Está estável hemodinamicamente e apresenta linfadenopatia e hepatoesplenomegalia. Houve aumento acentuado das escórias e foi feito um diagnóstico de lesão renal aguda por lise tumoral. Nesse caso, cálcio, fósforo e ácido úrico do sangue, respectivamente, ficarão:`,
+ ["Baixo / baixo / alto.","Alto / baixo / baixo.","Baixo / alto / alto.","Alto / alto / baixo."],"C"],
+[23,"Nefrologia","Litíase urinária","Cálculo ureteral (questão de 'incorreto')",`Homem de 20 anos chega à emergência com forte dor lombar em flanco direito, que não alivia com mudanças de postura, associada com alteração da cor da urina. O exame de imagem mostra calcificação de 4 mm na pequena pelve à direita, e o ultrassom abdominal mostra cálculo na porção terminal do ureter direito com dilatação leve a moderada do sistema coletor. Foi iniciada hidratação e analgesia com AINEs. A respeito desse caso clínico, é INCORRETO afirmar que:`,
+ ["A composição mais provável do cálculo descrito acima é de oxalato de cálcio.","A maioria dos cálculos com menos de 5 mm é eliminada espontaneamente.","Cálculo renal, infecção urinária e pH urinário de 7,0 indicam cistinúria.","Cálculo de ácido úrico costuma ser radiotransparente e ter pH ácido."],"C"],
+[24,"Nefrologia","Infecção do trato urinário","ITU em homem",`Homem de 32 anos, com quadro de febre de 40 °C, disúria, polaciúria e estrangúria, há alguns dias, faz exame de urina que mostra 40 piócitos por campo e 350.000 colônias/mL de Escherichia coli. O próximo passo, nesse caso, é iniciar:`,
+ ["Sulfametoxazol x trimetoprim e realizar USG abdominal com contraste renal.","Sulfametoxazol x trimetoprim e realizar PSA seguido de toque retal.","Ciprofloxacino e realizar USG abdominal com contraste renal.","Ciprofloxacino e realizar PSA seguido de toque retal."],"D"],
+[25,"Endocrinologia","Diabetes mellitus","Cetoacidose diabética e distúrbios eletrolíticos",`Homem de 35 anos, com história de diabetes mellitus tipo 1, há 18 anos, dá entrada na emergência com quadro de cetoacidose diabética, sendo instituído tratamento convencional usando insulina venosa e reposição volêmica com solução fisiológica, que gerou grande melhora do quadro. Fazia uso de insulina NPH e sinvastatina. Após 72 horas, já sem reposição parenteral ou sinais de desidratação, os novos exames laboratoriais realizados mostraram glicemia = 135 mg/dL, creatinina = 1,8 mg/dL, potássio = 6,1 mEq/L, sódio = 135 mEq/L e cloro = 110 mEq/L. O hemograma não mostra alteração e a gasometria evidencia pH = 7,21, pO2 = 90 mmHg, pCO2 = 22 mmHg, bicarbonato = 17 mEq/L, BE = -8,5 mEq/L e saturação de O2 = 97%. O exame de urina mostra pH = 5,0 e ausência de proteínas ou corpos cetônicos. Frente a esse quadro clínico, o diagnóstico mais provável é:`,
+ ["Hipoaldosteronismo hiporreninêmico.","Rebote da cetoacidose diabética.","Acidose tubular renal tipo 1.","Acidose láctica por sepse."],"A"],
+[26,"Endocrinologia","Metabolismo do cálcio","Hiperparatireoidismo primário",`Durante a realização de exames de rotina em uma mulher assintomática, detectou-se hipercalcemia (Ca++ normal = 8,2 e 10,2 mg/dL) e hipofosfatemia (PO4-- normal = 2,5 e 4,5 mg/dL). Ela não usa qualquer medicamento ou vitamina. Seu PTH é de 132 pg/mL (normal entre 10 e 65 pg/mL). Levando em conta o diagnóstico mais provável, ela deverá ser submetida a tratamento cirúrgico, EXCETO se tiver:`,
+ ["65 anos de idade.","Calcemia = 11,5 mg/dL.","Osteoporose generalizada.","Clearance de creatinina = 50 mL/min."],"A"],
+[27,"Endocrinologia","Diabetes mellitus","Cetoacidose diabética - potássio",`Paciente de 22 anos dá entrada na emergência após suspender a insulina NPH que usava diariamente há 8 anos. Está taquipneico e desidratado, afebril, corado, algo desorientado e tem bom débito urinário. Os exames complementares mostram: pH = 7,15, bicarbonato = 10 mEq/L, glicemia = 580 mg/dL, corpos cetônicos presentes, creatinina = 1,1 mg/dL e ureia = 160 mg/dL. O eletrocardiograma mostra taquicardia sinusal. Nesse caso, deve-se iniciar reposição venosa de potássio:`,
+ ["Com qualquer nível de calemia.","Quando os níveis de potássio estiverem abaixo do normal.","Quando a calemia estiver próxima aos níveis superiores da normalidade.","Quando os níveis séricos estiverem próximos ao limite inferior da normalidade."],"C"],
+[28,"Endocrinologia","Glândulas suprarrenais","Insuficiência adrenal primária",`Paciente de 32 anos, que nos últimos cinco anos não usou qualquer medicamento, vai ao consultório queixando-se de fadiga, perda de energia, emagrecimento, hipotensão postural, tonteiras, náuseas e vômitos eventuais. Está hemodinamicamente estável. Os exames complementares verificaram: Na = 125 mEq/L, K = 5,7 mEq/L e glicose = 56 mg/dL. A hipótese principal foi confirmada depois de dosagem de cortisol após estímulo com ACTH. Os próximos testes, além de ACTH elevado, devem mostrar:`,
+ ["Renina e aldosterona altos.","Renina e aldosterona baixos.","Renina alta e aldosterona baixa.","Renina baixa e aldosterona alta."],"C"],
+[29,"Endocrinologia","Diabetes mellitus","Rastreamento de nefropatia diabética",`A microalbuminúria é um marcador precoce de lesão renal no diabetes mellitus, sendo necessário realizar dosagens repetidas desse marcador. No diabetes tipo 1 devem ser iniciadas após cinco anos do diagnóstico, enquanto no diabetes tipo 2 devem começar:`,
+ ["Na época do diagnóstico.","2 anos após o diagnóstico.","5 anos após o diagnóstico.","10 anos após o diagnóstico."],"A"],
+[30,"Cardiologia","Síndromes coronarianas agudas","IAM - manejo e contraindicações",`Uma semana depois de sofrer um infarto miocárdico transmural da parede lateral e lateral alta, um paciente de 45 anos volta a ter dor precordial mantida, de média intensidade, que irradia para ambos os trapézios. O eletrocardiograma mostra ondas Q em V5, V6, D1 e aVL, além de alterações difusas do segmento ST e ondas T. Nesse caso, deve-se evitar:`,
+ ["Nitrato.","Morfina.","Indometacina.","Anticoagulantes orais."],"D"],
+[31,"Cardiologia","Síndromes coronarianas agudas","IAM de parede inferior com choque",`Paciente de 50 anos dá entrada na emergência com dor precordial em aperto de duas horas de duração. Seu eletrocardiograma mostra supradesnivelamento do segmento ST em D2, D3 e aVF, V3R e V4R. Ao exame, tem fácies de dor, PA = 80 x 40 mmHg, FC = 110 e turgência jugular patológica. O melhor tratamento para a hipotensão arterial apresentada é:`,
+ ["Dopamina.","Dobutamina.","Soro fisiológico.","Noradrenalina."],"C"],
+[32,"Cardiologia","Valvopatias","Estenose mitral",`Paciente de 30 anos se queixa de cansaço. Na ausculta cardíaca, verifica-se sopro diastólico na posição mitral com hiperfonese do primeiro ruído cardíaco (B1), reforço pré-sistólico e estalido de abertura. O eletrocardiograma mostra sinais de aumento do átrio esquerdo. Quanto à patologia valvar apresentada, é correto afirmar que o(a):`,
+ ["Sopro diastólico pode ser melhor auscultado após exercício.","B1 costuma ser hiperfonético em fases avançadas da patologia.","Reforço pré-sistólico é mais facilmente notado em pacientes com fibrilação atrial.","Presença de um sopro sistólico mitral +/4+ na ponta necessariamente significa insuficiência mitral associada."],"A"],
+[33,"Gastroenterologia","Hepatologia","Cirrose x pericardite constritiva",`O setor de emergência solicitou a internação de uma mulher de 60 anos devido a mau estado geral, ascite e cansaço. Por esse quadro, tem diagnóstico clínico de cirrose hepática idiopática, há alguns anos. Nunca usou álcool e as sorologias virais são negativas. Ao exame físico, está ictérica +/4+, emagrecida com massa muscular muito reduzida, turgência jugular a 45 graus e hipofonese de bulhas. À inspiração profunda, não ocorre diminuição da turgência e a pressão arterial cai 14 mmHg. Os pulmões apresentam ausculta normal, tem ascite volumosa e praticamente não há edema dos membros inferiores. Com esse quadro clínico, a principal hipótese diagnóstica deve ser:`,
+ ["Cirrose hepática.","Pericardite constritiva.","Síndrome de veia cava superior.","Insuficiência cardíaca congestiva descompensada."],"B"],
+[34,"Cardiologia","Insuficiência cardíaca","Tratamento da IC",`Homem de 68 anos, hipertenso desde os 30 anos de idade, queixa-se de cansaço aos esforços com piora nos últimos meses. Tem sido tratado para insuficiência cardíaca congestiva, nos últimos cinco anos; segue a dieta e usa captopril, furosemida, espironolactona e carvedilol em doses adequadas. Os exames clínicos verificaram: hemoglobina = 10,5 g/dL, creatinina = 1,4 mg/dL, sódio = 132 mEq/L e potássio = 5,1 mEq/L. Quanto ao tratamento desse paciente, é correto afirmar que:`,
+ ["O uso de eritropoetina aumenta a sobrevida.","A associação de valsartan pode piorar o prognóstico.","Uma estatina deveria ser associada ao esquema terapêutico.","A digoxina deve ser evitada, caso o paciente tenha fibrilação atrial."],"B"],
+[35,"Cardiologia","Arritmias","Fibrilação atrial pós-etilismo",`Homem de 42 anos, previamente saudável, não fumante nem sedentário, horas após tomar algumas garrafas de vinho com amigos no jantar de sexta-feira, começa a sentir palpitações e tonteira eventual. No sábado à noite, incomodado pela sensação estranha no peito, procura emergência onde é realizado um eletrocardiograma que mostra frequência cardíaca em 110 bpm, sem ondas P, R-R irregular e repolarização ventricular normal. O exame do precórdio está normal, exceto pelo ritmo cardíaco irregular, não havendo sopros. Ao exame, apresenta: PA = 106 x 70 mmHg (deitado) e 98 x 68 mmHg (em pé), FC = 112 e IMC = 25. A melhor conduta, nesse caso, é:`,
+ ["Controlar a frequência cardíaca, iniciar anticoagulação plena, mantendo-a por quatro semanas, dar alta e tentar reverter para ritmo sinusal após esse período.","Iniciar anticoagulante oral e tentar reverter para ritmo sinusal durante a internação, após a realização de ecotransesofágico.","Iniciar anticoagulante oral, controlar a frequência cardíaca, dar alta e tentar cardioverter em 48 a 72 horas.","Tentar reverter para ritmo sinusal na emergência."],"D"],
+[36,"Pneumologia","Tromboembolismo pulmonar","TEP pós-operatório com infarto pulmonar",`Mulher de 55 anos foi submetida à abdominoplastia há cinco dias. Evoluiu com dor torácica do tipo pleurítica de forte intensidade. Ao exame, verifica-se: PA = 100 x 70 mmHg, FC = 106, edema na perna esquerda, mole, quente e com cacifo. O D-dímero está alto, e a angiotomografia pulmonar confirma o diagnóstico de tromboembolismo, com presença de infarto pulmonar. A respeito desse caso, é correto afirmar que o(a):`,
+ ["Presença de infarto pulmonar e dor pleurítica sugerem que ocorreu embolia pulmonar pequena.","Colocação de filtro de veia cava inferior está indicada, uma vez que está contraindicada a anticoagulação plena.","D-dímero alto já daria o diagnóstico de tromboembolismo pulmonar, dispensando a angiotomografia pulmonar.","Uso de trombolítico deveria ser estimulado nesses casos para encurtar o tempo de internação hospitalar e diminuir a ocorrência de hipertensão arterial pulmonar."],"A"],
+[37,"Emergências","Choque","Hipotensão após fístula arteriovenosa",`Paciente diabético e hipertenso evoluiu com insuficiência renal crônica terminal com necessidade de tratamento dialítico. Seu médico recomenda confecção de fístula arteriovenosa para realizar hemodiálise. Ao retornar do centro cirúrgico, apresenta hipotensão arterial apesar de doses altas de noradrenalina (PA = 66 x 30 mmHg) e congestão pulmonar. É colocado no respirador, ventilando com 100% de oxigênio e PaO2 = 50. Os dados hemodinâmicos à beira do leito mostram que a resistência vascular periférica está muito baixa e o débito cardíaco alto. O melhor tratamento, para esse caso, deve ser:`,
+ ["Levar a hemodinâmica para angioplastia coronária.","Iniciar a anticoagulação plena.","Associar a dobutamina.","Ocluir a fístula."],"D"],
+[38,"Hematologia","Anemias","Anemia ferropriva x talassemia",`Mulher de 25 anos procura médico por cansaço. Está hipocorada +/4+, com hemoglobina = 9,9 g/dL, VGM = 68 fl, HGM = 23 pg, ferritina = 95,0 μg/L, ferro sérico = 110 mcg/dL e TIBIC normal. O restante do exame físico não apresenta alterações. O próximo passo deverá ser realizar:`,
+ ["Imunofixação de proteínas séricas.","Eletroforese de hemoglobina.","Dosagem de vitamina B12.","Biópsia de medula óssea."],"B"],
+[39,"Hematologia","Leucemias e neoplasias mieloproliferativas","Leucoeritroblastose / mielofibrose",`Homem assintomático de 63 anos vem à consulta pela primeira vez para acompanhamento clínico de rotina. Ao exame físico, está hipocorado +/4+, não tem linfadenomegalias palpáveis, mas tem hepatoesplenomegalia. Os exames laboratoriais revelam: hemoglobina = 10,6 g/dL, 8.000 leucócitos, 250.000 plaquetas e LDH e fosfatase alcalina elevados. No esfregaço do sangue periférico, há hemácias em lágrima, hemácias nucleadas, mielócitos e promielócitos. Esses achados sugerem:`,
+ ["Hipertensão porta por cirrose hepática.","Leucemia linfocítica crônica.","Hemocromatose.","Mielofibrose."],"D"],
+[40,"Hematologia","Medula óssea","Aplasia medular",`Mulher de 35 anos procura auxílio devido a sangramentos gengivais, equimoses frequentes e fraqueza, iniciados há duas semanas. Apresenta hemoglobina = 9,0 ng/dL, sangue periférico com plaquetopenia e hemácias de tamanho aumentado. Os reticulócitos praticamente não são vistos. Com esses dados, levanta-se a hipótese de aplasia medular. Pensando nessa hipótese, o achado de exame físico muito ATÍPICO seria:`,
+ ["Esplenomegalia.","Sopro sistólico mitral.","Hemorragia retiniana.","Hemiplegia com alteração do nível de consciência."],"A"],
+[41,"Hematologia","Hemostasia","Hemofilia A - agentes hemostáticos",`Paciente com hemofilia A leve evolui com hematúria macroscópica. Está estável hemodinamicamente e não tem outra queixa. O médico assistente pode lançar mão de drogas para tentar melhorar a coagulação através do aumento da concentração do fator de von Willebrand e do fator VIII. Nesse caso, a melhor droga seria:`,
+ ["1-amino-8-β-arginina vasopressina.","Ácido Δ-amino levulínico.","Ácido ε-amino caproico.","Ácido tranexâmico."],"A"],
+[42,"Cardiologia","Síndromes coronarianas agudas","IAM anterior extenso com choque",`Paciente de 42 anos, fumante e hipertenso, dá entrada na emergência com dor precordial típica de forte intensidade, dispneia e sudorese fria, além de diminuição do volume urinário. Apresenta PA = 84 x 40 mmHg; FC = 110 bpm; enchimento capilar lento, extremidades frias e cianóticas e SatO2 Hb = 80% em ar ambiente. O ECG revelou supradesnivelamento de V1 a V6. Além de todas as medidas necessárias ao atendimento do paciente, se cogita iniciar um vasopressor. Nesse caso, a melhor escolha seria fazer uso de:`,
+ ["Vasopressina.","Norepinefrina.","Adrenalina.","Dopamina."],"B"],
+[43,"Cardiologia","Insuficiência cardíaca","Digitálicos",`Os digitálicos foram praticamente abandonados no tratamento de pacientes com edema agudo de pulmão e da insuficiência cardíaca sistólica agudamente descompensada. Entretanto, ainda há racionalidade para seu uso nesses pacientes quando o ritmo cardíaco rápido estiver associado à:`,
+ ["Taquicardia supraventricular paroxística.","Síndrome de Wolff-Parkinson-White.","Extrassistolia ventricular frequente.","Fibrilação atrial."],"D"],
+[44,"Emergências","Ventilação mecânica","Volume corrente na SDRA/IRA",`Paciente de 32 anos, pesando 80 kg, é internado com pancreatite aguda severa. No terceiro dia de internação, evolui com infiltrados alveolares bilaterais, sem derrame pleural, sem inversão da trama vascular pulmonar e com área cardíaca normal. Há grande desconforto respiratório, com PaO2 = 40 mmHg e PaCO2 = 30 mmHg, enquanto respira ar ambiente. Por isso, ele foi entubado e colocado no respirador. O volume corrente (em ml) inicialmente proposto deve estar em torno de:`,
+ ["160.","480.","560.","640."],"B"],
+[45,"Infectologia","Infecções sistêmicas","Febre tifoide",`Diplomata de 38 anos procura emergência devido a quadro de febre alta, dores pelo corpo, náuseas, vômitos frequentes, dor abdominal, episódio frustro de evacuação diarreica, tosse seca, cefaleia, queda do estado geral e períodos de agitação, há cinco dias. Esteve em viagem pelo interior da Bolívia e do Peru, de onde voltou há cerca de 20 dias. Ao exame físico, verifica-se PA = 100 x 70 mmHg, FC = 98 bpm, Tax = 39,7°C, FR = 28, manchas róseas distribuídas pelo corpo, sem adenomegalias, pulmões e aparelho cardiovascular sem alterações e abdômen difusamente doloroso à palpação com ponta de baço palpável. No exame de sangue, verifica-se 3.800 leucócitos com 20% de bastões, 2% de metamielócitos, 1% de mielócitos, 57 segmentados, 18 linfócitos e 2 basófilos. Sabendo que essa doença pode evoluir com perfuração do íleo, enquanto se aguardam as sorologias e hemoculturas, o melhor tratamento empírico deve ser iniciado com:`,
+ ["Ceftriaxona.","Penicilina cristalina.","Amoxicilina com clavulanato.","Sulfametoxazol + trimetoprim."],"A"],
+[46,"Infectologia","Infecções do sistema nervoso central","Meningite bacteriana",`Mulher de 78 anos inicia quadro de febre alta, cefaleia e alteração do nível de consciência. Ao exame, tem rigidez de nuca. A análise do líquor mostrou 900 células com 88% de polimorfonucleares, 70 mg/dl de proteínas e 40 mg/dl de glicose. O melhor tratamento empírico a ser iniciado é:`,
+ ["Ciprofloxacino e vancomicina.","Ciprofloxacino e ampicilina.","Gentamicina e ceftriaxona.","Ampicilina e ceftriaxona."],"D"],
+[47,"Infectologia","Tuberculose","Efeitos adversos dos antituberculínicos",`Paciente de 50 anos, em tratamento para tuberculose pulmonar há um mês, desenvolve podagra. Não há história prévia de gota. O ácido úrico, outrora normal, agora é de 10 mg/dl. A droga mais provavelmente envolvida na gênese do efeito colateral descrito é:`,
+ ["Isoniazida.","Etambutol.","Rifampicina.","Pirazinamida."],"D"],
+[48,"Infectologia","Infecções do sistema nervoso central","Meningite tuberculosa",`Homem de 70 anos procura ambulatório de neurologia devido à cefaleia, episódios de alterações de comportamento e febre de até 38,5°C. Seu VHS é de 120 mm na primeira hora. Feito um diagnóstico presuntivo de arterite temporal, iniciou-se 40 mg de prednisona. Ao invés da esperada melhora, evolui com piora do nível de consciência e febre alta. A tomografia sem contraste foi normal. A punção lombar revela líquido turvo com 200 mg/dl de proteínas, 600 células, sendo 56% mononucleares e glicose = 20 mg/dl. A melhor conduta a partir desse resultado é:`,
+ ["Aguardar a pesquisa de BAAR e PCR para tuberculose antes de iniciar o tratamento.","Realizar tratamento de suporte e aguardar cultura para micobactéria.","Iniciar RIPE imediatamente.","Iniciar aciclovir venoso."],"C"],
+[49,"Infectologia","Hanseníase","Hanseníase lepromatosa",`Paciente de 38 anos, oriundo de zona endêmica de lepra, vem à consulta devido a várias lesões enegrecidas, necróticas ulcerativas, principalmente nos pés e nas pernas e algumas poucas nas mãos. Ao exame físico, tem madarose bilateral. Teve seu dedo médio da mão esquerda amputado devido à osteomielite que se seguiu a uma extensa úlcera nesse local. Sua pele é difusamente espessada, mas não tem lesões visíveis além das úlceras descritas. Sobre a possibilidade do diagnóstico de lepra lepromatosa nesse paciente, é correto afirmar que o(a):`,
+ ["Formação de abscessos nos nervos periféricos é mais comum nessa apresentação clínica.","Pesquisa de bacilos costuma ser positiva mesmo na pele aparentemente sem lesão.","Espessamento de nervos periféricos é caracteristicamente assimétrico.","Madarose costuma ser notada desde as fases iniciais da doença."],"B"],
+[50,"Infectologia","Infecções sexualmente transmissíveis","Sífilis primária",`Homem de 23 anos vai à consulta por causa de úlcera firme e indolor no pênis que surgiu há três dias. O médico pensa no diagnóstico de sífilis. Nesse caso, é correto afirmar que:`,
+ ["O VDRL costuma permanecer positivo indefinidamente após o tratamento adequado.","O cancro geralmente desaparece em um prazo entre uma a duas semanas.","É comum observar linfonodos aglomerados formando trajetos fistulosos.","A linfadenomegalia costuma ser bilateral."],"D"]
+];
+
+/* ============ constantes ============ */
+const LET=["A","B","C","D","E"];
+const DISC={cm:"Clínica Médica",ti:"Terapia Intensiva",ps:"Psiquiatria",lg:"Legista"};
+const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG"};
+const zeros=()=>Object.fromEntries(Object.keys(DISC).map(k=>[k,0]));
+const TI_IDS=[37,44];                 /* questões do PDF que pertencem a Terapia Intensiva */
+const LIMITE=70;                      /* % abaixo do qual o subtema precisa de reforço */
+const KEY="banco_questoes_v2";        /* mesma chave das versões anteriores: histórico preservado */
+const TIPOS={transc:"Transcrição / texto errado",gab:"Gabarito errado",alt:"Alternativa errada ou faltando",fig:"Figura faltando ou errada",outro:"Outro"};
+const CAUSAS={conteudo:"Não sabia o conteúdo",interp:"Interpretei mal o enunciado",pegadinha:"Pegadinha de palavra",confusao:"Confundi dois conceitos",calc:"Erro de cálculo ou dado"};
+const CSV_MODELO="codigo;disciplina;tema;subtema;banca;ano;enunciado;A;B;C;D;E;gabarito;anulada;figura\n;Clínica Médica;Cardiologia;Arritmias;SES-RJ;2019;Homem de 42 anos com palpitações e FC de 110 bpm, sem ondas P no ECG. Qual a melhor conduta?;Controlar a frequência e iniciar anticoagulação;Cardioversão imediata sem anticoagulação;Reverter para ritmo sinusal na emergência;Dar alta sem tratamento;;C;;\n;Psiquiatria;Transtornos de ansiedade;Pânico;AMIB;2025;Paciente com crises de pânico recorrentes. Qual o tratamento de primeira linha?;Benzodiazepínico contínuo;ISRS;Antipsicótico;Lítio;;B;;panico_01.png\n;Legista;Tanatologia;Fenômenos cadavéricos;;2023;Qual fenômeno cadavérico aparece primeiro após a morte?;Rigidez;Livores;Algor mortis;;;C;;\n;Legista;Traumatologia forense;Lesões por arma de fogo;;;Na imagem, a orla de escoriação indica qual orifício?;Saída;Entrada;Ambos;;;B;;tiro_01.png\n";
+
+const MODELO_LOTE=`@ Clínica Médica | Cardiologia | Fibrilação atrial | SES-RJ | 2019
+
+Homem de 42 anos, previamente saudável, inicia palpitações...
+A) primeira alternativa
+B) segunda alternativa
+C) terceira alternativa
+D) quarta alternativa
+#D
+
+Segunda questão do mesmo tema, sem repetir o cabeçalho...
+A) uma
+B) duas
+*C) esta é a correta, marcada com asterisco
+D) quatro`;
+
+/* ============ dados ============ */
+const SEED=RAW_CM.map(r=>({
+  id:"q-"+r[0], disc:TI_IDS.includes(r[0])?"ti":"cm", orig:r[0],
+  tema:r[1], subtema:r[2], assunto:r[3], enun:r[4], alts:r[5],
+  gab:r[6], anulada:!!r[7], fig:r[8]||null, banca:"SES-RJ", ano:2019
+}));
+
+function carregar(){
+  let x={};
+  try{x=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+  const d={added:x.added||[],stats:x.stats||{},sched:x.sched||{},flags:x.flags||[],
+           reports:x.reports||[],edits:x.edits||{},seq:x.seq||0,sessoes:x.sessoes||[],
+           cfg:Object.assign({conf:false,teclado:true,tema:""},x.cfg||{})};
+  d.added.forEach(q=>{ if(!q.seq) q.seq=++d.seq; if(!q.cod) q.cod=(PRE[q.disc]||"CM")+"-A"+String(q.seq).padStart(2,"0"); });
+  return d;
+}
+let addedPronto=false,_addedT=null;
+function gravar(){
+  const resto={...db};delete resto.added;
+  try{localStorage.setItem(KEY,JSON.stringify(resto))}catch(e){ st.msg="Não foi possível salvar: armazenamento do navegador cheio ou bloqueado." }
+  salvarAdded();agendarNuvem()}
+/* questões adicionadas: IndexedDB (cabe milhares de questões) */
+const dadosDB=()=>new Promise((res,rej)=>{const r=indexedDB.open("bq_dados",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("kv");
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+async function kvGet(k){const d=await dadosDB();return new Promise((res,rej)=>{const t=d.transaction("kv","readonly"),q=t.objectStore("kv").get(k);
+  t.oncomplete=()=>res(q.result);t.onerror=()=>rej(t.error)})}
+async function kvPut(k,v){const d=await dadosDB();return new Promise((res,rej)=>{const t=d.transaction("kv","readwrite");
+  t.objectStore("kv").put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
+function salvarAdded(){
+  if(!addedPronto)return;
+  clearTimeout(_addedT);
+  _addedT=setTimeout(()=>{const copia=db.added.slice();
+    kvPut("added",copia).then(()=>{try{localStorage.removeItem(KEY+"_added")}catch(e){}})
+      .catch(()=>{try{localStorage.setItem(KEY+"_added",JSON.stringify(copia))}catch(e){st.msg="Não foi possível salvar as questões: armazenamento cheio.";render()}})},150)}
+async function carregarAdded(){
+  let lista=null;
+  try{lista=await kvGet("added")}catch(e){}
+  if(!Array.isArray(lista)){try{lista=JSON.parse(localStorage.getItem(KEY+"_added"))}catch(e){}}
+  if(Array.isArray(lista)&&lista.length)db.added=lista;
+  db.added.forEach(q=>{ if(!q.seq) q.seq=++db.seq; if(!q.cod) q.cod=(PRE[q.disc]||"CM")+"-A"+String(q.seq).padStart(2,"0"); });
+  addedPronto=true;
+  gravar();construir();render()}
+
+let db=carregar();
+
+/* lista final de questões: SEED + adicionadas, com as edições aplicadas e código estável */
+let QS=[],POR_ID={},POR_COD={};
+function construir(){
+  const c=zeros();
+  QS=SEED.concat(db.added).map(q=>{
+    const m={...q,...(db.edits[q.id]||{})};
+    /* o código vem da disciplina de origem e nunca muda, mesmo se a questão for reclassificada */
+    m.cod=q.cod||PRE[q.disc]+"-"+String(++c[q.disc]).padStart(3,"0");
+    return m;
+  });
+  POR_ID={}; POR_COD={};
+  QS.forEach(q=>{POR_ID[q.id]=q;POR_COD[q.cod.toUpperCase()]=q});
+}
+construir();
+
+/* ============ estado ============ */
+const st={view:"home",disc:null,sel:new Set(),filtro:"todas",banca:"",ano:"",qtd:"",ordem:"aleatoria",
+          gab:false,msg:"",rel:null,abaAdd:"lote",editId:null,busca:"",repQ:null,form:{},
+          S:{lista:[],resp:{},esc:{},conf:{},causa:{},inicio:0,dur:0,fim:0,prova:false,encerrada:true,cur:0,rotulo:""},
+          dur:"0",feedback:true,umaQ:false,impTxt:"",impTxtNome:"",impImg:{},previa:null};
+
+/* ============ utilidades ============ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const chave=(t,s)=>t+"||"+s;
+function mistura(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+const relAbertos=cod=>db.reports.filter(r=>r.cod===cod&&!r.ok);
+
+function estat(l){let t=0,a=0,f=0;l.forEach(q=>{const s=db.stats[q.id];if(s){t+=s.t;a+=s.a;f++}});
+  return{t,a,f,n:l.length,pct:t?Math.round(a*100/t):null}}
+const txtPct=e=>e.pct===null?"não estudado":`${e.pct}% (${e.a}/${e.t})`;
+const PRI=e=>e.pct!==null&&e.pct<LIMITE&&e.t>=2;
+const bar=e=>`<div class="bar"><i style="width:${e.pct||0}%"></i></div>`;
+
+function grupos(d){const m={};QS.filter(q=>q.disc===d).forEach(q=>{(m[q.tema]=m[q.tema]||{});(m[q.tema][q.subtema]=m[q.tema][q.subtema]||[]).push(q)});return m}
+
+const pred={todas:()=>1, nao:q=>!db.stats[q.id], erradas:q=>db.sched[q.id]&&db.sched[q.id].int===1,
+  revisao:q=>db.sched[q.id]&&db.sched[q.id].due<=Date.now(), sinal:q=>db.flags.includes(q.id), imagem:q=>!!q.fig};
+function aplicaFiltro(l){
+  if(st.filtro==="prioridade"){const m={};l.forEach(q=>{const k=chave(q.tema,q.subtema);(m[k]=m[k]||[]).push(q)});
+    const ruins=new Set(Object.keys(m).filter(k=>PRI(estat(m[k]))));
+    return l.filter(q=>ruins.has(chave(q.tema,q.subtema)))}
+  return l.filter(pred[st.filtro]||pred.todas)}
+function selecionadas(d){
+  let l=QS.filter(q=>q.disc===d&&(!st.sel.size||st.sel.has(chave(q.tema,q.subtema))));
+  if(st.banca)l=l.filter(q=>(q.banca||"")===st.banca);
+  if(st.ano)l=l.filter(q=>String(q.ano||"")===st.ano);
+  return aplicaFiltro(l)}
+const valores=(d,campo)=>[...new Set(QS.filter(q=>q.disc===d).map(q=>q[campo]).filter(Boolean).map(String))].sort();
+
+/* ============ imagens coladas (IndexedDB) ============ */
+let _idb=null;
+const idb=()=>_idb||(_idb=new Promise((res,rej)=>{
+  const r=indexedDB.open("bq_imgs",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("img");
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+const imgTx=(modo,fn)=>idb().then(d=>new Promise((res,rej)=>{
+  const t=d.transaction("img",modo),r=fn(t.objectStore("img"));
+  t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)}));
+const imgGet=k=>imgTx("readonly",s=>s.get(k));
+const imgPut=(k,v)=>imgTx("readwrite",s=>s.put(v,k));
+const imgDel=k=>imgTx("readwrite",s=>s.delete(k));
+const imgKeys=()=>imgTx("readonly",s=>s.getAllKeys());
+
+const IMGC=new Map();
+function figTag(fig,cod,extra){
+  if(!fig)return"";
+  const a=`class="fig" ${extra||""} alt="Figura da questão ${esc(cod||"")}"`;
+  return fig.startsWith("img:")?`<img ${a} data-img="${esc(fig.slice(4))}">`:`<img ${a} src="${esc(fig)}">`}
+function pintarImagens(){
+  document.querySelectorAll("img[data-img]").forEach(el=>{
+    const k=el.dataset.img;
+    if(IMGC.has(k)){el.src=IMGC.get(k);return}
+    imgGet(k).then(v=>{if(v){IMGC.set(k,v);el.src=v}
+      else{const d=document.createElement("div");d.className="meta";d.textContent="(imagem não encontrada neste navegador)";el.replaceWith(d)}}).catch(()=>{})})}
+
+/* reduz a imagem antes de guardar, para não estourar o armazenamento */
+const reduzir=file=>new Promise(res=>{
+  const fr=new FileReader();
+  fr.onload=()=>{const im=new Image();
+    im.onload=()=>{const M=1400;let w=im.width,h=im.height;
+      if(w>M||h>M){const r=Math.min(M/w,M/h);w=Math.round(w*r);h=Math.round(h*r)}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(im,0,0,w,h);res(c.toDataURL("image/jpeg",0.85))};
+    im.onerror=()=>res(fr.result);im.src=fr.result};
+  fr.onerror=()=>res(null);fr.readAsDataURL(file)});
+
+async function guardarImagem(file,alvo){
+  if(!file||!/^image\//.test(file.type)){st.msg="O arquivo precisa ser uma imagem.";return render()}
+  const dados=await reduzir(file);
+  if(!dados){st.msg="Não consegui ler a imagem.";return render()}
+  const k="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  try{await imgPut(k,dados)}catch(e){st.msg="Não consegui guardar a imagem: "+e.message;return render()}
+  IMGC.set(k,dados);st.form[alvo]="img:"+k;
+  st.msg=`Imagem anexada (${Math.round(dados.length/1366)} KB).`;render()}
+
+function campoImagem(alvo,valor){
+  const v=valor||"";
+  return `<div class="dropz" data-drop="${alvo}">
+    <div class="meta">Figura: cole com Ctrl+V, arraste o arquivo aqui, escolha abaixo ou informe um endereço.</div>
+    <input type="file" accept="image/*" data-file="${alvo}">
+    <input data-f="${alvo}" value="${esc(v)}" placeholder="endereço da imagem (opcional)">
+    ${v?figTag(v,"",'style="max-height:150px"')+`<div><button class="sm" data-act="imgLimpar" data-alvo="${alvo}">Remover figura</button></div>`:""}</div>`}
+
+/* ============ sessão ============ */
+const sessaoAtiva=()=>{const S=st.S;return S&&S.lista&&S.lista.length&&!S.encerrada?S:null};
+let RELOGIO=null;
+function tempoRestante(S){S=S||st.S;if(!S||!S.fim)return"";const s=Math.max(0,Math.round((S.fim-Date.now())/1000));
+  return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function iniciarRelogio(){clearInterval(RELOGIO);RELOGIO=setInterval(tick,1000)}
+function tick(){
+  const S=sessaoAtiva();if(!S||!S.fim)return;
+  if(Date.now()>=S.fim){encerrarSessao("tempo");return}
+  const el=document.getElementById("cron");if(el)el.textContent=tempoRestante(S)}
+function salvarSessao(){
+  try{const S=sessaoAtiva();
+    if(S)localStorage.setItem(KEY+"_sessao",JSON.stringify({S,disc:st.disc,feedback:st.feedback,umaQ:st.umaQ}));
+    else localStorage.removeItem(KEY+"_sessao")}catch(e){}}
+function limparSessaoSalva(){try{localStorage.removeItem(KEY+"_sessao")}catch(e){}}
+function carregarSessaoSalva(){
+  try{const x=JSON.parse(localStorage.getItem(KEY+"_sessao"));
+    if(x&&x.S&&x.S.lista&&x.S.lista.length&&!x.S.encerrada){st.S=x.S;st.disc=x.disc||null;st.feedback=x.feedback!==false;st.umaQ=!!x.umaQ;
+      st.S.lista=st.S.lista.map((q,i)=>st.S.resp[i]===undefined?{...q,opcoes:mistura(q.alts.map((t,k)=>({t,c:LET[k]===q.gab})))}:q)}}catch(e){}}
+
+function iniciar(l,dur,forca){
+  if(!l.length){st.msg="Nenhuma questão corresponde a essa seleção.";render();return}
+  const S=sessaoAtiva();
+  if(!forca&&S&&Object.keys(S.resp).length&&!confirm("Você tem uma sessão em andamento. Começar outra substitui a atual. Continuar?"))return render();
+  let b=(st.ordem==="aleatoria"?mistura(l):l.slice()).map(q=>({...q,opcoes:mistura(q.alts.map((t,i)=>({t,c:LET[i]===q.gab})))}));
+  const n=parseInt(st.qtd,10); if(n>0) b=b.slice(0,n);
+  const min=dur!==undefined?+dur:(parseInt(st.dur,10)||0);
+  st.S={lista:b,resp:{},esc:{},conf:{},causa:{},inicio:Date.now(),dur:min,fim:min?Date.now()+min*6e4:0,
+        prova:!st.feedback,encerrada:false,cur:0,rotulo:st.disc?DISC[st.disc]:"Sessão mista"};
+  st.view="quiz";st.msg="";st.gab=false;st.repQ=null;iniciarRelogio();render();scrollTo(0,0);
+}
+function encerrarSessao(motivo){
+  const S=st.S;if(!S||!S.lista||S.encerrada)return;
+  S.encerrada=true;clearInterval(RELOGIO);
+  const n=Object.keys(S.resp).length,ac=Object.values(S.resp).filter(Boolean).length;
+  if(S.dur>0&&n>0){db.sessoes.push({id:"s"+Date.now().toString(36),faixa:S.dur,n,ac,
+    min:Math.round((Date.now()-S.inicio)/6e3)/10,prova:S.prova,motivo:motivo||"manual",data:new Date().toLocaleDateString("pt-BR")});gravar()}
+  limparSessaoSalva();
+  st.rel=relatorio();st.view="rel";st.msg=motivo==="tempo"?"Tempo esgotado: a sessão foi encerrada.":"";
+  render()}
+function responder(i,j){
+  const S=st.S;
+  if(!S.lista[i]||S.resp[i]!==undefined||S.encerrada)return;
+  const q=S.lista[i],ok=q.opcoes[j].c||q.anulada;
+  S.resp[i]=ok;S.esc[i]=j;
+  const s=db.stats[q.id]||{t:0,a:0};s.t++;if(ok)s.a++;db.stats[q.id]=s;
+  if(!ok&&!q.anulada){const oi=q.alts.indexOf(q.opcoes[j].t);
+    if(oi>=0){s.d=s.d||{};s.d[oi]=(s.d[oi]||0)+1}}
+  const sc=db.sched[q.id]||{int:0,due:0};
+  sc.int=ok?(sc.int>1?Math.min(sc.int*2,60):2):1;
+  sc.due=Date.now()+sc.int*864e5;db.sched[q.id]=sc;
+  gravar();render();
+  if(S.prova||!db.cfg.conf)proximaQuestao(i);
+}
+function marcarConfianca(i,v){
+  const S=st.S,q=S.lista[i];
+  if(!q||S.resp[i]===undefined||S.conf[i])return;
+  S.conf[i]=v;
+  if(v==="c"){const s=db.stats[q.id]||{t:0,a:0};s.g=(s.g||0)+1;if(S.resp[i])s.gc=(s.gc||0)+1;db.stats[q.id]=s;gravar()}
+  render();proximaQuestao(i)}
+const porResponder=()=>st.S.lista.findIndex((q,i)=>st.S.resp[i]===undefined);
+function proximaQuestao(depoisDe){
+  const S=st.S;
+  const n=S.lista.findIndex((q,i)=>i>depoisDe&&S.resp[i]===undefined);
+  if(st.umaQ){if(S.prova&&n>=0){S.cur=n;render()}return}
+  if(n>=0)setTimeout(()=>{const el=document.getElementById("qc"+n);
+    if(el)el.scrollIntoView({behavior:"smooth",block:"start"})},60)}
+function navQ(d){const S=st.S;if(!S||!S.lista)return;
+  S.cur=Math.max(0,Math.min(S.lista.length-1,S.cur+d));render();scrollTo(0,0)}
+
+/* questões em que você cai sempre no mesmo distrator */
+function armadilhas(){
+  const out=[];
+  QS.forEach(q=>{const s=db.stats[q.id];if(!s||!s.d)return;
+    const e=Object.entries(s.d).sort((a,b)=>b[1]-a[1])[0];
+    if(e&&e[1]>=2&&q.alts[+e[0]])out.push({q,alt:q.alts[+e[0]],n:e[1]})});
+  return out.sort((a,b)=>b.n-a.n)}
+const chutes=()=>QS.filter(q=>{const s=db.stats[q.id];return s&&s.gc>0});
+
+/* ============ relatório ============ */
+function relatorio(){
+  const S=st.S,ids=Object.keys(S.resp),ac=Object.values(S.resp).filter(Boolean).length;
+  const por={};
+  S.lista.forEach((q,i)=>{const k=chave(q.tema,q.subtema);
+    const p=por[k]||(por[k]={tema:q.tema,sub:q.subtema,disc:DISC[q.disc],n:0,a:0});
+    if(S.resp[i]!==undefined){p.n++;if(S.resp[i])p.a++}});
+  const temas=Object.values(por).filter(p=>p.n).map(p=>({...p,pct:Math.round(p.a*100/p.n)})).sort((x,y)=>x.pct-y.pct);
+  const erradas=[],sinal=[],cnt={};
+  S.lista.forEach((q,i)=>{
+    const t=q.enun.length>150?q.enun.slice(0,150)+"…":q.enun;
+    if(S.resp[i]===false)erradas.push({cod:q.cod,t,tema:q.tema,sub:q.subtema,m:LET[S.esc[i]],c:LET[q.opcoes.findIndex(o=>o.c)]});
+    if(db.flags.includes(q.id))sinal.push({cod:q.cod,t,tema:q.tema,sub:q.subtema})});
+  Object.values(S.causa||{}).forEach(k=>cnt[k]=(cnt[k]||0)+1);
+  const er=ids.length-ac;
+  return{titulo:S.rotulo||(st.disc?DISC[st.disc]:"Sessão de estudo"),data:new Date().toLocaleString("pt-BR"),
+    mins:S.inicio?Math.max(1,Math.round((Date.now()-S.inicio)/6e4)):null,
+    n:S.lista.length,resp:ids.length,ac,er,pct:ids.length?Math.round(ac*100/ids.length):0,
+    temas,erradas,sinal,atencao:temas.filter(p=>p.pct<LIMITE),
+    causas:Object.keys(CAUSAS).filter(k=>cnt[k]).map(k=>({nome:CAUSAS[k],n:cnt[k]})),
+    prova:!!S.prova,dur:S.dur||0}}
+function relTexto(r){
+  const L=["RELATÓRIO DE ESTUDO — "+r.titulo,"Data: "+r.data];
+  if(r.mins)L.push("Duração: "+r.mins+" min");
+  L.push("",`Questões: ${r.n} · Respondidas: ${r.resp} · Acertos: ${r.ac} · Erros: ${r.er} · Aproveitamento: ${r.pct}%`,"",
+    "DESEMPENHO POR SUBTEMA (pior ao melhor)");
+  r.temas.forEach(p=>L.push(`- ${p.sub} (${p.disc} › ${p.tema}): ${p.pct}% (${p.a}/${p.n})`));
+  if(r.causas.length)L.push("","CAUSAS DOS ERROS",...r.causas.map(c=>`- ${c.nome}: ${c.n}`));
+  L.push("","PONTOS DE ATENÇÃO (abaixo de "+LIMITE+"%)",...(r.atencao.length?r.atencao.map(p=>`- ${p.sub} (${p.tema})`):["- Nenhum"]));
+  L.push("","QUESTÕES ERRADAS",...(r.erradas.length?r.erradas.map(e=>`- [${e.cod}] ${e.tema} › ${e.sub}\n  ${e.t}\n  marcada ${e.m}, correta ${e.c}`):["- Nenhuma"]));
+  L.push("","SINALIZADAS PARA REVER",...(r.sinal.length?r.sinal.map(e=>`- [${e.cod}] ${e.tema} › ${e.sub}: ${e.t}`):["- Nenhuma"]));
+  return L.join("\n")}
+
+/* ============ importar questões ============ */
+const normDisc=v=>{const s=String(v||"").toLowerCase();
+  return Object.keys(DISC).find(k=>k===s||DISC[k].toLowerCase()===s)
+    ||(/cl[íi]n/.test(s)?"cm":/intens|terap|cti|uti/.test(s)?"ti":/psiq/.test(s)?"ps"
+      :/legist|legal|per[íi]cia|forense|tanato/.test(s)?"lg":null)};
+
+function parseLote(txt){
+  const out=[],erros=[];
+  let ctx={disc:null,tema:"",subtema:""},cur=null,li=0;
+  const fecha=()=>{
+    if(!cur)return;
+    const n=cur.linha;
+    if(!cur.disc) erros.push(`Linha ${n}: falta o cabeçalho @ Disciplina | Tema | Subtema`);
+    else if(cur.alts.length<2) erros.push(`Linha ${n}: a questão tem menos de 2 alternativas`);
+    else if(!cur.gab&&!cur.anulada) erros.push(`Linha ${n}: falta o gabarito (#C ou *) na questão "${cur.enun.slice(0,40)}…"`);
+    else if(!cur.enun.trim()) erros.push(`Linha ${n}: falta o enunciado`);
+    else out.push({disc:cur.disc,tema:cur.tema,subtema:cur.subtema,enun:cur.enun.trim(),
+                   alts:cur.alts.map(a=>a.trim()),gab:cur.gab||"A",anulada:cur.anulada,fig:cur.fig,
+                   banca:cur.banca||"",ano:cur.ano||""});
+    cur=null};
+  txt.split(/\r?\n/).forEach(raw=>{
+    li++; const l=raw.trim();
+    let m;
+    if(m=l.match(/^@\s*(.+)$/)){                                   /* cabeçalho de contexto */
+      fecha();
+      const p=m[1].split("|").map(s=>s.trim());
+      const d=normDisc(p[0]);
+      if(!d) erros.push(`Linha ${li}: disciplina "${p[0]}" não reconhecida`);
+      ctx={disc:d,tema:p[1]||"Geral",subtema:p[2]||p[1]||"Geral",banca:p[3]||"",ano:p[4]||""};return}
+    if(m=l.match(/^(?:#\s*)?fonte\s*:?\s*(.+)$/i)){
+      const f=m[1].trim().match(/^(.*?)[\s|,]*(\d{4})?$/);
+      if(cur){if(f[1])cur.banca=f[1].trim();if(f[2])cur.ano=f[2]}
+      else{if(f[1])ctx.banca=f[1].trim();if(f[2])ctx.ano=f[2]}
+      return}
+    if(m=l.match(/^(?:#|gab(?:arito)?|resposta)\s*:?\s*([A-Ea-e])\b/i)){    /* gabarito */
+      if(cur){cur.gab=m[1].toUpperCase();fecha()} return}
+    if(/^(?:#\s*)?anulada\b/i.test(l)){ if(cur){cur.anulada=true;cur.gab=cur.gab||"A";fecha()} return}
+    if(m=l.match(/^(?:#\s*)?fig(?:ura)?\s*:?\s*(\S+)/i)){ if(cur)cur.fig=m[1]; return}
+    if(m=l.match(/^(\*?)\s*\(?([A-Ea-e])\s*[\)\.\-–]\s*(.*)$/)){            /* alternativa */
+      if(cur&&cur.enun.trim()){
+        if(m[1]==="*")cur.gab=LET[cur.alts.length];
+        cur.alts.push(m[3]);return}}
+    if(!l){ if(cur&&cur.alts.length)return; if(cur)cur.enun+="\n"; return}
+    if(!cur) cur={...ctx,enun:"",alts:[],gab:"",anulada:false,fig:null,linha:li};
+    if(cur.alts.length) cur.alts[cur.alts.length-1]+=" "+l;      /* continuação da alternativa */
+    else cur.enun+=(cur.enun?"\n":"")+l;
+  });
+  fecha();
+  return{out,erros}}
+
+function parseJSON(txt){
+  const out=[],erros=[];
+  let o; try{o=JSON.parse(txt)}catch(e){return{out,erros:["JSON inválido: "+e.message]}}
+  (Array.isArray(o)?o:[o]).forEach((x,i)=>{
+    const d=normDisc(x.disciplina||x.disc);
+    const alts=x.alternativas||x.alts,g=String(x.gabarito||x.gab||"").toUpperCase();
+    if(!d)return erros.push(`Item ${i+1}: disciplina inválida`);
+    if(!x.enunciado&&!x.enun)return erros.push(`Item ${i+1}: falta o enunciado`);
+    if(!Array.isArray(alts)||alts.length<2)return erros.push(`Item ${i+1}: alternativas devem ser 2 a 5`);
+    if(LET.indexOf(g)<0||LET.indexOf(g)>=alts.length)return erros.push(`Item ${i+1}: gabarito "${g}" inválido`);
+    out.push({disc:d,tema:x.tema||"Geral",subtema:x.subtema||x.tema||"Geral",enun:x.enunciado||x.enun,
+      alts:alts.map(String),gab:g,anulada:!!x.anulada,fig:x.figura||x.fig||null,
+      banca:x.banca||"",ano:x.ano||""})});
+  return{out,erros}}
+
+const COD_RE=/^(CM|TI|PS|LG)-A(\d{2,})$/;
+const codigoLivre=c=>!QS.some(q=>q.cod===c);
+function salvarNovas(l){
+  const novas=l.map(q=>{
+    const m=q.cod&&COD_RE.exec(q.cod);
+    const s=m?+m[2]:++db.seq;
+    if(m&&s>db.seq)db.seq=s;
+    return {...q,id:"add-"+s+"-"+Date.now().toString(36),seq:s,cod:PRE[q.disc]+"-A"+String(s).padStart(2,"0")}});
+  db.added=db.added.concat(novas);gravar();construir();
+  return novas.map(q=>q.cod)}
+
+/* ============ planilha e arquivos ============ */
+function parseCSV(txt){
+  txt=txt.replace(/^﻿/,"");
+  const primeira=(txt.split(/\r?\n/)[0])||"";
+  const del=(primeira.split(";").length>primeira.split(",").length)?";":",";
+  const rows=[];let row=[],campo="",aspas=false;
+  for(let i=0;i<txt.length;i++){const c=txt[i];
+    if(aspas){if(c==='"'){if(txt[i+1]==='"'){campo+='"';i++}else aspas=false}else campo+=c}
+    else if(c==='"')aspas=true;
+    else if(c===del){row.push(campo);campo=""}
+    else if(c==="\n"||c==="\r"){if(c==="\r"&&txt[i+1]==="\n")i++;row.push(campo);rows.push(row);row=[];campo=""}
+    else campo+=c}
+  if(campo!==""||row.length){row.push(campo);rows.push(row)}
+  return rows.filter(r=>r.some(x=>String(x).trim()!==""))}
+
+function csvParaQuestoes(txt){
+  const rows=parseCSV(txt),out=[],erros=[];
+  if(!rows.length)return{out,erros:["A planilha está vazia."]};
+  const norm=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+  const head=rows[0].map(norm);
+  const col=n=>head.indexOf(n);
+  const C={disc:col("disciplina"),tema:col("tema"),sub:col("subtema"),banca:col("banca"),ano:col("ano"),
+    enun:col("enunciado"),gab:col("gabarito"),anul:col("anulada"),fig:col("figura"),cod:col("codigo")};
+  const letras=LET.map(l=>col(l.toLowerCase()));
+  if(C.enun<0||C.gab<0)return{out,erros:["O cabeçalho precisa ter as colunas enunciado e gabarito (veja a planilha modelo)."]};
+  rows.slice(1).forEach((r,k)=>{
+    const L=k+2,g=i=>i>=0?String(r[i]??"").trim():"";
+    const d=normDisc(g(C.disc));
+    const alts=letras.map(i=>g(i)).filter(x=>x!=="");
+    const gab=g(C.gab).toUpperCase(),anulada=/^(sim|s|1|true|x)$/i.test(g(C.anul));
+    const enun=g(C.enun);
+    if(!d){erros.push(`Linha ${L}: disciplina "${g(C.disc)}" não reconhecida`);return}
+    if(!enun){erros.push(`Linha ${L}: enunciado vazio`);return}
+    if(alts.length<2){erros.push(`Linha ${L}: precisa de pelo menos 2 alternativas`);return}
+    if(!anulada&&(LET.indexOf(gab)<0||LET.indexOf(gab)>=alts.length)){erros.push(`Linha ${L}: gabarito "${gab}" inválido para ${alts.length} alternativas`);return}
+    const tema=g(C.tema)||"Geral";
+    const fg=g(C.fig);out.push({disc:d,tema,subtema:g(C.sub)||tema,enun,alts,gab:gab||"A",anulada,fig:(/^(n[aã]o|n|-|0)$/i.test(fg)||/^sim$/i.test(fg))?null:(fg||null),figSim:/^sim$/i.test(fg),banca:g(C.banca),ano:g(C.ano),cod:(g(C.cod)||"").toUpperCase()||null})});
+  return{out,erros}}
+
+async function receberArquivos(lista){
+  for(const f of lista){
+    if(/^image\//.test(f.type))st.impImg[f.name.toLowerCase()]=await reduzir(f);
+    else if(/\.(csv|txt|md)$/i.test(f.name)){st.impTxt=await f.text();st.impTxtNome=f.name}
+    else st.msg="Arquivo ignorado: "+f.name}
+  st.previa=null;render()}
+
+const normTxt=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").trim();
+const assinatura=q=>JSON.stringify([q.alts,q.gab,!!q.anulada]);
+function conferir(){
+  const txt=st.impTxt;
+  if(!txt){st.msg="Escolha a planilha (.csv) ou o texto primeiro.";return}
+  const csv=/\.csv$/i.test(st.impTxtNome||"");
+  const r=csv?csvParaQuestoes(txt):parseLote(txt);
+  const usados=new Set();
+  const itens=r.out.map(q=>{const it={q,imgData:null,erro:null};
+    if(q.fig&&!/^https?:\/\//i.test(q.fig)){
+      const im=st.impImg[String(q.fig).toLowerCase()];
+      if(im)it.imgData=im;else it.erro="figura "+q.fig+" não enviada"}
+    if(q.figSim&&!q.fig&&!it.erro)it.erro="depende de imagem: indique o nome do arquivo na coluna figura e envie a imagem";
+    if(q.cod&&!it.erro){
+      if(!COD_RE.test(q.cod))it.erro="código "+q.cod+" inválido (use CM-A07, TI-A07, PS-A07 ou LG-A07)";
+      else if(!q.cod.startsWith(PRE[q.disc]+"-A"))it.erro="código "+q.cod+" não combina com a disciplina";
+      else if(usados.has(q.cod)||!codigoLivre(q.cod))it.erro="código "+q.cod+" já usado";
+      else usados.add(q.cod)}
+    return it});
+  /* duplicadas e conflitos: contra o banco e dentro da própria planilha */
+  const ch=new Map(), add=(k,v)=>{if(!ch.has(k))ch.set(k,[]);ch.get(k).push(v)};
+  QS.forEach(q=>add(normTxt(q.enun),{banco:true,cod:q.cod,sig:assinatura(q)}));
+  itens.forEach((it,i)=>{if(!it.erro)add(normTxt(it.q.enun),{banco:false,i,cod:it.q.cod||("linha "+(i+2)),sig:assinatura(it.q)})});
+  for(const g of ch.values()){
+    const arq=g.filter(v=>!v.banco); if(!arq.length)continue;
+    const banco=g.find(v=>v.banco);
+    if(new Set(g.map(v=>v.sig)).size>1){
+      arq.forEach(v=>{itens[v.i].erro="conflito de versão: mesmo enunciado com alternativas ou gabarito diferentes"+(banco?" de "+banco.cod:"")+" (não será gravada)"});
+      continue}
+    if(banco){arq.forEach(v=>{itens[v.i].erro="duplicada de "+banco.cod+" (não será gravada)"});continue}
+    const [primeira,...resto]=arq;
+    resto.forEach(v=>{itens[v.i].erro="duplicada de "+primeira.cod+" (não será gravada)"});
+  }
+  st.previa={itens,erros:r.erros};st.msg="";render()}
+
+async function gravarPrevia(){
+  const P=st.previa;if(!P)return;
+  const ok=P.itens.filter(x=>!x.erro),qs=[];
+  try{
+    for(const x of ok){const q={...x.q};
+      if(x.imgData){const k="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+        await imgPut(k,x.imgData);IMGC.set(k,x.imgData);q.fig="img:"+k}
+      qs.push(q)}
+  }catch(e){st.msg="Não consegui guardar as imagens: "+e.message;render();return}
+  const cods=salvarNovas(qs);
+  st.previa=null;st.impTxt="";st.impTxtNome="";st.impImg={};
+  st.msg=cods.length?`${cods.length} questão(ões) gravadas: de ${cods[0]} a ${cods[cods.length-1]}.`:"Nada foi gravado.";
+  render()}
+
+function vPrevia(){
+  const P=st.previa;if(!P)return"";
+  const ok=P.itens.filter(x=>!x.erro).length,ruins=P.itens.length-ok;
+  const dups=P.itens.filter(x=>/^duplicada/.test(x.erro||"")).length,confl=P.itens.filter(x=>/^conflito/.test(x.erro||"")).length;
+  const outros=ruins-dups-confl;
+  return `<div class="card"><h3 style="margin-top:0">Prévia: ${ok} questão(ões) prontas${dups?` · ${dups} duplicada(s) do banco ou repetidas na planilha`:""}${confl?` · ${confl} com versões conflitantes`:""}${outros?` · ${outros} com problema`:""}${P.erros.length?` · ${P.erros.length} linha(s) ignoradas`:""}</h3>
+    ${P.erros.length?`<div class="msg">${P.erros.slice(0,12).map(e=>esc(e)).join("<br>")}${P.erros.length>12?"<br>…":""}</div>`:""}
+    ${P.itens.length?`<div style="overflow:auto"><table class="tab"><thead><tr><th>#</th><th>Código</th><th>Disciplina</th><th>Tema › Subtema</th><th>Enunciado</th><th>Alt.</th><th>Gab.</th><th>Figura</th></tr></thead><tbody>
+    ${P.itens.slice(0,300).map((x,i)=>`<tr class="${x.erro?"ruim":""}"><td>${i+1}</td><td>${esc(x.q.cod||"automático")}</td><td>${DISC[x.q.disc]}</td><td>${esc(x.q.tema)} › ${esc(x.q.subtema)}</td><td>${esc(x.q.enun.slice(0,80))}…</td><td>${x.q.alts.length}</td><td>${x.q.anulada?"anulada":x.q.gab}</td><td>${x.erro?esc(x.erro):(x.imgData?"imagem ok":(x.q.fig?"link":"—"))}</td></tr>`).join("")}
+    </tbody></table>${P.itens.length>300?`<p class="meta">Mostrando as 300 primeiras de ${P.itens.length} linhas. As demais entram na mesma conferência.</p>`:""}</div>`:""}
+    <div class="acoes"><button class="primary" data-act="gravarArq" ${ok?"":"disabled"}>Gravar ${ok} questão(ões)</button><button data-act="cancelarPrevia">Cancelar</button></div></div>`}
+
+/* ============ telas ============ */
+const msgBox=()=>st.msg?`<div class="msg">${esc(st.msg)}</div>`:"";
+const fonte=q=>[q.banca,q.ano].filter(Boolean).join(" ");
+const fonteTag=q=>fonte(q)?`<span class="tag">${esc(fonte(q))}</span>`:"";
+const voltar=(a,d,t)=>`<button data-act="${a}"${d?` data-d="${d}"`:""}>← ${t}</button>`;
+
+function vHome(){
+  const ativa=sessaoAtiva();
+  const cards=Object.keys(DISC).map(d=>{const e=estat(QS.filter(q=>q.disc===d));
+    return `<button class="dcard" data-act="disc" data-d="${d}"><b>${DISC[d]}</b>
+      <div class="meta">${e.n} questões · ${e.f} já respondidas</div>
+      <div>${e.pct===null?"Sem histórico":e.pct+"% de acerto"}</div></button>`}).join("");
+  const nRev=QS.filter(pred.revisao).length,nSin=db.flags.length,nImg=QS.filter(pred.imagem).length,nRep=db.reports.filter(r=>!r.ok).length;
+  const rot={"":"automático","light":"claro","dark":"escuro"};
+  const bloco=ativa?`<div class="card sessao"><b>Sessão em andamento</b>
+    <span class="meta">· ${esc(ativa.rotulo||"Sessão")} · ${Object.keys(ativa.resp).length}/${ativa.lista.length} respondidas${ativa.fim?" · "+(Date.now()>=ativa.fim?"tempo esgotado":"restam "+tempoRestante(ativa)):""}</span>
+    <div class="acoes"><button class="primary sm" data-act="retomar">Retomar</button><button class="sm" data-act="descartar">Descartar</button></div></div>`:"";
+  return `${bloco}<h2>Escolha a disciplina</h2><div class="grid">${cards}</div>
+    <h3>Sessões rápidas</h3>
+    <div class="acoes" style="margin:0">
+      <button data-act="glob" data-f="revisao" ${nRev?"":"disabled"}>Revisão de hoje (${nRev})</button>
+      <button data-act="glob" data-f="sinal" ${nSin?"":"disabled"}>Sinalizadas (${nSin})</button>
+      <button data-act="glob" data-f="imagem" ${nImg?"":"disabled"}>Só com imagem (${nImg})</button>
+      <button data-act="glob" data-f="erradas">Erradas na última tentativa</button></div>
+    <h3>Sessão cronometrada (todas as disciplinas, aleatória)</h3>
+    <div class="acoes" style="margin:0">${[10,20,30].map(m=>`<button data-act="cron" data-m="${m}">${m} min</button>`).join("")}</div>
+    <p class="meta">Ao acabar o tempo, a sessão é encerrada e o relatório aparece. Dentro de uma disciplina, a duração também pode ser escolhida na barra inferior.</p>
+    <h3>Gerenciar</h3>
+    <div class="acoes" style="margin:0">
+      <button class="primary" data-act="add">+ Adicionar questões</button>
+      <button data-act="banco">Banco de questões (editar)</button>
+      <button data-act="relatos">Problemas relatados${nRep?` <span class="tag r">${nRep}</span>`:""}</button>
+      <button data-act="stats">Desempenho</button>
+      <button data-act="dados">Backup</button>
+      <button data-act="tema">Tema: ${rot[db.cfg.tema||""]}</button></div>${msgBox()}`}
+
+function vDisc(){
+  const head=`<div class="topo">${voltar("home",0,"Disciplinas")}<h2>${DISC[st.disc]}</h2>
+    <div class="acoes" style="margin:0"><button class="sm" data-act="stats">Desempenho</button><button class="sm" data-act="add">+ Adicionar</button></div></div>`;
+  const g=grupos(st.disc),temas=Object.keys(g).sort();
+  if(!temas.length)return head+`<p class="empty">Nenhuma questão nesta disciplina ainda.<br>Use <b>+ Adicionar</b> para incluir as primeiras.</p>${msgBox()}`;
+  const corpo=temas.map(t=>{
+    const subs=Object.keys(g[t]).sort(),e=estat(subs.flatMap(s=>g[t][s]));
+    const todos=subs.every(s=>st.sel.has(chave(t,s)));
+    return `<details class="card" open><summary><input type="checkbox" data-act="tsel" data-k="${esc(t)}" ${todos?"checked":""}> <b>${esc(t)}</b> <span class="meta">· ${e.n} q · ${txtPct(e)}</span></summary>`
+      +subs.map(s=>{const l=g[t][s],se=estat(l),k=chave(t,s);
+        return `<div class="lin"><span class="nome"><input type="checkbox" data-act="ssel" data-k="${esc(k)}" ${st.sel.has(k)?"checked":""}> ${esc(s)}</span>
+          <span class="meta">${l.length} q · ${txtPct(se)} ${PRI(se)?'<span class="pri">⚠ reforçar</span>':""}</span>
+          ${bar(se)}<button class="sm" data-act="praticar" data-k="${esc(k)}">Praticar</button></div>`}).join("")
+      +`</details>`}).join("");
+  const sel=selecionadas(st.disc),bancas=valores(st.disc,"banca"),anos=valores(st.disc,"ano");
+  const ops=[["todas","Todas"],["nao","Não respondidas"],["erradas","Erradas na última tentativa"],
+    ["revisao","Revisão de hoje"],["sinal","Sinalizadas"],["imagem","Só com imagem"],["prioridade","Subtemas prioritários"]];
+  return head+corpo+`<div class="barra">
+    <div style="flex:1 1 150px">${st.sel.size?"Selecionadas":"Disciplina inteira"}: <b>${sel.length}</b> questões</div>
+    <label><span>Filtro</span><select data-ch="filtro">${ops.map(([v,t])=>`<option value="${v}" ${st.filtro===v?"selected":""}>${t}</option>`).join("")}</select></label>
+    ${bancas.length>1?`<label><span>Banca</span><select data-ch="banca"><option value="">Todas</option>${bancas.map(x=>`<option${st.banca===x?" selected":""}>${esc(x)}</option>`).join("")}</select></label>`:""}
+    ${anos.length>1?`<label><span>Ano</span><select data-ch="ano"><option value="">Todos</option>${anos.map(x=>`<option${st.ano===x?" selected":""}>${esc(x)}</option>`).join("")}</select></label>`:""}
+    <label><span>Duração</span><select data-ch="dur"><option value="0"${st.dur==="0"?" selected":""}>Sem limite</option>${[10,20,30].map(m=>`<option value="${m}"${String(st.dur)===String(m)?" selected":""}>${m} min</option>`).join("")}</select></label>
+    <label><span>Resposta</span><select data-ch="feedback"><option value="1"${st.feedback?" selected":""}>Na hora</option><option value="0"${st.feedback?"":" selected"}>Só no final (prova)</option></select></label>
+    <label><span>Quantidade</span><input type="number" min="1" placeholder="todas" data-f="qtd" value="${esc(st.qtd)}"></label>
+    <label><span>Ordem</span><select data-ch="ordem"><option value="aleatoria"${st.ordem==="aleatoria"?" selected":""}>Aleatória</option><option value="sequencial"${st.ordem==="sequencial"?" selected":""}>Sequencial</option></select></label>
+    <button class="primary" data-act="iniciar" ${sel.length?"":"disabled"}>Iniciar</button></div>${msgBox()}`}
+
+function vQuiz(){
+  const S=st.S,n=S.lista.length,r=Object.keys(S.resp).length;
+  const ac=Object.values(S.resp).filter(Boolean).length,er=r-ac;
+  const resumo=S.prova?`Prova · ${r}/${n} respondidas`:`Respondidas ${r}/${n} · Acertos ${ac} · Erros ${er}`;
+  const head=`<div class="topo"><span class="acoes" style="margin:0">${voltar(st.disc?"disc":"home",st.disc,"Voltar")}${st.disc?'<button class="sm" data-act="home">⌂ Início</button>':""}</span>
+    <div class="meta"><span class="cron" id="cron">${S.fim?tempoRestante(S):""}</span> ${resumo}</div>
+    <div class="acoes" style="margin:0">
+      ${S.prova?"":`<button class="sm" data-act="gab">${st.gab?"Ocultar gabarito":"Mostrar gabarito"}</button>`}
+      ${S.prova||!er?"":'<button class="sm" data-act="erros">Refazer só os erros</button>'}
+      <button class="sm" data-act="umaQ">${st.umaQ?"Ver em lista":"Uma por vez"}</button>
+      ${st.umaQ?'<button class="sm" data-act="telaCheia">⛶ Tela cheia</button>':""}
+      <button class="sm primary" data-act="encerrar">Encerrar e ver relatório</button></div></div>
+    ${db.cfg.teclado?`<p class="meta" style="margin:-6px 0 12px">Teclado: <span class="kbd">A</span>–<span class="kbd">E</span> responder · <span class="kbd">G</span> gabarito · <span class="kbd">M</span> sinalizar${db.cfg.conf&&!S.prova?' · <span class="kbd">1</span> sabia / <span class="kbd">2</span> chutei':""} · <span class="kbd">N</span> próxima${st.umaQ?' · <span class="kbd">←</span> <span class="kbd">→</span> navegar':""}</p>`:""}`;
+  const idxs=st.umaQ?[S.cur]:S.lista.map((_,i)=>i);
+  const cards=idxs.filter(i=>S.lista[i]).map(i=>{
+    const q=S.lista[i],resp=S.resp[i],pick=S.esc[i],nr=relAbertos(q.cod).length,sq=db.stats[q.id]||{};
+    const fb=!S.prova;
+    const opts=q.opcoes.map((o,j)=>{
+      let c="";
+      if(resp!==undefined){
+        if(!fb){if(j===pick)c="pick"}
+        else if(!q.anulada){if(o.c)c="correct";else if(j===pick)c="wrong"}}
+      return `<button class="opt ${c}" data-act="resp" data-q="${i}" data-i="${j}" ${resp!==undefined?"disabled":""}><span class="l">${LET[j]})</span><span>${esc(o.t)}</span></button>`}).join("");
+    let res="";
+    if(resp!==undefined&&!fb)res=`<div class="meta">Resposta registrada: ${LET[pick]}. O resultado aparece ao encerrar.</div>`;
+    else if(resp!==undefined){
+      res=q.anulada?'<div class="res">Questão anulada: qualquer alternativa conta.</div>'
+        :`<div class="res ${resp?"ok":"err"}">${resp?"Correta!":"Incorreta — a alternativa verde é a correta."}</div>`;
+      if(resp===false&&!q.anulada&&sq.d){const oi=q.alts.indexOf(q.opcoes[pick].t),v=sq.d[oi]||0;
+        if(v>1)res+=`<div class="meta">Você já marcou esta mesma alternativa ${v} vezes nesta questão.</div>`}
+      if(resp===false&&!q.anulada)res+=S.causa[i]!==undefined
+        ?`<div class="meta">Causa: <b>${CAUSAS[S.causa[i]]}</b></div>`
+        :`<div class="conf">Por que errou? ${Object.keys(CAUSAS).map(k=>`<button class="sm" data-act="causa" data-q="${i}" data-k="${k}">${CAUSAS[k]}</button>`).join("")}</div>`;
+      if(db.cfg.conf)res+=S.conf[i]
+        ?`<div class="conf">Marcada como <b>${S.conf[i]==="s"?"sabia":"chute"}</b>.</div>`
+        :`<div class="conf">Você sabia ou chutou? <button class="sm" data-act="conf" data-q="${i}" data-v="s">Sabia <span class="kbd">1</span></button><button class="sm" data-act="conf" data-q="${i}" data-v="c">Chutei <span class="kbd">2</span></button></div>`}
+    return `<section class="card" id="qc${i}">
+      <div class="meta"><span class="cod">${q.cod}</span> · ${DISC[q.disc]} › <b>${esc(q.tema)}</b> › ${esc(q.subtema)}
+        ${fonteTag(q)}${q.orig?`<span class="tag">prova nº ${q.orig}</span>`:'<span class="tag">própria</span>'}
+        ${db.edits[q.id]?'<span class="tag e">editada</span>':""}${nr?`<span class="tag r">${nr} relato${nr>1?"s":""}</span>`:""}</div>
+      <div class="enun">${esc(q.enun)}</div>
+      ${figTag(q.fig,q.cod)}
+      ${opts}${res}${fb?`<div class="gab">Gabarito: ${LET[q.opcoes.findIndex(o=>o.c)]}</div>`:""}
+      <div class="acoes"><button class="sm" data-act="flag" data-id="${esc(q.id)}">${db.flags.includes(q.id)?"🚩 Sinalizada":"⚑ Sinalizar para rever"}</button>
+        <button class="sm" data-act="rep" data-cod="${q.cod}">⚠ Relatar problema</button>
+        <button class="sm" data-act="edit" data-id="${esc(q.id)}">✎ Editar</button></div>
+      ${st.repQ===q.cod?formRelato(q):""}</section>`}).join("");
+  const nav=st.umaQ&&n?`<div class="acoes" style="justify-content:space-between;align-items:center">
+      <button data-act="navQ" data-d="-1" ${S.cur<=0?"disabled":""}>← Anterior</button>
+      <span class="meta">${S.cur+1} de ${n}</span>
+      <button class="primary" data-act="navQ" data-d="1" ${S.cur>=n-1?"disabled":""}>Próxima →</button></div>`:"";
+  return head+(n?cards+nav:`<p class="empty">Sessão vazia.</p>`)+msgBox()}
+
+function formRelato(q){
+  return `<div class="card" style="margin:10px 0 0;background:var(--bg)">
+    <label><span>Tipo de problema na questão ${q.cod}</span>
+      <select data-f="repTipo">${Object.keys(TIPOS).map(k=>`<option value="${k}"${st.form.repTipo===k?" selected":""}>${TIPOS[k]}</option>`).join("")}</select></label>
+    <label><span>Descrição (o que está errado e, se souber, qual seria o certo)</span>
+      <textarea data-f="repTxt" placeholder="Ex.: o enunciado diz 'Muller Fisher', o correto é 'Miller Fisher'. Ou: o gabarito deveria ser C.">${esc(st.form.repTxt||"")}</textarea></label>
+    <div class="acoes"><button class="primary sm" data-act="repSalvar" data-cod="${q.cod}">Enviar relato</button>
+      <button class="sm" data-act="repFechar">Cancelar</button></div></div>`}
+
+function vRelatos(){
+  const ab=db.reports.filter(r=>!r.ok),fe=db.reports.filter(r=>r.ok);
+  const linha=(r,i)=>{const q=POR_COD[r.cod];
+    return `<div class="card"><div class="meta"><span class="cod">${esc(r.cod)}</span> · ${esc(TIPOS[r.tipo]||r.tipo)} · ${esc(r.data)}${r.ok?' <span class="tag e">resolvido</span>':""}</div>
+      ${r.txt?`<div style="margin:6px 0">${esc(r.txt)}</div>`:""}
+      ${q?`<div class="meta">${esc(q.tema)} › ${esc(q.subtema)} — ${esc(q.enun.slice(0,110))}…</div>`:'<div class="meta">Questão não encontrada.</div>'}
+      <div class="acoes">${q?`<button class="sm" data-act="edit" data-id="${esc(q.id)}">✎ Editar questão</button>`:""}
+        <button class="sm" data-act="repToggle" data-i="${r.i}">${r.ok?"Reabrir":"Marcar como resolvido"}</button>
+        <button class="sm" data-act="repDel" data-i="${r.i}">Excluir relato</button></div></div>`};
+  const idx=db.reports.map((r,i)=>({...r,i}));
+  return `<div class="topo">${voltar("home",0,"Início")}<h2>Problemas relatados</h2>
+    <button class="sm" data-act="copiarRelatos" ${db.reports.length?"":"disabled"}>Copiar lista para enviar</button></div>
+    <h3>Em aberto (${ab.length})</h3>
+    ${ab.length?idx.filter(r=>!r.ok).map(linha).join(""):'<p class="meta">Nenhum problema em aberto.</p>'}
+    <h3>Resolvidos (${fe.length})</h3>
+    ${fe.length?idx.filter(r=>r.ok).map(linha).join(""):'<p class="meta">Nenhum.</p>'}${msgBox()}`}
+
+function vBanco(){
+  const b=(st.busca||"").trim().toLowerCase();
+  let l=QS;
+  if(b)l=l.filter(q=>(q.cod+" "+q.tema+" "+q.subtema+" "+q.enun+" "+(q.orig||"")+" "+fonte(q)+" "+DISC[q.disc]).toLowerCase().includes(b));
+  const lim=l.slice(0,120);
+  return `<div class="topo">${voltar("home",0,"Início")}<h2>Banco de questões</h2>
+    <button class="sm primary" data-act="add">+ Adicionar</button></div>
+    <div class="row" style="margin-bottom:10px"><label style="flex:1 1 240px"><span>Buscar por código, tema, subtema ou texto (${QS.length} questões no total)</span>
+      <input data-f="busca" data-ch="busca" value="${esc(st.busca)}" placeholder="Ex.: CM-012, fibrilação, Nefrologia"></label>
+      <button data-act="buscar">Buscar</button>${st.busca?'<button data-act="limparBusca">Limpar</button>':""}</div>
+    ${l.length>120?`<p class="meta">Mostrando as 120 primeiras de ${l.length}. Refine a busca.</p>`:`<p class="meta">${l.length} questão(ões).</p>`}
+    ${lim.map(q=>{const nr=relAbertos(q.cod).length;
+      return `<div class="lin"><span class="nome"><span class="cod">${q.cod}</span>
+        <span>${esc(q.enun.slice(0,70))}…</span></span>
+        <span class="meta">${esc(q.tema)} › ${esc(q.subtema)} ${fonteTag(q)}${db.edits[q.id]?' <span class="tag e">editada</span>':""}${nr?` <span class="tag r">${nr}</span>`:""}${q.anulada?' <span class="tag f">anulada</span>':""}</span>
+        <button class="sm" data-act="edit" data-id="${esc(q.id)}">Editar</button></div>`}).join("")
+      ||'<p class="empty">Nenhuma questão encontrada.</p>'}${msgBox()}`}
+
+function vEdit(){
+  const q=POR_ID[st.editId];
+  if(!q){st.view="banco";return vBanco()}
+  const f=st.form;
+  const v=(k,d)=>f[k]!==undefined?f[k]:d;
+  const alts=v("eAlts",q.alts.join("\n"));
+  const nAlts=alts.split(/\n/).filter(s=>s.trim()).length;
+  const rel=relAbertos(q.cod);
+  const volta={quiz:"voltarQuiz",relatos:"relatos",banco:"banco"}[st.volta]||"banco";
+  return `<div class="topo">${voltar(volta,0,"Voltar")}
+    <h2>Editar ${q.cod}</h2><button class="sm" data-act="editReset" ${db.edits[q.id]?"":"disabled"}>Desfazer edições</button></div>
+    ${rel.length?`<div class="msg"><b>${rel.length} problema(s) relatado(s):</b><br>${rel.map(r=>esc((TIPOS[r.tipo]||r.tipo)+(r.txt?" — "+r.txt:""))).join("<br>")}</div>`:""}
+    <div class="card">
+      <div class="row"><label><span>Disciplina</span><select data-f="eDisc">${Object.keys(DISC).map(k=>`<option value="${k}"${v("eDisc",q.disc)===k?" selected":""}>${DISC[k]}</option>`).join("")}</select></label>
+        <label><span>Tema</span><input data-f="eTema" value="${esc(v("eTema",q.tema))}"></label>
+        <label><span>Subtema</span><input data-f="eSub" value="${esc(v("eSub",q.subtema))}"></label></div>
+      <label><span>Enunciado</span><textarea data-f="eEnun">${esc(v("eEnun",q.enun))}</textarea></label>
+      <label><span>Alternativas — uma por linha, sem a letra (<b data-cnt="eAlts">${nAlts}</b> detectadas)</span>
+        <textarea data-f="eAlts" data-gabsel="eGab" data-cntalvo="eAlts">${esc(alts)}</textarea></label>
+      <div class="row">
+        <label><span>Gabarito</span><select data-f="eGab">${LET.slice(0,Math.max(nAlts,2)).map(x=>`<option value="${x}"${v("eGab",q.gab)===x?" selected":""}>${x}</option>`).join("")}</select></label>
+        <label><span>Banca</span><input data-f="eBanca" value="${esc(v("eBanca",q.banca||""))}" placeholder="Ex.: SES-RJ, AMIB"></label>
+        <label><span>Ano</span><input data-f="eAno" value="${esc(v("eAno",q.ano||""))}" placeholder="Ex.: 2019"></label>
+        <label style="flex:0 0 auto"><span>Anulada</span><input type="checkbox" data-f="eAnul" ${v("eAnul",q.anulada)?"checked":""}></label></div>
+      ${campoImagem("eFig",v("eFig",q.fig||""))}
+      <div class="acoes"><button class="primary" data-act="editSalvar" data-id="${esc(q.id)}">Salvar alterações</button>
+        ${q.seq?`<button data-act="editExcluir" data-id="${esc(q.id)}">Excluir questão</button>`:""}</div>
+      <p class="meta">${q.orig?"Questão da prova original nº "+q.orig+". As edições ficam gravadas por cima do texto original e podem ser desfeitas.":"Questão adicionada por você."}</p>
+    </div>${msgBox()}`}
+
+function vAdd(){
+  const ab=st.abaAdd,f=st.form;
+  const abas=[["lote","Colar em lote (mais rápido)"],["form","Uma questão por vez"],["arq","Planilha e arquivos"],["json","JSON"]];
+  let corpo="";
+  if(ab==="lote"){
+    corpo=`<div class="card">
+      <p>Cole as questões no formato abaixo. O cabeçalho <code>@</code> vale para todas as questões seguintes até o próximo <code>@</code>, e a questão termina na linha do gabarito.</p>
+      <pre>${esc(MODELO_LOTE)}</pre>
+      <p class="meta">Aceita <code>A)</code>, <code>a.</code>, <code>(A)</code> · gabarito como <code>#C</code>, <code>Gabarito: C</code> ou <code>*</code> na alternativa certa · <code>#anulada</code> para questão anulada · <code>#figura: endereço.png</code> para imagem · <code>#fonte: AMIB 2025</code> para banca e ano. No cabeçalho, a 4ª e a 5ª partes são banca e ano.</p>
+      <label><span>Questões</span><textarea class="mono" data-f="lote" placeholder="Cole aqui">${esc(f.lote||"")}</textarea></label>
+      <div class="acoes"><button class="primary" data-act="impLote">Conferir e adicionar</button>
+        <button data-act="copiarModelo">Copiar modelo</button></div></div>`}
+  else if(ab==="form"){
+    const nA=(f.fAlts||"").split(/\n/).filter(s=>s.trim()).length;
+    corpo=`<div class="card">
+      <div class="row"><label><span>Disciplina</span><select data-f="fDisc">${Object.keys(DISC).map(k=>`<option value="${k}"${f.fDisc===k?" selected":""}>${DISC[k]}</option>`).join("")}</select></label>
+        <label><span>Tema</span><input data-f="fTema" list="temas" value="${esc(f.fTema||"")}" placeholder="Ex.: Cardiologia"></label>
+        <label><span>Subtema</span><input data-f="fSub" list="subs" value="${esc(f.fSub||"")}" placeholder="Ex.: Arritmias"></label></div>
+      <datalist id="temas">${[...new Set(QS.map(q=>q.tema))].sort().map(t=>`<option>${esc(t)}</option>`).join("")}</datalist>
+      <datalist id="subs">${[...new Set(QS.map(q=>q.subtema))].sort().map(t=>`<option>${esc(t)}</option>`).join("")}</datalist>
+      <label><span>Enunciado</span><textarea data-f="fEnun">${esc(f.fEnun||"")}</textarea></label>
+      <label><span>Alternativas — uma por linha, sem a letra (<b data-cnt="fAlts">${nA}</b> detectadas)</span>
+        <textarea data-f="fAlts" data-gabsel="fGab" data-cntalvo="fAlts" placeholder="primeira alternativa&#10;segunda alternativa&#10;terceira&#10;quarta">${esc(f.fAlts||"")}</textarea></label>
+      <div class="row"><label><span>Gabarito</span><select data-f="fGab">${LET.slice(0,Math.max(nA,2)).map(x=>`<option value="${x}"${f.fGab===x?" selected":""}>${x}</option>`).join("")}</select></label>
+        <label><span>Banca</span><input data-f="fBanca" value="${esc(f.fBanca||"")}" placeholder="Ex.: AMIB"></label>
+        <label><span>Ano</span><input data-f="fAno" value="${esc(f.fAno||"")}" placeholder="Ex.: 2025"></label>
+        <label style="flex:0 0 auto"><span>Anulada</span><input type="checkbox" data-f="fAnul" ${f.fAnul?"checked":""}></label></div>
+      ${campoImagem("fFig",f.fFig||"")}
+      <div class="acoes"><button class="primary" data-act="impForm">Adicionar questão</button></div></div>`}
+  else if(ab==="arq"){
+    corpo=`<div class="card">
+      <p>Para digitar muitas questões de uma vez, sem IA: preencha a planilha modelo, exporte como CSV e envie aqui. Cada linha é uma questão.</p>
+      <pre>codigo;disciplina;tema;subtema;banca;ano;enunciado;A;B;C;D;E;gabarito;anulada;figura</pre>
+      <p class="meta">Próximo número livre: <b>${String(db.seq+1).padStart(2,"0")}</b>. Na coluna <code>codigo</code>, use CM-A, TI-A, PS-A ou LG-A seguido do número (ex.: PS-A${String(db.seq+1).padStart(2,"0")}), na ordem em que as questões forem entrando. Deixe em branco para numeração automática.</p>
+      <p class="meta"><b>Código:</b> identificador fixo da questão, gravado já na planilha · <b>Disciplina:</b> Clínica Médica, Terapia Intensiva, Psiquiatria ou Legista · <b>Gabarito:</b> a letra certa · <b>Anulada:</b> "sim" ou vazio · <b>Figura:</b> o nome do arquivo da imagem, enviado junto (ex.: CM-035.png), ou um endereço começando com http. Imagens não entram dentro da planilha: envie o arquivo com o mesmo nome. Excel e Planilhas Google funcionam, com ";" ou ",".</p>
+      <div class="acoes"><button class="primary" data-act="baixarModelo">Baixar planilha modelo (.csv)</button></div></div>
+    <div class="card">
+      <label><span>Envie a planilha (.csv) ou um texto (.txt/.md) no formato de lote, junto com as imagens, se houver. Pode selecionar tudo de uma vez.</span>
+        <input type="file" multiple accept=".csv,.txt,.md,image/*" data-file-many="1"></label>
+      <div class="meta">${st.impTxtNome?"Arquivo: "+esc(st.impTxtNome)+" · ":"Nenhuma planilha escolhida · "}Imagens recebidas: ${Object.keys(st.impImg).length}</div>
+      <div class="acoes"><button class="primary" data-act="conferirArq">Conferir antes de gravar</button><button data-act="limparArq">Limpar</button></div></div>`}
+  else{
+    corpo=`<div class="card">
+      <p>Formato para quando eu gerar as questões para você:</p>
+      <pre>[{"disciplina":"Clínica Médica","tema":"Cardiologia","subtema":"Arritmias",
+  "enunciado":"...","alternativas":["a","b","c","d"],"gabarito":"C",
+  "anulada":false,"figura":null}]</pre>
+      <label><span>JSON</span><textarea class="mono" data-f="json">${esc(f.json||"")}</textarea></label>
+      <div class="acoes"><button class="primary" data-act="impJson">Conferir e adicionar</button></div></div>`}
+  return `<div class="topo">${voltar("home",0,"Início")}<h2>Adicionar questões</h2>
+    <button class="sm" data-act="banco">Ver banco</button></div>
+    <div class="aba">${abas.map(([k,t])=>`<button data-act="aba" data-k="${k}" aria-selected="${ab===k}">${t}</button>`).join("")}</div>
+    ${corpo}${ab==="arq"?vPrevia():""}${msgBox()}`}
+
+function vStats(){
+  const porD=Object.keys(DISC).map(d=>{const e=estat(QS.filter(q=>q.disc===d));
+    return `<div class="lin"><span class="nome"><b>${DISC[d]}</b></span>
+      <span class="meta">${txtPct(e)} · ${e.f}/${e.n} respondidas</span>${bar(e)}</div>`}).join("");
+  const L=[],M=[];
+  Object.keys(DISC).forEach(d=>{const g=grupos(d);
+    Object.keys(g).forEach(t=>Object.keys(g[t]).forEach(s=>{const e=estat(g[t][s]);M.push({d,t,s,e});if(e.t)L.push({d,t,s,e})}))});
+  L.sort((x,y)=>x.e.pct-y.e.pct);
+  M.sort((x,y)=>(x.e.pct===null?999:x.e.pct)-(y.e.pct===null?999:y.e.pct));
+  const cor=p=>`background:hsl(${Math.round(p*1.2)} 62% 42%)`;
+  const mapa=`<div class="mapa">${M.map(x=>`<button class="tile ${x.e.pct===null?"nd":""}" style="${x.e.pct===null?"":cor(x.e.pct)}" title="${esc(DISC[x.d]+" › "+x.t)}" data-act="praticarPri" data-d="${x.d}" data-k="${esc(chave(x.t,x.s))}"><span>${esc(x.s)}</span><b>${x.e.pct===null?"—":x.e.pct+"%"}</b></button>`).join("")}</div>
+    <div class="legenda"></div><div class="meta" style="display:flex;justify-content:space-between"><span>0% · menos acerto</span><span>100% · mais acerto</span></div>`;
+  const lin=x=>`<div class="lin"><span class="nome"><span><b>${esc(x.s)}</b><br><span class="meta">${DISC[x.d]} › ${esc(x.t)}</span></span></span>
+    <span class="meta">${txtPct(x.e)} ${PRI(x.e)?'<span class="pri">⚠ reforçar</span>':""}</span>${bar(x.e)}
+    <button class="sm" data-act="praticarPri" data-d="${x.d}" data-k="${esc(chave(x.t,x.s))}">Praticar</button></div>`;
+  const pri=L.filter(x=>PRI(x.e)),arm=armadilhas(),ch=chutes();
+  const cnt={};QS.forEach(q=>{const s=db.stats[q.id];if(s&&s.c)Object.entries(s.c).forEach(([k,v])=>cnt[k]=(cnt[k]||0)+v)});
+  const totC=Object.values(cnt).reduce((a,b)=>a+b,0);
+  const causasHtml=totC?Object.keys(CAUSAS).map(k=>{const v=cnt[k]||0,p=Math.round(v*100/totC);
+    return `<div class="lin"><span class="nome">${CAUSAS[k]}</span><span class="meta">${v} (${p}%)</span>${bar({pct:p})}</div>`}).join("")
+    :'<p class="meta">Ainda sem causas registradas. Ao errar uma questão, escolha o motivo ali mesmo.</p>';
+  const ritmo=[10,20,30].map(f=>{const Ls=db.sessoes.filter(s=>s.faixa===f);
+    if(!Ls.length)return `<div class="lin"><span class="nome"><b>${f} min</b></span><span class="meta">sem sessões ainda</span></div>`;
+    const tot=Ls.reduce((a,s)=>a+s.n,0),ac=Ls.reduce((a,s)=>a+s.ac,0),med=tot/Ls.length;
+    return `<div class="lin"><span class="nome"><b>${f} min</b> <span class="meta">· ${Ls.length} sessão(ões)</span></span>
+      <span class="meta">em média <b>${med.toFixed(1)}</b> questões · acerto ${tot?Math.round(ac*100/tot):0}% · ≈ ${(f*60/med).toFixed(0)} s por questão</span></div>`}).join("");
+  return `<div class="topo">${voltar("home",0,"Início")}<h2>Desempenho</h2>
+    <button class="sm" data-act="zerar">Zerar histórico</button></div>
+    <h3>Por disciplina</h3>${porD}
+    <h3>Mapa de calor dos subtemas</h3>${mapa}
+    <h3>Ritmo: quantas questões cabem em cada tempo</h3>${ritmo}
+    <h3>Por que você erra</h3>${causasHtml}
+    <h3>Subtemas que merecem mais atenção (abaixo de ${LIMITE}%)</h3>
+    ${pri.length?pri.map(lin).join(""):`<p class="meta">Nenhum subtema abaixo de ${LIMITE}% com pelo menos 2 respostas.</p>`}
+    <h3>Todos os subtemas respondidos (pior ao melhor)</h3>
+    ${L.length?L.map(lin).join(""):'<p class="meta">Nenhuma resposta registrada ainda.</p>'}
+    <h3>Armadilhas recorrentes — o mesmo distrator escolhido 2 vezes ou mais</h3>
+    ${arm.length?arm.map(x=>`<div class="card"><div class="meta"><span class="cod">${x.q.cod}</span> · ${esc(x.q.tema)} › ${esc(x.q.subtema)} — marcada ${x.n} vezes</div>
+      <div style="margin:5px 0">${esc(x.q.enun.slice(0,130))}…</div>
+      <div class="res err">Você insiste em: ${esc(x.alt)}</div>
+      <div class="meta">Correta: ${esc(x.q.alts[LET.indexOf(x.q.gab)]||"")}</div>
+      <div class="acoes"><button class="sm" data-act="praticarUma" data-id="${esc(x.q.id)}">Refazer</button>
+        <button class="sm" data-act="edit" data-id="${esc(x.q.id)}">Editar</button></div></div>`).join("")
+      :'<p class="meta">Nenhuma ainda. Esta lista aparece quando você erra a mesma questão escolhendo sempre a mesma alternativa.</p>'}
+    ${db.cfg.conf?`<h3>Acertos no chute — não conte como domínio</h3>
+    ${ch.length?ch.map(q=>{const s=db.stats[q.id];
+      return `<div class="lin"><span class="nome"><span><span class="cod">${q.cod}</span> ${esc(q.subtema)}<br><span class="meta">${esc(q.tema)}</span></span></span>
+        <span class="meta">${s.gc} acerto(s) no chute em ${s.g} chute(s)</span>
+        <button class="sm" data-act="praticarUma" data-id="${esc(q.id)}">Refazer</button></div>`}).join("")
+      :'<p class="meta">Nenhum acerto marcado como chute.</p>'}`:""}
+    <p class="meta" style="margin-top:14px">Questões ainda não respondidas: ${QS.filter(q=>!db.stats[q.id]).length}</p>${msgBox()}`}
+
+function vRel(){
+  const r=st.rel;if(!r){st.view="home";return vHome()}
+  const bloco=(arr,f)=>arr.length?arr.map(f).join(""):'<p class="meta">Nenhum.</p>';
+  return `<div class="topo"><button data-act="home">← Início</button><h2>Relatório</h2>
+    <div class="acoes" style="margin:0"><button class="sm" data-act="baixarRel">Baixar .txt</button><button class="sm" data-act="imprimir">Imprimir</button></div></div>
+    <div class="card"><div class="meta">${esc(r.titulo)} · ${esc(r.data)}${r.mins?" · "+r.mins+" min":""}${r.prova?" · modo prova":""}${r.dur?" · cronometrada ("+r.dur+" min)":""}</div>
+      ${st.msg?`<div class="msg">${esc(st.msg)}</div>`:""}
+      <p style="font-size:16px"><b>${r.ac}</b> acertos em <b>${r.resp}</b> respondidas · <b>${r.pct}%</b> de aproveitamento · ${r.er} erros</p></div>
+    <h3>Desempenho por subtema</h3>
+    ${bloco(r.temas,p=>`<div class="lin"><span class="nome"><span><b>${esc(p.sub)}</b><br><span class="meta">${esc(p.disc)} › ${esc(p.tema)}</span></span></span>
+      <span class="meta">${p.pct}% (${p.a}/${p.n})</span>${bar({pct:p.pct})}</div>`)}
+    <h3>Pontos de atenção</h3>
+    ${bloco(r.atencao,p=>`<div class="lin"><span class="pri">⚠</span> ${esc(p.sub)} <span class="meta">(${esc(p.tema)})</span></div>`)}
+    ${r.causas.length?`<h3>Por que você errou</h3>${bloco(r.causas,c=>`<div class="lin"><span class="nome">${esc(c.nome)}</span><span class="meta">${c.n} vez(es)</span>${bar({pct:Math.round(c.n*100/Math.max(1,r.er))})}</div>`)}`:""}
+    <h3>Questões erradas</h3>
+    ${bloco(r.erradas,e=>`<div class="card"><div class="meta"><span class="cod">${e.cod}</span> · ${esc(e.tema)} › ${esc(e.sub)}</div>
+      <div>${esc(e.t)}</div><div class="meta">Você marcou ${e.m} · correta ${e.c}</div></div>`)}
+    <h3>Sinalizadas para rever</h3>
+    ${bloco(r.sinal,e=>`<div class="card"><div class="meta"><span class="cod">${e.cod}</span> · ${esc(e.tema)} › ${esc(e.sub)}</div><div>${esc(e.t)}</div></div>`)}`}
+
+function vDados(){
+  return `<div class="topo">${voltar("home",0,"Início")}<h2>Ajustes e backup</h2><span></span></div>
+    <div class="card"><h3 style="margin-top:0">Conta</h3>
+      <p class="meta">${usuario?"Conectado como "+esc(usuario.email||""):"Sem conta conectada neste aparelho."}</p>
+      <div class="acoes"><button data-act="sair">Sair desta conta</button></div></div>
+    <div class="card"><h3 style="margin-top:0">Ajustes</h3>
+      <label><input type="checkbox" data-cfg="teclado" ${db.cfg.teclado?"checked":""}> Atalhos de teclado durante a sessão
+        <span class="meta">A–E respondem, G mostra o gabarito, M sinaliza, N pula para a próxima, 1 e 2 marcam sabia ou chutei.</span></label>
+      <label><input type="checkbox" data-cfg="conf" ${db.cfg.conf?"checked":""}> Perguntar, após cada resposta, se você sabia ou chutou
+        <span class="meta">Opcional. Serve para separar o que você domina do que acertou por sorte; aparece no Desempenho.</span></label></div>
+    <div class="card"><p>Todo o seu progresso, questões adicionadas, edições e relatos ficam salvos apenas neste navegador. Exporte de vez em quando para não perder nada ao trocar de aparelho ou limpar o navegador.</p>
+      <div class="meta">Guardado agora: ${db.added.length} questões adicionadas · ${Object.keys(db.edits).length} edições · ${db.reports.length} relatos · ${Object.keys(db.stats).length} questões com histórico · ${db.flags.length} sinalizadas</div>
+      <div class="acoes"><button class="primary" data-act="exportar">Exportar backup (.json)</button></div>
+      <p class="meta">As figuras coladas vão junto no arquivo, o que pode deixá-lo grande.</p></div>
+    <div class="card"><label><span>Importar backup — cole o conteúdo do arquivo</span><textarea class="mono" data-f="imp"></textarea></label>
+      <div class="acoes"><button data-act="importar">Importar e mesclar</button></div>
+      <p class="meta">A importação soma ao que já existe: questões e relatos são acrescentados, e o histórico de acertos prevalece o de maior número de respostas.</p></div>${msgBox()}`}
+
+const VIEWS={entrar:vEntrar,home:vHome,disc:vDisc,quiz:vQuiz,stats:vStats,add:vAdd,rel:vRel,banco:vBanco,edit:vEdit,relatos:vRelatos,dados:vDados};
+let ultView="";
+function render(){
+  const y=scrollY,mesma=ultView===st.view;
+  $("app").innerHTML=(VIEWS[st.view]||vHome)();
+  document.body.classList.toggle("gabOn",st.gab);
+  document.body.classList.toggle("uma",!!st.umaQ&&st.view==="quiz");
+  const tm=db.cfg.tema;
+  if(tm)document.documentElement.setAttribute("data-theme",tm);else document.documentElement.removeAttribute("data-theme");
+  ultView=st.view; if(mesma)scrollTo(0,y); else scrollTo(0,0);
+  pintarImagens();
+  salvarSessao();
+}
+
+/* ============ captura de formulários ============ */
+function colher(){document.querySelectorAll("[data-f]").forEach(el=>{
+  const k=el.dataset.f,v=el.type==="checkbox"?el.checked:el.value;
+  if(k==="qtd")st.qtd=v;else if(k==="busca")st.busca=v;else st.form[k]=v})}
+
+function baixar(nome,txt,tipo){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([txt],{type:tipo||"text/plain;charset=utf-8"}));
+  a.download=nome;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function copiar(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{})}
+
+/* ============ ações ============ */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]");if(!el)return;
+  const a=el.dataset.act;colher();
+  if(a==="resp"){responder(+el.dataset.q,+el.dataset.i);return}
+  if(a==="conf"){marcarConfianca(+el.dataset.q,el.dataset.v);return}
+  switch(a){
+    case "enviarLink":enviarLink();break;
+    case "confirmarCodigo":confirmarCodigo();break;
+    case "sair":sair();break;
+    case "home":st.view="home";st.msg="";break;
+    case "disc":st.view="disc";st.disc=el.dataset.d;st.sel=new Set();st.msg="";break;
+    case "stats":st.view="stats";st.msg="";break;
+    case "banco":st.view="banco";st.msg="";break;
+    case "relatos":st.view="relatos";st.msg="";break;
+    case "dados":st.view="dados";st.msg="";break;
+    case "add":st.view="add";st.msg="";break;
+    case "aba":st.abaAdd=el.dataset.k;st.msg="";break;
+
+    case "tsel":{const g=grupos(st.disc)[el.dataset.k]||{};
+      Object.keys(g).forEach(s=>{const k=chave(el.dataset.k,s);el.checked?st.sel.add(k):st.sel.delete(k)});break}
+    case "ssel":{const k=el.dataset.k;el.checked?st.sel.add(k):st.sel.delete(k);break}
+    case "praticar":st.sel=new Set([el.dataset.k]);return iniciar(selecionadas(st.disc));
+    case "praticarPri":st.disc=el.dataset.d;st.sel=new Set([el.dataset.k]);st.filtro="todas";return iniciar(selecionadas(st.disc));
+    case "iniciar":return iniciar(selecionadas(st.disc));
+    case "glob":st.disc=null;st.sel=new Set();st.filtro="todas";st.msg="";return iniciar(QS.filter(pred[el.dataset.f]),0);
+    case "gab":st.gab=!st.gab;break;
+    case "erros":return iniciar(st.S.lista.filter((q,i)=>st.S.resp[i]===false),0,true);
+    case "flag":{const id=el.dataset.id;
+      db.flags=db.flags.includes(id)?db.flags.filter(x=>x!==id):db.flags.concat(id);gravar();break}
+    case "rel":st.rel=relatorio();st.view="rel";break;
+    case "voltarQuiz":st.view="quiz";break;
+    case "baixarRel":baixar("relatorio_estudo.txt",relTexto(st.rel));return;
+    case "imprimir":print();return;
+
+    /* relatos */
+    case "rep":st.repQ=st.repQ===el.dataset.cod?null:el.dataset.cod;st.form.repTxt="";break;
+    case "repFechar":st.repQ=null;break;
+    case "repSalvar":{
+      const txt=(st.form.repTxt||"").trim();
+      if(!txt){st.msg="Descreva o problema antes de enviar.";break}
+      db.reports.push({cod:el.dataset.cod,tipo:st.form.repTipo||"transc",txt,
+        data:new Date().toLocaleString("pt-BR"),ok:false});
+      gravar();st.repQ=null;st.form.repTxt="";
+      st.msg=`Relato registrado para ${el.dataset.cod}. Veja em "Problemas relatados", na tela inicial.`;break}
+    case "repToggle":{const r=db.reports[+el.dataset.i];if(r){r.ok=!r.ok;gravar()}break}
+    case "repDel":{db.reports.splice(+el.dataset.i,1);gravar();break}
+    case "copiarRelatos":{
+      copiar("PROBLEMAS NAS QUESTÕES\n\n"+db.reports.map(r=>{const q=POR_COD[r.cod];
+        return `[${r.cod}] ${TIPOS[r.tipo]||r.tipo}${r.ok?" (resolvido)":""}\n${r.txt}\n`
+          +(q?`Enunciado atual: ${q.enun.slice(0,200)}\nAlternativas: ${q.alts.map((x,i)=>LET[i]+") "+x).join(" | ")}\nGabarito atual: ${q.gab}\n`:"")}).join("\n"));
+      st.msg="Lista copiada. Cole na conversa comigo e eu devolvo as correções.";break}
+
+    /* edição */
+    case "edit":st.volta=["quiz","relatos","banco"].includes(st.view)?st.view:"banco";st.editId=el.dataset.id;st.view="edit";st.form={};st.msg="";break;
+    case "editSalvar":{
+      const q=POR_ID[el.dataset.id],f=st.form;
+      const alts=(f.eAlts!==undefined?f.eAlts:q.alts.join("\n")).split(/\n/).map(s=>s.trim()).filter(Boolean);
+      if(alts.length<2){st.msg="A questão precisa de pelo menos 2 alternativas.";break}
+      const gab=f.eGab||q.gab;
+      if(LET.indexOf(gab)>=alts.length){st.msg=`Gabarito ${gab} não existe: há só ${alts.length} alternativas.`;break}
+      const enun=(f.eEnun!==undefined?f.eEnun:q.enun).trim();
+      if(!enun){st.msg="O enunciado não pode ficar vazio.";break}
+      const patch={disc:f.eDisc||q.disc,tema:(f.eTema!==undefined?f.eTema:q.tema).trim()||"Geral",
+        subtema:(f.eSub!==undefined?f.eSub:q.subtema).trim()||"Geral",enun,alts,gab,
+        anulada:f.eAnul!==undefined?!!f.eAnul:q.anulada,fig:(f.eFig!==undefined?f.eFig:q.fig||"").trim()||null,
+        banca:(f.eBanca!==undefined?f.eBanca:q.banca||"").trim(),ano:(f.eAno!==undefined?f.eAno:q.ano||"").toString().trim()};
+      if(q.seq){const i=db.added.findIndex(x=>x.id===q.id);if(i>=0)db.added[i]={...db.added[i],...patch}}
+      else db.edits[q.id]={...(db.edits[q.id]||{}),...patch};
+      gravar();construir();
+      /* reflete a edição na sessão aberta */
+      st.S.lista=st.S.lista.map(x=>x.id===q.id?{...POR_ID[q.id],opcoes:x.opcoes}:x);
+      st.form={};st.msg=`${q.cod} atualizada.`;st.view=st.volta==="quiz"?"quiz":(st.volta||"banco");break}
+    case "editReset":{const q=POR_ID[st.editId];delete db.edits[q.id];gravar();construir();
+      st.form={};st.msg=`Edições de ${q.cod} desfeitas.`;break}
+    case "editExcluir":{const q=POR_ID[el.dataset.id];
+      if(!confirm(`Excluir definitivamente a questão ${q.cod}?`))break;
+      db.added=db.added.filter(x=>x.id!==q.id);delete db.stats[q.id];delete db.sched[q.id];
+      db.flags=db.flags.filter(x=>x!==q.id);gravar();construir();
+      st.msg=`${q.cod} excluída.`;st.view="banco";break}
+
+    /* importação */
+    case "impLote":case "impJson":{
+      const txt=((a==="impLote"?st.form.lote:st.form.json)||"").trim();
+      if(!txt){st.msg="Cole o conteúdo antes de conferir.";break}
+      const r=a==="impLote"?parseLote(txt):parseJSON(txt);
+      if(r.erros.length){st.msg=(r.out.length?`${r.out.length} questão(ões) válidas, mas há problemas — nada foi adicionado. `:"Nada foi adicionado. ")+r.erros.slice(0,6).join(" · ");break}
+      const cods=salvarNovas(r.out);
+      if(a==="impLote")st.form.lote="";else st.form.json="";
+      st.msg=`${cods.length} questão(ões) adicionada(s): ${cods.join(", ")}.`;break}
+    case "impForm":{
+      const f=st.form,alts=(f.fAlts||"").split(/\n/).map(s=>s.trim()).filter(Boolean);
+      if(!(f.fEnun||"").trim()){st.msg="Escreva o enunciado.";break}
+      if(alts.length<2){st.msg="Escreva pelo menos 2 alternativas, uma por linha.";break}
+      const gab=f.fGab||"A";
+      if(LET.indexOf(gab)>=alts.length){st.msg=`Gabarito ${gab} não existe: há só ${alts.length} alternativas.`;break}
+      const cods=salvarNovas([{disc:f.fDisc||"cm",tema:(f.fTema||"Geral").trim(),subtema:(f.fSub||f.fTema||"Geral").trim(),
+        enun:f.fEnun.trim(),alts,gab,anulada:!!f.fAnul,fig:(f.fFig||"").trim()||null,
+        banca:(f.fBanca||"").trim(),ano:(f.fAno||"").trim()}]);
+      st.form={fDisc:f.fDisc,fTema:f.fTema,fSub:f.fSub,fBanca:f.fBanca,fAno:f.fAno};   /* mantém o contexto */
+      st.msg=`Questão ${cods[0]} adicionada. Os campos de tema foram mantidos para a próxima.`;break}
+    case "copiarModelo":copiar(MODELO_LOTE);st.msg="Modelo copiado.";break;
+
+    /* backup */
+    case "exportar":{
+      const usadas=QS.map(q=>q.fig).filter(f=>f&&f.startsWith("img:")).map(f=>f.slice(4));
+      Promise.all(usadas.map(k=>imgGet(k).then(v=>[k,v]))).then(pares=>{
+        const imgs={};pares.forEach(([k,v])=>{if(v)imgs[k]=v});
+        baixar("backup_questoes_"+new Date().toISOString().slice(0,10)+".json",
+          JSON.stringify({...db,imgs}),"application/json")}).catch(()=>{
+        baixar("backup_questoes.json",JSON.stringify(db),"application/json")});
+      return}
+    case "importar":{
+      let x;try{x=JSON.parse(st.form.imp||"")}catch(err){st.msg="Arquivo inválido: "+err.message;break}
+      if(!x||typeof x!=="object"){st.msg="Arquivo inválido.";break}
+      (x.added||[]).forEach(q=>{if(!db.added.some(y=>y.id===q.id)){q.seq=++db.seq;db.added.push(q)}});
+      Object.assign(db.edits,x.edits||{});
+      (x.reports||[]).forEach(r=>{if(!db.reports.some(y=>y.cod===r.cod&&y.txt===r.txt))db.reports.push(r)});
+      Object.entries(x.stats||{}).forEach(([k,v])=>{const c=db.stats[k];if(!c||v.t>c.t)db.stats[k]=v});
+      Object.entries(x.sched||{}).forEach(([k,v])=>{if(!db.sched[k])db.sched[k]=v});
+      db.flags=[...new Set(db.flags.concat(x.flags||[]))];
+      (x.sessoes||[]).forEach(s=>{if(!db.sessoes.some(y=>y.id===s.id))db.sessoes.push(s)});
+      if(x.cfg)db.cfg=Object.assign(db.cfg,x.cfg);
+      Object.entries(x.imgs||{}).forEach(([k,v])=>{imgPut(k,v).catch(()=>{});IMGC.set(k,v)});
+      gravar();construir();st.form.imp="";st.msg="Backup importado e mesclado.";break}
+    case "praticarUma":{const q=POR_ID[el.dataset.id];st.disc=q.disc;st.sel=new Set();st.filtro="todas";return iniciar([q])}
+    case "imgLimpar":{const k=st.form[el.dataset.alvo]||"";
+      if(k.startsWith("img:")){imgDel(k.slice(4)).catch(()=>{});IMGC.delete(k.slice(4))}
+      st.form[el.dataset.alvo]="";st.msg="Figura removida.";break}
+    case "tema":{const o=["","light","dark"];db.cfg.tema=o[(o.indexOf(db.cfg.tema||"")+1)%3];gravar();break}
+    case "cron":st.disc=null;st.sel=new Set();st.filtro="todas";return iniciar(QS.slice(),+el.dataset.m);
+    case "retomar":{const S=sessaoAtiva();if(!S)break;st.view="quiz";iniciarRelogio();
+      if(S.fim&&Date.now()>=S.fim){encerrarSessao("tempo");return}break}
+    case "descartar":if(confirm("Descartar a sessão em andamento? As respostas já dadas continuam no histórico.")){
+      st.S={lista:[],resp:{},esc:{},conf:{},causa:{},inicio:0,dur:0,fim:0,prova:false,encerrada:true,cur:0,rotulo:""};limparSessaoSalva()}break;
+    case "causa":{const S=st.S,i=+el.dataset.q,k=el.dataset.k,q=S.lista[i];
+      if(q&&S.resp[i]===false&&S.causa[i]===undefined){S.causa[i]=k;
+        const s=db.stats[q.id]||{t:0,a:0};s.c=s.c||{};s.c[k]=(s.c[k]||0)+1;db.stats[q.id]=s;gravar()}break}
+    case "umaQ":st.umaQ=!st.umaQ;break;
+    case "telaCheia":{const de=document.documentElement;
+      if(document.fullscreenElement){document.exitFullscreen&&document.exitFullscreen()}
+      else if(de.requestFullscreen){de.requestFullscreen().catch(()=>{st.msg="Tela cheia não disponível neste navegador."})}
+      break}
+    case "navQ":navQ(+el.dataset.d);return;
+    case "encerrar":encerrarSessao("manual");return;
+    case "baixarModelo":baixar("planilha_modelo_questoes.csv",CSV_MODELO,"text/csv;charset=utf-8");return;
+    case "conferirArq":conferir();return;
+    case "gravarArq":gravarPrevia();return;
+    case "cancelarPrevia":st.previa=null;break;
+    case "limparArq":st.impTxt="";st.impTxtNome="";st.impImg={};st.previa=null;break;
+    case "buscar":break;
+    case "limparBusca":st.busca="";break;
+    case "zerar":if(confirm("Apagar todo o histórico de acertos e a programação de revisões?")){
+      db.stats={};db.sched={};gravar();st.msg="Histórico zerado."}break;
+  }
+  render();
+});
+
+/* mudanças que precisam redesenhar na hora (filtro, duração, banca, planilha, ajustes) */
+document.addEventListener("change",e=>{
+  const t=e.target,d=t.dataset||{};
+  if(d.fileMany!==undefined){receberArquivos([...t.files]);return}
+  if(d.cfg){db.cfg[d.cfg]=t.type==="checkbox"?t.checked:t.value;gravar();render();return}
+  if(d.file){const f=t.files&&t.files[0];if(f){colher();guardarImagem(f,d.file)}return}
+  if(d.ch){colher();
+    const k=d.ch;
+    if(k==="filtro")st.filtro=t.value;
+    if(k==="ordem")st.ordem=t.value;
+    if(k==="banca")st.banca=t.value;
+    if(k==="ano")st.ano=t.value;
+    if(k==="dur")st.dur=t.value;
+    if(k==="feedback")st.feedback=t.value==="1";
+    render()}});
+/* colar, arrastar e soltar imagens */
+const alvoImagem=()=>st.view==="edit"?"eFig":(st.view==="add"&&st.abaAdd==="form")?"fFig":null;
+document.addEventListener("paste",e=>{
+  const alvo=alvoImagem();if(!alvo)return;
+  const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith("image/"));
+  if(!it)return;
+  e.preventDefault();colher();guardarImagem(it.getAsFile(),alvo)});
+document.addEventListener("dragover",e=>{const z=e.target.closest&&e.target.closest("[data-drop]");
+  if(z){e.preventDefault();z.classList.add("over")}});
+document.addEventListener("dragleave",e=>{const z=e.target.closest&&e.target.closest("[data-drop]");if(z)z.classList.remove("over")});
+document.addEventListener("drop",e=>{const z=e.target.closest&&e.target.closest("[data-drop]");
+  if(!z)return;e.preventDefault();z.classList.remove("over");
+  const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+  if(f){colher();guardarImagem(f,z.dataset.drop)}});
+
+/* atalhos de teclado durante a sessão */
+document.addEventListener("keydown",e=>{
+  if(st.view!=="quiz"||!sessaoAtiva()||!db.cfg.teclado||e.ctrlKey||e.metaKey||e.altKey)return;
+  const tag=(e.target.tagName||"").toUpperCase();
+  if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
+  const S=st.S,k=e.key.length===1?e.key.toUpperCase():e.key;
+  if(st.umaQ&&(k==="ArrowRight"||k==="ArrowLeft")){e.preventDefault();navQ(k==="ArrowRight"?1:-1);return}
+  const i=st.umaQ?S.cur:porResponder();
+  if(LET.includes(k)){
+    if(i<0||S.resp[i]!==undefined)return;
+    const j=LET.indexOf(k);
+    if(j<S.lista[i].opcoes.length){e.preventDefault();responder(i,j)}return}
+  if(k==="G"&&!S.prova){e.preventDefault();st.gab=!st.gab;render();return}
+  if(k==="M"){const j=st.umaQ?S.cur:(i<0?S.lista.length-1:i);const q=S.lista[j];if(!q)return;
+    e.preventDefault();db.flags=db.flags.includes(q.id)?db.flags.filter(x=>x!==q.id):db.flags.concat(q.id);
+    gravar();render();return}
+  if(db.cfg.conf&&!S.prova&&(k==="1"||k==="2")){
+    const j=S.lista.findIndex((q,n)=>S.resp[n]!==undefined&&!S.conf[n]);
+    if(j>=0){e.preventDefault();marcarConfianca(j,k==="1"?"s":"c")}return}
+  if(k==="N"||k===" "||k==="Enter"){
+    if(st.umaQ){e.preventDefault();navQ(1);return}
+    if(i>=0){e.preventDefault();const el=document.getElementById("qc"+i);if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}}});
+/* contagem de alternativas e seletor de gabarito mudam sem redesenhar a tela */
+document.addEventListener("input",e=>{
+  const el=e.target,d=el.dataset;if(!d||!d.gabsel)return;
+  const n=el.value.split(/\n/).filter(s=>s.trim()).length;
+  const cnt=document.querySelector(`[data-cnt="${d.cntalvo}"]`);if(cnt)cnt.textContent=n;
+  const sel=document.querySelector(`[data-f="${d.gabsel}"]`);
+  if(sel){const atual=sel.value,novo=LET.slice(0,Math.max(n,2));
+    if(sel.options.length!==novo.length){
+      sel.innerHTML=novo.map(x=>`<option value="${x}">${x}</option>`).join("");
+      sel.value=novo.includes(atual)?atual:novo[0]}}});
+
+/* ============ conta e nuvem (Supabase) ============ */
+const SB_URL="https://zuxssudbatkrlrxclpvc.supabase.co";
+const SB_CHAVE="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1eHNzdWRiYXRrcmxyeGNscHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MDk0ODksImV4cCI6MjEwNzk4NTQ4OX0.KzekfbeyngWpxtwStcsz0MpqwclQeAlWh5-VNvhJmAI";
+const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_CHAVE,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+let usuario=null,nuvem={carregado:false},ultimoSalvo=new Map(),progSalvo="",_nuvemT=null,_fila=Promise.resolve();
+const progDe=d=>({stats:d.stats,sched:d.sched,flags:d.flags,reports:d.reports,edits:d.edits,seq:d.seq,sessoes:d.sessoes,cfg:d.cfg});
+function setSync(s){const el=document.getElementById("estado");
+  if(el)el.textContent={ok:"☁ sincronizado",pendente:"☁ pendente: envia quando houver conexão",carregando:"☁ carregando…",erro:"☁ sem conexão com a nuvem",local:""}[s]||""}
+const salvarNuvemFila=()=>{_fila=_fila.then(salvarNuvem)};
+const agendarNuvem=()=>{clearTimeout(_nuvemT);_nuvemT=setTimeout(salvarNuvemFila,700)};
+
+async function lerNuvem(){
+  const {data:p,error:e1}=await sb.from("progresso").select("dados").eq("user_id",usuario.id).maybeSingle();
+  if(e1)throw e1;
+  let linhas=[],ini=0;
+  for(;;){
+    const {data,error}=await sb.from("questoes").select("id,dados").eq("user_id",usuario.id).order("id").range(ini,ini+999);
+    if(error)throw error;
+    linhas=linhas.concat(data||[]);
+    if(!data||data.length<1000)break;
+    ini+=1000}
+  return {progresso:p?p.dados:null,linhas}}
+
+function aplicarNuvem(c){
+  const pr=c.progresso||{};
+  Object.assign(db,{stats:pr.stats||{},sched:pr.sched||{},flags:pr.flags||[],reports:pr.reports||[],edits:pr.edits||{},
+    seq:pr.seq||0,sessoes:pr.sessoes||[],cfg:Object.assign({conf:false,teclado:true,tema:""},pr.cfg||{})});
+  db.added=c.linhas.map(r=>({...r.dados,id:r.id}));
+  db.added.forEach(q=>{if(!q.seq)q.seq=++db.seq;if(!q.cod)q.cod=(PRE[q.disc]||"CM")+"-A"+String(q.seq).padStart(2,"0")});
+  ultimoSalvo=new Map(db.added.map(q=>[q.id,JSON.stringify(q)]));
+  progSalvo=JSON.stringify(progDe(db))}
+
+async function salvarNuvem(){
+  if(!sb||!usuario||!nuvem.carregado)return;
+  if(!navigator.onLine){setSync("pendente");return}
+  try{
+    const pj=JSON.stringify(progDe(db));
+    if(pj!==progSalvo){const {error}=await sb.from("progresso").upsert({user_id:usuario.id,dados:progDe(db)});if(error)throw error;progSalvo=pj}
+    const vistos=new Set(),mudar=[];
+    for(const q of db.added){vistos.add(q.id);const j=JSON.stringify(q);
+      if(ultimoSalvo.get(q.id)!==j)mudar.push({user_id:usuario.id,id:q.id,dados:q,_j:j})}
+    for(let i=0;i<mudar.length;i+=400){
+      const {error}=await sb.from("questoes").upsert(mudar.slice(i,i+400).map(({_j,...r})=>r));if(error)throw error}
+    mudar.forEach(r=>ultimoSalvo.set(r.id,r._j));
+    for(const id of [...ultimoSalvo.keys()])if(!vistos.has(id)){
+      const {error}=await sb.from("questoes").delete().eq("id",id);if(error)throw error;ultimoSalvo.delete(id)}
+    setSync("ok")
+  }catch(e){setSync("pendente")}}
+
+async function entrarComSessao(u){
+  if(usuario&&usuario.id===u.id)return;
+  usuario=u;setSync("carregando");
+  try{
+    const c=await lerNuvem();
+    if(!c.progresso&&c.linhas.length===0){
+      nuvem.carregado=true;ultimoSalvo=new Map();progSalvo="";
+    }else{aplicarNuvem(c);nuvem.carregado=true}
+    construir();gravar();
+    if(st.view==="entrar")st.view="home";
+    render();setSync("ok");
+    salvarNuvemFila();
+  }catch(e){
+    usuario=null;nuvem.carregado=false;setSync("erro");
+    st.view="home";st.msg="Não consegui carregar seus dados da nuvem. Você pode usar o que já está neste aparelho, mas nada será enviado até conectar.";
+    render()}}
+
+async function iniciarNuvem(){
+  if(!sb){setSync("local");return}
+  window.addEventListener("online",()=>{if(usuario)salvarNuvemFila()});
+  sb.auth.onAuthStateChange((ev,s)=>{
+    if(s&&s.user){if(!usuario||usuario.id!==s.user.id)entrarComSessao(s.user)}
+    else if(ev==="SIGNED_OUT"){usuario=null;nuvem.carregado=false;st.view="entrar";render()}});
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session)await entrarComSessao(data.session.user);
+  else{st.view="entrar";render()}}
+
+async function enviarLink(){
+  const email=String(st.form.emailLogin||"").trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)){st.msg="Digite um e-mail válido.";render();return}
+  if(!sb){st.msg="Sem conexão com o servidor. Tente de novo com internet.";render();return}
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  st.form.emailEnviado=email;
+  st.loginEtapa="codigo";
+  st.msg=error?"Não consegui enviar o link: "+error.message:"Enviei para "+email+". Se o e-mail trouxer um código de 6 dígitos, digite-o abaixo. Se trouxer só um link, toque nele.";
+  render()}
+
+async function confirmarCodigo(){
+  const token=String(st.form.codigo||"").replace(/\s/g,"");
+  const email=st.form.emailEnviado||String(st.form.emailLogin||"").trim();
+  if(!/^\d{6,8}$/.test(token)){st.msg="Digite o código de 6 dígitos que chegou no e-mail.";render();return}
+  if(!sb){st.msg="Sem conexão com o servidor.";render();return}
+  const {data,error}=await sb.auth.verifyOtp({email,token,type:"email"});
+  if(error||!data||!data.session){st.msg="Código inválido ou vencido. Peça um novo link.";render();return}
+  st.loginEtapa=null;st.msg="";
+  await entrarComSessao(data.session.user);
+  render()}
+
+async function sair(){
+  if(!confirm("Sair deste aparelho? Confirme que suas últimas alterações já foram sincronizadas (indicador no canto da tela)."))return;
+  if(sb)await sb.auth.signOut().catch(()=>{});
+  try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+"_sessao");localStorage.removeItem(KEY+"_added")}catch(e){}
+  try{await kvPut("added",[])}catch(e){}
+  location.reload()}
+
+function vEntrar(){
+  const codigo=st.loginEtapa==="codigo";
+  return `<div class="card" style="max-width:420px;margin:40px auto">
+    <h2 style="margin-top:0">Banco de Questões</h2>
+    <p class="meta">Digite seu e-mail. Enviamos um link (e um código) para você entrar. Seus dados ficam só na sua conta.</p>
+    <label><span>E-mail</span><input type="email" data-f="emailLogin" value="${esc(st.form.emailLogin||"")}" autocomplete="email"></label>
+    <div class="acoes"><button class="primary" data-act="enviarLink">${codigo?"Reenviar link":"Enviar link"}</button></div>
+    ${codigo?`<label style="margin-top:14px"><span>Código de 6 dígitos (se o e-mail trouxer)</span><input inputmode="numeric" autocomplete="one-time-code" data-f="codigo" value="${esc(st.form.codigo||"")}"></label>
+    <div class="acoes"><button class="primary" data-act="confirmarCodigo">Entrar com o código</button></div>`:""}
+    ${msgBox()}</div>`}
+
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+
+carregarSessaoSalva();
+if(window.supabase)st.view="entrar";
+render();
+carregarAdded().then(iniciarNuvem);
+</script>
+</body>
+</html>
