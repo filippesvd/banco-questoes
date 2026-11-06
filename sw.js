@@ -1,4 +1,4 @@
-const CACHE = "bq-cloud-v16";
+const CACHE = "bq-cloud-v17";
 const ARQUIVOS = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
