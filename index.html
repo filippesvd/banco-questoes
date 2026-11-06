@@ -36,7 +36,16 @@
   .row>label{flex:1 1 180px;margin:0}
   .acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   .topo{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
-  .topo h2{margin:0}
+  .topo h2{margin:0;display:flex;align-items:center;gap:8px}
+  .topo h2::before{content:"";flex:0 0 26px;width:26px;height:26px;background:var(--ilus) center/contain no-repeat}
+  .ico{display:block;width:44px;height:44px;object-fit:contain;margin:0 0 6px}
+  .hero{height:84px;border-radius:14px;margin:0 0 12px;border:1px solid var(--bd);background:url(fundo_03.webp) center 40%/cover no-repeat}
+  :root[data-theme="dark"] .hero{background-image:url(fundo_07.webp)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hero{background-image:url(fundo_07.webp)}}
+  :root[data-theme="light"] body{background-image:url(padrao_leve.webp)}
+  @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) body{background-image:url(padrao_leve.webp)}}
+  :root[data-theme="light"] .topo{background:var(--faixa,url(detalhe_01.webp)) center bottom/auto 12px repeat-x}
+  @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .topo{background:var(--faixa,url(detalhe_01.webp)) center bottom/auto 12px repeat-x}}
   .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
   .dcard{text-align:left;padding:18px;border-radius:10px;background:var(--card);border:1px solid var(--bd)}
@@ -112,7 +121,7 @@
   .bigs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 8px}
   .big{display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:124px;padding:16px;border:none;border-radius:16px;background:var(--c);color:#1E1E24;cursor:pointer}
   .big b{font-size:19px}.big span{font-size:12px;opacity:.85}
-  .b1{--c:#8AB4F8}.b2{--c:#81C995}.b3{--c:#FDD663}.b4{--c:#F28B82}
+  .b1{--c:#8ACBD9}.b2{--c:#F6B65C}.b3{--c:#9ACD8B}.b4{--c:#F2A08E}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .mat{display:flex;flex-direction:column;gap:3px;text-align:left;min-height:118px;padding:14px;border-radius:14px;background:var(--card);border:2px solid var(--bd);color:var(--txt2)}
   .mat b{font-size:16px;color:var(--txt)}.mat span{font-size:12px}.mat small{font-size:12px;margin-top:auto}
@@ -129,7 +138,7 @@
   .shp.tr{background:#FDD663;clip-path:polygon(50% 0,100% 100%,0 100%);align-items:flex-end;padding:0 0 12px;font-size:11px}
   .shp.ci{background:#81C995;border-radius:50%}
   .shp.di{background:#F28B82;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
-  .b5{--c:#C58AF9}.b6{--c:#78D9EC}
+  .b5{--c:#C4B5F0}.b6{--c:#F9D59B}
   .bigs.tres{grid-template-columns:1fr 1fr}
   .prog{height:8px;background:var(--bd);border-radius:4px;overflow:hidden;margin:6px 0}
   .prog>i{display:block;height:100%;background:var(--acc)}
@@ -279,7 +288,7 @@ const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG",fm:"FM",ec:"EC",rx:"RX",tc:"TC",us:"U
 const zeros=()=>Object.fromEntries(Object.keys(DISC).map(k=>[k,0]));
 const TI_IDS=[37,44];                 /* questões do PDF que pertencem a Terapia Intensiva */
 const LIMITE=70;                      /* % abaixo do qual o subtema precisa de reforço */
-const APP_VERSAO="18";
+const APP_VERSAO="20";
 const KEY="banco_questoes_v2";        /* mesma chave das versões anteriores: histórico preservado */
 const TIPOS={transc:"Transcrição / texto errado",gab:"Gabarito errado",alt:"Alternativa errada ou faltando",fig:"Figura faltando ou errada",outro:"Outro"};
 const DSM_CAPS=[["neurodesenv","Transtornos do neurodesenvolvimento"],["esquizofrenia","Espectro da esquizofrenia e outros transtornos psicóticos"],
@@ -2512,26 +2521,26 @@ function vHome(){
       <div class="acoes"><button class="primary sm" data-act="novoProj">Criar projeto</button></div></div>`;
   const folga=(p&&db.motor.folgaIgnorada!==hojeISO()&&!(db.motor.folgas||[]).includes(hojeISO()))?sugerirFolgaAgora(p):[];
   const folgaCard=folga.length?`<div class="card aviso-card"><b>Sugestão de folga hoje</b> <span class="meta">· ${esc(folga.join("; "))}. Não quebra a sequência; as revisões vencidas passam para amanhã.</span><div class="acoes"><button class="primary sm" data-act="folgaAceitar">Aceitar folga</button><button class="sm" data-act="folgaIgnorar">Estudar mesmo assim</button></div></div>`:"";
-  return `${cardConta()}${bloco}${folgaCard}${proj}
+  return `<div class="hero" role="img" aria-label="Ilustração"></div>${cardConta()}${bloco}${folgaCard}${proj}
     ${db.cfg.neuroProx&&db.cfg.neuroProx<=hojeISO()?`<div class="card aviso-card"><b>Reavaliação neuropsicológica prevista</b> <span class="meta">· compare com a anterior e ajuste o plano.</span><div class="acoes"><button class="primary sm" data-act="neuro">Abrir</button></div></div>`:""}
     ${nInc?`<div class="card aviso-card"><b>${nInc} questão(ões) incompletas</b> <span class="meta">sem gabarito ou com alternativas faltando.</span>
     <div class="acoes"><button class="primary sm" data-act="paraRevisar">Completar</button></div></div>`:""}
     <div class="bigs">
-      <button class="big b1" data-act="menu"><b>Menu</b><span>Projetos, simulados, revisão, banco, inserir e teste de atenção</span></button>
-      <button class="big b4" data-act="config"><b>Configurações</b><span>Conta, meta, tema, atalhos e backup</span></button>
+      <button class="big b1" data-act="menu"><img class="ico" src="icone_01.webp" alt="" aria-hidden="true"><b>Menu</b><span>Projetos, simulados, revisão, banco, inserir e teste de atenção</span></button>
+      <button class="big b4" data-act="config"><img class="ico" src="icone_14.webp" alt="" aria-hidden="true"><b>Configurações</b><span>Conta, meta, tema, atalhos e backup</span></button>
     </div>${msgBox()}`}
 
 function vMenu(){
   const nRep=db.reports.filter(r=>!r.ok).length;
   return `<div class="topo">${voltar("home",0,"Início")}<h2>Menu</h2><span></span></div>
     <div class="bigs">
-      <button class="big b3" data-act="neuro"><b>Avaliação neuropsicológica</b><span>Teste de atenção, memória, atenção sustentada e flexibilidade${db.cfg.neuroProx&&db.cfg.neuroProx<=hojeISO()?" · reavaliação vencida":""}</span></button>
-      <button class="big b1" data-act="projetos"><b>Projetos</b><span>${db.projetos.length} projeto(s) · cronograma por matéria</span></button>
-      <button class="big b5" data-act="simulados"><b>Simulados</b><span>Montar um novo ou refazer anteriores</span></button>
-      <button class="big b2" data-act="revisarQ"><b>Revisar questões</b><span>O que você mais erra, com questões parecidas</span></button>
-      <button class="big b6" data-act="mapa"><b>Mapa de desenvolvimento</b><span>Calor por matéria, tópico e afirmação · completado e acertos${temEstrutura()?" · "+ESTR.n+" átomos":""}</span></button>
-      <button class="big b6" data-act="banco"><b>Banco de questões</b><span>${QS.length} questões · conferir, marcar e editar</span></button>
-      <button class="big b4" data-act="add"><b>Inserir questões</b><span>Colar em lote, planilha, JSON ou uma por vez</span></button>
+      <button class="big b3" data-act="neuro"><img class="ico" src="icone_08.webp" alt="" aria-hidden="true"><b>Avaliação neuropsicológica</b><span>Teste de atenção, memória, atenção sustentada e flexibilidade${db.cfg.neuroProx&&db.cfg.neuroProx<=hojeISO()?" · reavaliação vencida":""}</span></button>
+      <button class="big b1" data-act="projetos"><img class="ico" src="icone_07.webp" alt="" aria-hidden="true"><b>Projetos</b><span>${db.projetos.length} projeto(s) · cronograma por matéria</span></button>
+      <button class="big b5" data-act="simulados"><img class="ico" src="icone_09.webp" alt="" aria-hidden="true"><b>Simulados</b><span>Montar um novo ou refazer anteriores</span></button>
+      <button class="big b2" data-act="revisarQ"><img class="ico" src="icone_06.webp" alt="" aria-hidden="true"><b>Revisar questões</b><span>O que você mais erra, com questões parecidas</span></button>
+      <button class="big b6" data-act="mapa"><img class="ico" src="icone_11.webp" alt="" aria-hidden="true"><b>Mapa de desenvolvimento</b><span>Calor por matéria, tópico e afirmação · completado e acertos${temEstrutura()?" · "+ESTR.n+" átomos":""}</span></button>
+      <button class="big b6" data-act="banco"><img class="ico" src="icone_02.webp" alt="" aria-hidden="true"><b>Banco de questões</b><span>${QS.length} questões · conferir, marcar e editar</span></button>
+      <button class="big b4" data-act="add"><img class="ico" src="icone_05.webp" alt="" aria-hidden="true"><b>Inserir questões</b><span>Colar em lote, planilha, JSON ou uma por vez</span></button>
     </div>
 
     <h3>Mais</h3>
@@ -3198,6 +3207,7 @@ function render(){
   $("app").innerHTML=(VIEWS[st.view]||vHome)();
   document.body.classList.toggle("gabOn",st.gab);
   document.body.classList.toggle("uma",!!st.umaQ&&st.view==="quiz");
+  {const k=[...String(st.view)].reduce((s,c)=>s+c.charCodeAt(0),0);document.documentElement.style.setProperty("--faixa",`url(detalhe_${String(k%9+1).padStart(2,"0")}.webp)`);document.documentElement.style.setProperty("--ilus",`url(elemento_${String(k%12+1).padStart(2,"0")}.webp)`)}
   const tm=db.cfg.tema;
   if(tm)document.documentElement.setAttribute("data-theme",tm);else document.documentElement.removeAttribute("data-theme");
   ultView=st.view; if(mesma)scrollTo(0,y); else scrollTo(0,0);
