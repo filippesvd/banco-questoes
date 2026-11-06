@@ -87,6 +87,18 @@
   .cron{font-variant-numeric:tabular-nums;font-size:15px;color:var(--acc);font-weight:700}
   .opt.pick{border-color:var(--acc);border-width:2px}
   .mapa{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+  .mtile{display:flex;flex-direction:column;gap:4px;text-align:left;min-height:84px;border:1px solid var(--bd);border-left:5px solid var(--bd);border-radius:8px;padding:8px;background:var(--card);color:var(--txt)}
+  .mrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;width:100%;text-align:left;border:1px solid var(--bd);border-left:5px solid var(--bd);border-radius:8px;padding:8px 10px;margin:6px 0;background:var(--card);color:var(--txt)}
+  .mrow.hdr{border:none;border-left:5px solid var(--bd);padding:4px 8px;margin:0;background:transparent}
+  .mrow .nome{flex:1 1 170px;min-width:0}.mrow .inds{flex:1 1 auto;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12px}.mtile .ind{font-size:12px}
+  .mtile.ok,.mrow.ok,.atomo.ok{border-left-color:var(--ok)}.mtile.at,.mrow.at,.atomo.at{border-left-color:var(--warn)}.mtile.cr,.mrow.cr,.atomo.cr{border-left-color:var(--err)}
+  .ind{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--bd)}.dot.ok{background:var(--ok)}.dot.at{background:var(--warn)}.dot.cr{background:var(--err)}
+  .cbar{display:inline-block;width:56px;height:7px;border-radius:4px;background:var(--bd);overflow:hidden;vertical-align:middle}.cbar>i{display:block;height:100%;background:var(--acc)}
+  .atomo{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;border:1px solid var(--bd);border-left:4px solid var(--bd);border-radius:8px;padding:8px;margin:6px 0}
+  .atomo .atxt{flex:1;min-width:200px}.atomo .abtns{display:flex;flex-wrap:wrap;gap:4px}.atomo .dot{margin-right:6px}
+  .atomo-fb{margin-top:6px;padding:6px 8px;border-left:3px solid var(--acc);background:var(--bg);border-radius:6px}
   .tile{display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:72px;border:none;border-radius:8px;padding:8px;color:#fff}
   .tile span{font-size:12px;font-weight:600;line-height:1.25}
   .tile b{font-size:18px}
@@ -261,12 +273,13 @@ const DISC={cm:"Clínica Médica",ti:"Medicina Intensiva",ps:"Psiquiatria",lg:"M
 /* a que área cada matéria pertence; "*" = comum a todas (uma questão pode restringir pelo campo "area") */
 const DISC_AREA={cm:"medico",ti:"medico",ps:"medico",lg:"medico",fm:"medico",ec:"medico",rx:"medico",tc:"medico",us:"medico",rv:"medico",ss:"social",pl:"social",pt:"*",dr:"*",su:"*",et:"*",rl:"*",in:"*"};
 const areaAtual=()=>db.cfg.cargo||"medico";
-const visivel=q=>{const a=areaAtual(),da=DISC_AREA[q.disc]||"medico";return (da==="*"||da===a)&&(!q.area||q.area===a)};
+const verTudo=()=>{try{return !!(usuario&&db.adminOk&&db.cfg.verTudo)}catch(e){return false}};
+const visivel=q=>{if(verTudo())return true;const a=areaAtual(),da=DISC_AREA[q.disc]||"medico";return (da==="*"||da===a)&&(!q.area||q.area===a)};
 const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG",fm:"FM",ec:"EC",rx:"RX",tc:"TC",us:"US",rv:"RV",ss:"SS",pl:"PL",pt:"PT",dr:"DR",su:"SU",et:"ET",rl:"RL",in:"IN"};
 const zeros=()=>Object.fromEntries(Object.keys(DISC).map(k=>[k,0]));
 const TI_IDS=[37,44];                 /* questões do PDF que pertencem a Terapia Intensiva */
 const LIMITE=70;                      /* % abaixo do qual o subtema precisa de reforço */
-const APP_VERSAO="17";
+const APP_VERSAO="18";
 const KEY="banco_questoes_v2";        /* mesma chave das versões anteriores: histórico preservado */
 const TIPOS={transc:"Transcrição / texto errado",gab:"Gabarito errado",alt:"Alternativa errada ou faltando",fig:"Figura faltando ou errada",outro:"Outro"};
 const DSM_CAPS=[["neurodesenv","Transtornos do neurodesenvolvimento"],["esquizofrenia","Espectro da esquizofrenia e outros transtornos psicóticos"],
@@ -333,7 +346,7 @@ const PROPOSTA_DX=[
 ];
 const OBJ={concurso:"Concurso",titulo:"Título de especialista",residencia:"Residência médica",revalidacao:"Revalidação",aperfeicoamento:"Aperfeiçoamento"};
 const PRESET={concurso:["cm","lg","ps"],titulo:["ps","ti"],residencia:["cm","ps"],revalidacao:["rv","cm"],aperfeicoamento:Object.keys(DISC)};
-const DISC_VIS=()=>Object.fromEntries(Object.entries(DISC).filter(([k])=>{const da=DISC_AREA[k]||"medico";return da==="*"||da===areaAtual()}));
+const DISC_VIS=()=>verTudo()?{...DISC}:Object.fromEntries(Object.entries(DISC).filter(([k])=>{const da=DISC_AREA[k]||"medico";return da==="*"||da===areaAtual()}));
 const SUBOBJ={
   concurso:["Médico legista","Médico clínico","Médico intensivista","Médico psiquiatra","Médico de família","Médico do trabalho","Perito médico","Médico emergencista","Médico pediatra"],
   concursoSocial:["Assistente social (prefeitura/estado)","Assistente social (saúde)","Assistente social (judiciário)","Assistente social (INSS)"],
@@ -702,7 +715,7 @@ function carregar(){
   const d={added:x.added||[],stats:x.stats||{},sched:x.sched||{},flags:x.flags||[],
            reports:x.reports||[],edits:x.edits||{},seq:x.seq||0,sessoes:x.sessoes||[],
            projetos:x.projetos||[],simulados:x.simulados||[],atencao:x.atencao||[],notas:x.notas||{},neuro:x.neuro||[],
-           attempts:x.attempts||[],ideias:x.ideias||{},faixas:x.faixas||{},avisos:x.avisos||[],recordacoes:x.recordacoes||[],curvas:x.curvas||{sub:{},tema:{},disc:{}},curvaParams:x.curvaParams||null,curvaLog:x.curvaLog||[],u:x.u||null,motor:Object.assign({q0s:[],exaustasSeg:0,alvo:0,ponto:0,calib:0,folgas:[],ultimoSnap:{},recallPend:null},x.motor||{}),
+           attempts:x.attempts||[],ideias:x.ideias||{},faixas:x.faixas||{},avisos:x.avisos||[],recordacoes:x.recordacoes||[],curvas:x.curvas||{sub:{},tema:{},disc:{}},curvaParams:x.curvaParams||null,curvaLog:x.curvaLog||[],u:x.u||null,marcas:x.marcas||{},valid:x.valid||{},eventos:x.eventos||[],erros:x.erros||[],leituras:x.leituras||{},motor:Object.assign({q0s:[],exaustasSeg:0,alvo:0,ponto:0,calib:0,folgas:[],ultimoSnap:{},recallPend:null},x.motor||{}),
            cfg:Object.assign({conf:false,teclado:true,tema:"",meta:20,tempoBase:0},x.cfg||{})};
   d.added.forEach(q=>{ if(!q.seq) q.seq=++d.seq; if(!q.cod) q.cod=(PRE[q.disc]||"CM")+"-A"+String(q.seq).padStart(2,"0"); });
   return d;
@@ -1493,10 +1506,11 @@ function motorRegistrar(S,i,q,ok,j){
   if(U4()){const pr=PDe(q,agora,p);a.P=Math.round(pr.P*1000)/1000;a.R=Math.round(pr.R*1000)/1000;a.al=/termômetro/.test((S.motivos||{})[q.id]||"")}
   S.pausouNaQ=false;
   db.attempts.push(a);if(db.attempts.length>20000)db.attempts.splice(0,db.attempts.length-20000);
-  indexarTentativa(a,true);S.att.push(a);
+  indexarTentativa(a,true);S.att.push(a);atomHistAposTentativa(q,a);
   atualizarIdeia(k,q,a,p);
   if(U4()){atualizarUnificado(k,q,a,p);replanejarRestante(S)}
   if(S.motor)motorReinserir(S,q,k,ok,e);
+  cadeiaAposErro(S,q,i,ok);
   motorFadiga(S,a);
   if(S.meta&&!S.metaBatida&&Object.keys(S.resp).length>=S.meta&&!S.aviso){S.metaBatida=true;S.aviso={tipo:"meta"}}
   if(Object.keys(S.resp).length%MC.checkpoint===0)S.checkpoints=(S.checkpoints||[]).concat([checkpointDe(S)])}
@@ -1628,7 +1642,7 @@ function motorEncerrar(S,motivo){if(!S.att||!S.att.length)return;
   vistas.forEach(k=>{const e=db.ideias[k],a=antes[k]||{};if(a.e!==e.e||a.n!==e.n)mud.push({k,nome:nomeIdeiaK(k),de:a.e||"não avaliado",para:e.e,nivel:e.n})});
   S.resumoMotor={estado,q0:S.q0,mudancas:mud,ce:vistas.filter(k=>db.ideias[k].ce).map(k=>nomeIdeiaK(k)),
     revisoes:vistas.filter(k=>db.ideias[k].cal).map(k=>({nome:nomeIdeiaK(k),dias:Math.max(0,Math.round((db.ideias[k].due-Date.now())/DIA))})).sort((a,b)=>a.dias-b.dias),
-    faixa:{nome:nomeFaixa(faixaDe(S.inicio)),accMed:mediana(fx.acc),tMed:mediana(fx.t),acc,t:tMed},rotulo:S.rotuloFadiga||null,n,acc};
+    faixa:{nome:nomeFaixa(faixaDe(S.inicio)),accMed:mediana(fx.acc),tMed:mediana(fx.t),acc,t:tMed},rotulo:S.rotuloFadiga||null,n,acc,estr:resumoEstrutura(S)};
   if(U4())atualizarTermometro();
   db.motor.ultimoSnap=Object.fromEntries(Object.entries(db.ideias).map(([k,e])=>[k,{e:e.e,n:e.n}]));
   db.motor.recallPend={ses:S.id,ideias:vistas,temas:[...new Set(S.att.map(a=>a.tm))],data:hojeISO()};
@@ -1754,6 +1768,7 @@ function vAbertura(){const c=st.abertura;if(!c){st.view="projetos";return vProje
       return `<div class="card"><b>Prioridades de hoje</b>${pri.map(x=>`<div class="lin"><span class="nome">${esc(x.nome)}</span><span class="meta"><b>${x.total}</b> · lacuna ${x.lacuna} · esquecimento ${x.esquecimento} · peso ${x.peso}</span></div>`).join("")}
         ${al.length?`<div class="meta st-r" style="margin-top:6px">Queda súbita: ${al.map(a=>esc(a.nome)+" ("+Math.round(a.acc*100)+"% em "+a.dia.slice(5)+", média "+Math.round(a.media*100)+"%)").join("; ")}</div>`:""}
         ${epc?(epc.epc!==undefined?`<div class="meta" style="margin-top:6px">EPC (acerto esperado na prova): <b>${epc.epc}%</b> (${epc.p10}–${epc.p90}) com ${epc.n} respostas${epc.chance!==null?` · chance de ficar acima do corte de ${p.corte}%: <b>${epc.chance}%</b>`:""}</div>`:`<div class="meta" style="margin-top:6px">EPC disponível após ${epc.faltam} respostas a mais.</div>`):""}</div>`})():""}
+    ${(()=>{if(!U4()||!temEstrutura()||!mats.length)return "";const metaPrev=calib?MC.calibracao.tetoQ:(p.alvo||MC.meta.padrao);if(!c.previa||c.previa.meta!==metaPrev)c.previa={meta:metaPrev,r:montarSessaoUnificada(p,mats,metaPrev)};return cardEstruturaHoje(c.previa.r,p)})()}
     <div class="acoes"><button class="primary" data-act="comecarMotor" data-modo="treino">Começar (treino)</button>
       <button data-act="comecarMotor" data-modo="foco" ${sugerirFoco?'class="primary"':""}>Foco intenso${sugerirFoco?" (sugerido)":""}</button>
       <button data-act="comecarMotor" data-modo="simulado">Simulado</button></div>${msgBox()}`}
@@ -1764,13 +1779,14 @@ function comecarMotor(modo){const c=st.abertura,p=c.p,sl=c.slot;
   let meta=calib?MC.calibracao.tetoQ:(p.alvo||MC.meta.padrao);
   if(modo==="foco")meta=Math.max(meta,MC.meta.foco[0]);
   if(db.motor.abrirTopico){/* tópico marcado para abrir a próxima sessão */}
-  const r=U4()?montarSessaoUnificada(p,mats,meta):montarSessaoMotor(p,mats,meta);
+  const r=(c.previa&&c.previa.meta===meta&&c.previa.r.lista.length)?c.previa.r:(U4()?montarSessaoUnificada(p,mats,meta):montarSessaoMotor(p,mats,meta));c.previa=null;
   if(!r.lista.length){st.msg="Não há questões disponíveis para hoje (todas persistentes ou incompletas).";render();return}
   st.disc=mats[0].k;st.sel=new Set();st.filtro="todas";st.qtd="";st.ordem="sequencial";st.feedback=modo!=="simulado";st.umaQ=modo!=="treino";
   const dur=calib?MC.calibracao.tetoMin:(modo==="foco"?MC.foco.bloco[1]:0);
   const snap=Object.fromEntries(r.lista.map(q=>{const k=ideiaDe(q);const e=db.ideias[k];return[k,e?{e:e.e,n:e.n}:{e:"não avaliado",n:null}]}));
   iniciar(r.lista,dur,false,p.nome+" · "+mats.map(m=>m.nome).join(" + "),{projId:p.id,slotId:sl.id,ctx:p.nome+" · "+modo,materia:mats[0].k,motor:true,modo,meta:calib?null:meta,ponto:p.ponto||0,snapAntes:snap,att:[],calib,id:"s"+Date.now().toString(36),foco:modo==="foco"?{bloco:1}:null,feedN:0});
   st.ordem="aleatoria";db.motor.abrirTopico=null;
+  if(r.pares&&r.pares.length)st.S.pistas=pistasDaSessao(r.pares);
   if(r.motivos){st.S.motivos=r.motivos;st.msg=`${r.lista.length} questões · ${Object.entries(r.cont).map(([k,v])=>v+" "+k).join(", ")}${r.retaFinal?" · reta final: sem ideias novas":""}.`}
   else st.msg=`${r.lista.length} questões: ${r.nRev} revisões${r.vencidas>r.nRev?" (de "+r.vencidas+" vencidas)":""}, ${r.novas} ideias novas.`;render()}
 function vIdeias(){const t=st.ideiasTopico;const qs=QS.filter(q=>topicoDe(q)===t);const m=ideiasDe(qs);
@@ -1827,7 +1843,7 @@ function feedbackIdeia(q,i,S){const k=ideiaDe(q),e=estIdeia(k),nivel=e.n||"Apren
   if(q.explicacao&&(!curto||erro))h+=`<div style="margin-top:4px">${esc(q.explicacao)}</div>`;
   if(erro&&S.conf[i]==="certeza")h+=`<div class="res err">Erro com certeza: conceito errado. Esta explicação é a mais completa disponível; a ideia volta a 1 dia.</div>`;
   if(S.foco)h+=`<label style="margin-top:6px"><span>${erro?"Reescreva a ideia central correta em 1 linha":"Por que uma alternativa errada está errada? (1 linha)"}</span><input data-f="foco${i}" value="${esc(st.form["foco"+i]||"")}"></label>`;
-  return h}
+  return h+feedbackAtomos(q,i,S)}
 function botoesConf(i,S){const v=S.conf[i];if(S.resp[i]===undefined||S.prova)return "";
   const ops=S.resp[i]?["certeza","duvida","chute"]:["naosabia","chute","interp","confusao"];
   return `<div class="conf">Autoavaliação: ${v?`<b>${AUTOAV[v]}</b>`:ops.map((k,n)=>`<button class="sm" data-act="conf2" data-q="${i}" data-v="${k}">${AUTOAV[k]}${n<3?` <span class="kbd">${n+1}</span>`:""}</button>`).join("")}</div>`}
@@ -1842,6 +1858,7 @@ function relMotor(r){const m=r.motor;if(!m)return "";
     ${m.ce.length?m.ce.map(x=>`<div class="lin"><span class="pri">⚠</span> ${esc(x)}</div>`).join(""):'<p class="meta">Nenhum.</p>'}
     <h3>Revisões geradas</h3>
     ${m.revisoes.length?m.revisoes.slice(0,20).map(x=>`<div class="lin"><span class="nome">${esc(x.nome)}</span><span class="meta">em ${x.dias} dia(s)</span></div>`).join(""):'<p class="meta">Nenhuma ideia entrou no calendário ainda (são precisos 3 acertos sem chute).</p>'}
+    ${relEstrutura(m)}
     <div class="acoes"><button class="primary" data-act="recordar" data-ses="${r.ses||""}">Recordação pós-sessão (${MC.recordacao.minutos} min)</button></div>`}
 function vFaixas(){const L=Object.entries(db.faixas).sort((a,b)=>+a[0]-+b[0]);
   return `<h3>Faixas horárias</h3>${L.length?`<table class="tab"><thead><tr><th>Faixa</th><th>Sessões</th><th>Acurácia</th><th>Tempo/questão</th><th>Q₀</th><th>Ajuste</th></tr></thead><tbody>${L.map(([f,x])=>`<tr><td>${nomeFaixa(+f)}</td><td>${x.ses}</td><td>${mediana(x.acc)??"—"}%</td><td>${x.t.length?fmtMs(mediana(x.t)):"—"}</td><td>${mediana(x.q0)??"—"}</td><td>${x.aj||0}</td></tr>`).join("")}</tbody></table>`:'<p class="meta">Sem sessões registradas por faixa ainda.</p>'}`}
@@ -1963,7 +1980,7 @@ function atualizarUnificado(k,q,a,p){const u=uEstado(),e=estIdeia(k),agora=a.fim
     const bq=u.bq[q.id]||(u.bq[q.id]={b:bMarca(complexidadeDe(q),marcaDif(q)),n:0});bq.b=bApos(bq.b,bq.n,s,u.pesos);bq.n++;
     if((ATT.ideia[k]||[]).length>1){u.janela.push(s);if(u.janela.length>=MC.unificado.aprender.janela){const r=aprenderPesos(u.pesos,u.janela);if(r&&r.ajuste){uLog({tipo:"pesos",vies:r.vies,ajuste:r.ajuste,pesos:{...u.pesos}});u.janela=[]}}}
     registrarGlobal(q,certo)}
-  a.s=Math.round(s*100)/100;a.h=Math.round(e.h*100)/100;
+  a.sp=Math.round(s*100)/100;a.h=Math.round(e.h*100)/100;
   curvaSubDeIdeias(q)}
 /* o subtópico (curvas) herda a média das meias-vidas das suas ideias, salvo quando medido depois */
 function curvaSubDeIdeias(q){const key=subtopicoDe(q),no=db.curvas.sub&&db.curvas.sub[key];if(!no||!no.ini)return;
@@ -1981,15 +1998,15 @@ try{db.bGlobal=JSON.parse(localStorage.getItem(KEY+"_bglobal"))||{}}catch(e){db.
 /* candidatos para a política */
 function candidatosDe(pool,p){const agora=Date.now(),porTema={};pool.forEach(q=>porTema[temaDe(q)]=(porTema[temaDe(q)]||0)+1);const maxT=Math.max(1,...Object.values(porTema));
   return pool.map((q,i)=>{const pr=PDe(q,agora,p),e=db.ideias[ideiaDe(q)];
-    return{qi:i,q,P:pr.P,R:pr.R,visto:!!(e&&e.ultU),peso:(p&&p.pesosTema&&p.pesosTema[q.tema])||porTema[temaDe(q)]/maxT,tema:temaDe(q),ideia:ideiaDe(q),exp:(db.u.bq[q.id]||{}).n||0}})}
+    return{qi:i,q,P:pr.P,R:pr.R,visto:!!(e&&e.ultU),peso:pesoEstrutural(q,p,(p&&p.pesosTema&&p.pesosTema[q.tema])||porTema[temaDe(q)]/maxT),tema:temaDe(q),ideia:ideiaDe(q),exp:(db.u.bq[q.id]||{}).n||0}})}
 function montarSessaoUnificada(p,units,meta,excluir){const pool=poolDe(units).filter(q=>!incompleta(q)&&!(db.ideias[ideiaDe(q)]||{}).per&&!(excluir&&excluir.has(q.id)));
   if(!pool.length)return{lista:[],motivos:{}};const u=uEstado(),dAte=diasAteProva(p);
-  const picks=politicaSelecao(candidatosDe(pool,p),{n:meta,retaFinal:dAte!==null&&dAte<=MC.unificado.retaFinal,cotaFaltas:u.cotaFaltas});
+  const rg=regrasGrafo(politicaSelecao(candidatosDe(pool,p),{n:meta,retaFinal:dAte!==null&&dAte<=MC.unificado.retaFinal,cotaFaltas:u.cotaFaltas}),pool,p,meta),picks=rg.picks;
   const motivos={};picks.forEach(x=>motivos[x.q.id]=x.motivo);
   const pref=units[0]?units[0].nome:"";const itens=picks.map(x=>({q:x.q,mat:(units.find(m=>m.k&&matFiltro(m)(x.q))||{nome:x.q.disc}).nome,sub:subtopicoDe(x.q),novo:!x.visto,g:3}));
-  const lista=intercalar(itens,pref);
+  const lista=posicionarPares(intercalar(itens,pref),rg.pares);
   const cont={};picks.forEach(x=>{const c=x.motivo.split(":")[0];cont[c]=(cont[c]||0)+1});
-  return{lista,motivos,cont,retaFinal:dAte!==null&&dAte<=MC.unificado.retaFinal}}
+  return{lista,motivos,cont,pares:rg.pares,retaFinal:dAte!==null&&dAte<=MC.unificado.retaFinal}}
 /* replaneja o que falta na sessão depois de cada resposta (modo uma por vez): o mais esquecido sobe */
 function replanejarRestante(S){if(!S.motor||!U4()||!st.umaQ)return;const i0=S.cur+1;if(i0>=S.lista.length)return;
   const resto=S.lista.slice(i0).map((q,j)=>({q,j,resp:S.resp[i0+j]}));if(resto.some(r=>r.resp!==undefined))return;
@@ -2039,6 +2056,363 @@ function vMotorUnificadoAdmin(){const u=uEstado(),cal=calibracaoModelo();
     <details><summary class="meta">SQL da tabela anônima de dificuldade (rode uma vez no Supabase)</summary><pre>${esc(SQL_ITENS_GLOBAL)}</pre></details>
     <div class="acoes"><button class="sm" data-act="uExportar">Exportar estado do motor (.json)</button></div></div>`}
 function uExportar(){baixar("motor_unificado_"+hojeISO()+".json",JSON.stringify({exportado:new Date().toISOString(),u:uEstado(),ideias:db.ideias,calibracao:calibracaoModelo(),config:MC.unificado},null,1),"application/json")}
+
+/* ============================================================
+   ESTRUTURA DE CONHECIMENTO — átomos, grafo, mapa de desenvolvimento,
+   eventos devolvidos à base e painel do administrador.
+   O app não edita átomos: importa o pacote export/<MATERIA>/ e devolve eventos.
+   ============================================================ */
+const EST_CFG={aprendido:3,alvoPadrao:0.8,fraco:0.6,confusaoMin:0.6,parDist:[3,8],leitor:{estrela:1,neutro:0.5,pular:0,dificil:0.75},pesoBanca:0.5,maxRegras:0.3,maxEventos:4000,maxErros:40};
+const ESTR={pacotes:{},atomos:{},alias:{},relIdx:{},arvore:{},resumos:{},lista:[],agregados:{},n:0};
+const ATOM_HIST={};
+const ARQ_PACOTE=["atomos","arvore","questoes","relacoes","resumos","lista_mestra","agregados"];
+const temEstrutura=()=>ESTR.n>0;
+const codMateria=m=>{const s=String(m||"").trim();const up=s.toUpperCase();const k=Object.keys(PRE).find(k=>PRE[k]===up);if(k)return k;if(DISC[s.toLowerCase()])return s.toLowerCase();return normDisc(s)};
+const resolverAtomo=id=>{let x=id,g=0;while(ESTR.alias[x]&&g++<10)x=ESTR.alias[x];return x};
+const atomoDe=id=>ESTR.atomos[resolverAtomo(id)]||null;
+const atomoKeyIdeia=a=>"i:"+normTxt(a.ideia_central||a.subtopico||"");
+const atomosDaQ=q=>(q.atomos||[]).map(l=>({...l,id:resolverAtomo(l.id),a:atomoDe(l.id)})).filter(l=>l.a&&l.a.status!=="excluido");
+const atomoDecide=q=>{const l=atomosDaQ(q);return(l.find(x=>x.papel==="decide")||l[0]||{}).a||null};
+const relsDe=id=>ESTR.relIdx[resolverAtomo(id)]||[];
+const rotuloAtomo=id=>{const a=atomoDe(id);return a?(a.sujeito?a.sujeito+": ":"")+a.afirmacao:id};
+const clamp01=x=>Math.max(0,Math.min(1,x));
+
+/* ---------- construção dos índices ---------- */
+function construirEstrutura(){
+  ESTR.atomos={};ESTR.alias={};ESTR.relIdx={};ESTR.arvore={};ESTR.resumos={};ESTR.lista=[];ESTR.agregados={};ESTR.n=0;
+  const rels=[];
+  Object.entries(ESTR.pacotes).forEach(([d,p])=>{
+    (p.atomos||[]).forEach(a=>{ESTR.atomos[a.id]=a;ESTR.n++;(a.aliases||[]).forEach(al=>{if(al&&al!==a.id)ESTR.alias[al]=a.id})});
+    (p.relacoes||[]).forEach(r=>rels.push(r));
+    if(p.arvore)ESTR.arvore[d]=p.arvore;if(p.resumos)ESTR.resumos[d]=p.resumos;if(p.agregados)ESTR.agregados[d]=p.agregados;
+    if(p.lista)ESTR.lista=ESTR.lista.concat(p.lista.map(x=>({...x,disc:d})))});
+  const visto=new Set();
+  rels.forEach(r=>{const a=resolverAtomo(r.a),b=resolverAtomo(r.b);if(!ESTR.atomos[a]||!ESTR.atomos[b])return;const k=[a,b,r.tipo].join("|");if(visto.has(k))return;visto.add(k);
+    (ESTR.relIdx[a]=ESTR.relIdx[a]||[]).push({...r,a,b,outro:b,souA:true});
+    (ESTR.relIdx[b]=ESTR.relIdx[b]||[]).push({...r,a,b,outro:a,souA:false})});
+  /* marcações e validações feitas sob ids antigos migram para o id atual */
+  ["marcas","valid"].forEach(c=>{const m=db[c]||{};Object.keys(m).forEach(id=>{const n=resolverAtomo(id);if(n!==id){if(!m[n])m[n]=m[id];delete m[id]}})});
+  construirAtomHist()}
+function construirAtomHist(){for(const k in ATOM_HIST)delete ATOM_HIST[k];if(!temEstrutura())return;
+  const porQ=indiceAtomosPorQ();db.attempts.forEach(a=>{const ids=porQ[a.q];if(ids)ids.forEach(id=>registrarAtomHist(id,a))})}
+function indiceAtomosPorQ(){const m={};QS_TODAS.forEach(q=>{if(q.atomos&&q.atomos.length){const ids=atomosDaQ(q).map(l=>l.id);if(ids.length)m[q.id]=ids}});return m}
+function atomHistAposTentativa(q,a){if(!temEstrutura()||!q.atomos||!q.atomos.length)return;atomosDaQ(q).forEach(l=>registrarAtomHist(l.id,a))}
+function registrarAtomHist(id,a){const h=ATOM_HIST[id]||(ATOM_HIST[id]={n:0,ac:0,err:0,ch:0,lap:0,ult:0,foi:false,ults:[]});
+  h.n++;const certo=a.ok&&!a.ch;
+  if(certo){h.ac++;if(h.ac>=EST_CFG.aprendido)h.foi=true}else{if(a.ch)h.ch++;else h.err++;if(h.foi)h.lap++}
+  h.ult=Math.max(h.ult,a.fim);h.ults.push(certo?1:0);if(h.ults.length>5)h.ults.shift()}
+
+/* ---------- domínio, importância e prioridade por átomo ---------- */
+const retencaoAlvo=p=>(p&&p.ajustes&&p.ajustes.retencao)||EST_CFG.alvoPadrao;
+function estadoAtomo(id,p,agora){const h=ATOM_HIST[resolverAtomo(id)],a=atomoDe(id);agora=agora||Date.now();
+  if(!h||!h.n)return{estado:"desconhecido",dominio:0,R:null,n:0,ac:0,err:0,ch:0,lap:0,ult:0};
+  const e=a?db.ideias[atomoKeyIdeia(a)]:null,hmv=(e&&e.h)||MC.unificado.hInicial,R=Rh((agora-h.ult)/DIA,hmv),alvo=retencaoAlvo(p);
+  if(h.ac>=EST_CFG.aprendido)return{estado:R>=alvo?"conhecido":"esquecido",dominio:R,R,R2:Rh((agora-h.ult)/DIA+2,hmv),h:hmv,...h};
+  return{estado:"aprendendo",dominio:(h.ac/h.n)*0.6,R,h:hmv,...h}}
+let _freqBanca={};
+function freqBanca(id,banca){const k=banca.toLowerCase();if(!_freqBanca[k]){const cont={},porD={};
+    QS_TODAS.forEach(q=>{if(!q.atomos||String(q.banca||"").toLowerCase()!==k)return;atomosDaQ(q).forEach(l=>{cont[l.id]=(cont[l.id]||0)+1;const d=l.a.materia||q.disc;porD[d]=Math.max(porD[d]||0,cont[l.id])})});
+    _freqBanca[k]={cont,porD}}
+  const f=_freqBanca[k],a=atomoDe(id);if(!a)return null;const max=f.porD[a.materia]||f.porD[codMateria(a.materia)]||0;if(!max)return null;return(f.cont[resolverAtomo(id)]||0)/max}
+function importanciaDe(id,p){const a=atomoDe(id);if(!a)return 0;const c=a.componentes_importancia||null,m=(db.marcas||{})[resolverAtomo(id)];
+  let imp;
+  if(c){let freq=c.freq_q!==undefined?c.freq_q:0.5;
+    if(p&&p.banca){const fb=freqBanca(id,p.banca);if(fb!==null)freq=(1-EST_CFG.pesoBanca)*freq+EST_CFG.pesoBanca*fb}
+    const leitor=m?EST_CFG.leitor[m]:(c.leitor!==undefined?c.leitor:0.5);
+    imp=0.45*freq+0.25*leitor+0.20*(c.edital!==undefined?c.edital:0.5)+0.10*(c.enfase!==undefined?c.enfase:0.5)}
+  else{imp=a.importancia!==undefined?a.importancia:0.5;if(m)imp=0.75*imp+0.25*EST_CFG.leitor[m]}
+  if(/^(proposto|rever|pendente)$/.test(a.status||""))imp*=0.5;
+  return clamp01(imp)}
+const naoValidado=a=>!!a&&/^(proposto|rever|pendente)$/.test(a.status||"");
+function prioridadeAtomo(id,p,agora){const e=estadoAtomo(id,p,agora),imp=importanciaDe(id,p),alvo=retencaoAlvo(p);
+  const urg=e.estado==="esquecido"?1.5:(e.R!==null&&e.R>=alvo&&e.R2!==undefined&&e.R2<alvo)?1.2:1;
+  return{total:imp*(1-e.dominio)*urg,imp,urg,...e}}
+/* peso de uma questão para o motor: mistura o peso do tema com a importância dos átomos dela */
+function pesoEstrutural(q,p,pesoTema){if(!temEstrutura()||!q.atomos||!q.atomos.length)return pesoTema;
+  const l=atomosDaQ(q);if(!l.length)return pesoTema;const imp=Math.max(...l.map(x=>importanciaDe(x.id,p)));return 0.4*pesoTema+0.6*imp}
+const impDaQ=(q,p)=>{const l=atomosDaQ(q);return l.length?Math.max(...l.map(x=>importanciaDe(x.id,p))):null};
+
+/* ---------- eventos devolvidos à base ---------- */
+function evento(e){db.eventos=db.eventos||[];db.eventos.push({ts:new Date().toISOString(),...e});if(db.eventos.length>EST_CFG.maxEventos)db.eventos.splice(0,db.eventos.length-EST_CFG.maxEventos)}
+function marcarAtomo(id,v){id=resolverAtomo(id);db.marcas=db.marcas||{};if(v==="neutro"||db.marcas[id]===v)delete db.marcas[id];else db.marcas[id]=v;_freqBanca={};evento({tipo:"marcacao",atomo_id:id,marcacao:db.marcas[id]||"neutro"});gravar()}
+function validarAtomo(id,decisao,motivos,nota){id=resolverAtomo(id);db.valid=db.valid||{};if(decisao==="ok")delete db.valid[id];else db.valid[id]={decisao,motivos:motivos||[],nota:nota||"",ts:Date.now()};
+  evento({tipo:"validacao",atomo_id:id,decisao,motivos:motivos||[],nota:nota||""});gravar()}
+function registrarLeitura(ids){const hoje=hojeISO();db.leituras=db.leituras||{};let n=0;ids.forEach(id=>{id=resolverAtomo(id);if(db.leituras[id]===hoje)return;db.leituras[id]=hoje;evento({tipo:"leitura",atomo_id:id});n++});if(n)gravar()}
+function eventosJsonl(){const porQ=indiceAtomosPorQ(),L=[];
+  db.attempts.forEach(a=>{const ids=porQ[a.q];if(!ids)return;ids.forEach(id=>L.push({ts:new Date(a.fim).toISOString(),tipo:"resposta",atomo_id:id,questao_id:a.q,sessao_id:a.s||"",resultado:a.ch?"chute":(a.ok?"acerto":"erro"),tempo_ms:a.t||0}))});
+  (db.eventos||[]).forEach(e=>L.push(e));L.sort((x,y)=>x.ts<y.ts?-1:x.ts>y.ts?1:0);return L.map(l=>JSON.stringify(l)).join("\n")+"\n"}
+
+/* ---------- importação do pacote ---------- */
+async function receberPacote(files){const p={};let erros=[];
+  for(const f of files){const nome=f.name.toLowerCase().replace(/\.json$/,"");let o;try{o=JSON.parse(await f.text())}catch(e){erros.push(f.name+": JSON inválido");continue}
+    if(ARQ_PACOTE.includes(nome))p[nome]=o;
+    else if(o&&!Array.isArray(o)&&(o.atomos||o.arvore))ARQ_PACOTE.forEach(k=>{if(o[k]!==undefined)p[k]=o[k]});
+    else if(Array.isArray(o)&&o[0]&&o[0].afirmacao)p.atomos=o;
+    else if(Array.isArray(o)&&o[0]&&o[0].enunciado&&o[0].atomos)p.questoes=o;
+    else erros.push(f.name+": não reconheci (esperava atomos, arvore, questoes, relacoes, resumos, lista_mestra ou agregados)")}
+  if(!p.atomos&&!p.questoes){st.msg=(erros.join(" · ")||"Nenhum arquivo do pacote.");render();return}
+  const r=importarPacote(p);st.msg=[r.resumo].concat(erros,r.erros.slice(0,5)).join(" · ");render()}
+function importarPacote(p){const erros=[];
+  const d=codMateria((p.atomos&&p.atomos[0]&&p.atomos[0].materia)||(p.questoes&&p.questoes[0]&&(p.questoes[0].materias||[])[0])||(p.lista_mestra&&p.lista_mestra[0]&&p.lista_mestra[0].materia));
+  if(!d)return{resumo:"Matéria não reconhecida no pacote.",erros};
+  const pac=ESTR.pacotes[d]||(ESTR.pacotes[d]={atomos:[],relacoes:[],arvore:null,resumos:null,lista:null,agregados:null});
+  let nAt=0,nRel=0,nQ=0,nQnov=0;
+  if(p.atomos){const porId=Object.fromEntries(pac.atomos.map(a=>[a.id,a]));p.atomos.forEach(a=>{if(!a.id||!a.afirmacao){erros.push("átomo sem id ou afirmação");return}porId[a.id]=a;nAt++});pac.atomos=Object.values(porId)}
+  if(p.relacoes){const k=r=>[r.a,r.b,r.tipo].join("|");const porK=Object.fromEntries(pac.relacoes.map(r=>[k(r),r]));p.relacoes.forEach(r=>{if(!r.a||!r.b||!r.tipo)return;porK[k(r)]=r;nRel++});pac.relacoes=Object.values(porK)}
+  if(p.arvore)pac.arvore=p.arvore;if(p.resumos)pac.resumos=p.resumos;if(p.lista_mestra)pac.lista=p.lista_mestra;if(p.agregados)pac.agregados=p.agregados;
+  pac.atualizado=Date.now();
+  if(p.questoes){const porId=Object.fromEntries(db.added.map((q,i)=>[q.id,i]));
+    const porAt=Object.fromEntries(pac.atomos.map(a=>[a.id,a]));(pac.atomos||[]).forEach(a=>(a.aliases||[]).forEach(al=>{porAt[al]=porAt[al]||a}));
+    p.questoes.forEach(x=>{const q=questaoDoPacote(x,d,porAt);if(!q){erros.push("questão "+(x.id||"?")+" inválida");return}
+      if(porId[q.id]!==undefined){const v=db.added[porId[q.id]];db.added[porId[q.id]]={...q,seq:v.seq};}
+      else if(POR_ID[q.id]&&POR_ID[q.id].pub){/* já existe no banco público: atualiza o próprio e o admin republica */db.added.push({...q,seq:++db.seq});nQnov++}
+      else{db.added.push({...q,seq:++db.seq});nQnov++}nQ++})}
+  salvarEstruturaLocal();gravar();construir();construirEstrutura();
+  return{resumo:`${DISC[d]}: ${nAt} átomo(s), ${nRel} relação(ões), ${nQ} questão(ões) (${nQnov} novas)${p.arvore?", árvore":""}${p.resumos?", resumos":""}${p.lista_mestra?", lista mestra":""}.`,erros,disc:d}}
+function questaoDoPacote(x,d,porAt){if(!x||!x.id||!x.enunciado||!Array.isArray(x.alternativas)||x.alternativas.length<2)return null;
+  const alts=x.alternativas.map(a=>typeof a==="string"?a:(a.texto||"")),gab=String(x.gabarito||"").toUpperCase();
+  if(!gab||LET.indexOf(gab)<0||LET.indexOf(gab)>=alts.length)return null;
+  const links=(x.atomos||[]).filter(l=>l&&l.id).map(l=>({id:l.id,papel:l.papel||"apoia",tipo_cobranca:l.tipo_cobranca||"",distrator:l.distrator||""}));
+  const dec=links.find(l=>l.papel==="decide")||links[0];const at=dec?((porAt&&porAt[dec.id])||atomoDe(dec.id)):null;
+  const disc=codMateria((x.materias||[])[0])||d;
+  return{id:x.id,cod:x.id,disc,tema:x.tema||"Geral",aspecto:x.topico||"",subtema:x.subtopico||x.tema||"Geral",ideia:(at&&at.ideia_central)||x.ideia_central||"",
+    enun:x.enunciado,alts,gab,anulada:false,fig:x.figura||null,banca:x.banca||"",ano:x.ano||"",uf:x.uf||"",complexidade:x.complexidade||"",explicacao:x.analise||"",
+    atomos:links,gabStatus:x.gabarito_status||"",hash:x.hash_conteudo||"",area:AREAS[x.area]?x.area:""}}
+async function salvarEstruturaLocal(){try{await kvPut("estrutura",ESTR.pacotes)}catch(e){}}
+async function carregarEstruturaLocal(){try{const p=await kvGet("estrutura");if(p&&typeof p==="object"){ESTR.pacotes=p;construirEstrutura();render()}}catch(e){}}
+/* nuvem: tabela estrutura_publica (uma linha por matéria), lida por todos e escrita pelo administrador */
+async function publicarEstrutura(d){if(!ehAdmin()||!ESTR.pacotes[d])return;const {error}=await sb.from("estrutura_publica").upsert({materia:d,dados:ESTR.pacotes[d]});
+  st.msg=error?"Não consegui publicar a estrutura: "+error.message:"Estrutura de "+DISC[d]+" publicada para todos os usuários da área.";render()}
+async function carregarEstruturaPublica(){if(!sb||!usuario)return;try{const {data,error}=await sb.from("estrutura_publica").select("materia,dados");if(error||!data)return;
+    let mudou=false;data.forEach(r=>{const loc=ESTR.pacotes[r.materia];if(!loc||(r.dados.atualizado||0)>=(loc.atualizado||0)){ESTR.pacotes[r.materia]=r.dados;mudou=true}});
+    if(mudou){await salvarEstruturaLocal();construirEstrutura();render()}}catch(e){}}
+async function carregarConfigPublica(){if(!sb)return;try{const {data}=await sb.from("config_publica").select("chave,valor");(data||[]).forEach(r=>{if(r.chave==="areas_ativas"&&Array.isArray(r.valor)&&r.valor.length){AREAS_ATIVAS.splice(0,AREAS_ATIVAS.length,...r.valor.filter(k=>AREAS[k]))}});render()}catch(e){}}
+async function salvarConfigPublica(chave,valor){if(!ehAdmin())return;const {error}=await sb.from("config_publica").upsert({chave,valor});st.msg=error?"Não consegui salvar: "+error.message:"Salvo para todos os usuários.";render()}
+
+/* ---------- regras do grafo na montagem da sessão ---------- */
+function questaoDoAtomo(id,pool,excluir){id=resolverAtomo(id);const c=pool.filter(q=>!excluir.has(q.id)&&(q.atomos||[]).some(l=>resolverAtomo(l.id)===id));if(!c.length)return null;
+  const ult=(db.attempts.slice().reverse().find(a=>{const q=POR_ID[a.q];return q&&(q.atomos||[]).some(l=>resolverAtomo(l.id)===id)})||{}),ultQ=ult.q?POR_ID[ult.q]:null;
+  const ultTipo=ultQ?((ultQ.atomos||[]).find(l=>resolverAtomo(l.id)===id)||{}).tipo_cobranca:"";
+  const vezes=q=>(db.u&&db.u.bq[q.id]||{}).n||0;
+  c.sort((a,b)=>{const la=a.atomos.find(l=>resolverAtomo(l.id)===id),lb=b.atomos.find(l=>resolverAtomo(l.id)===id);
+    return((lb.papel==="decide")-(la.papel==="decide"))||((lb.tipo_cobranca!==ultTipo)-(la.tipo_cobranca!==ultTipo))||(vezes(a)-vezes(b))});
+  return c[0]}
+function regrasGrafo(picks,pool,p,meta){if(!temEstrutura())return{picks,pares:[]};
+  const sel=new Set(picks.map(x=>x.q.id)),selAt=new Map();picks.forEach(x=>atomosDaQ(x.q).forEach(l=>{if(!selAt.has(l.id))selAt.set(l.id,x.q.id)}));
+  const agora=Date.now(),max=Math.max(1,Math.round(meta*EST_CFG.maxRegras)),extras=[],pares=[];
+  for(const x of picks){if(extras.length>=max)break;const at=atomoDecide(x.q);if(!at)continue;
+    for(const r of relsDe(at.id)){if(extras.length>=max)break;
+      if(r.tipo==="prerequisito"&&!r.souA){const pre=r.outro;if(selAt.has(pre))continue;if(estadoAtomo(pre,p,agora).dominio>=EST_CFG.fraco)continue;
+        const q=questaoDoAtomo(pre,pool,sel);if(!q)continue;extras.push({q,antesDe:x.q.id,motivo:"pré-requisito: "+rotuloAtomo(pre)});sel.add(q.id);selAt.set(pre,q.id)}
+      else if(r.tipo==="confusao"&&(r.forca||0)>=EST_CFG.confusaoMin){const par=r.outro;
+        if(selAt.has(par)){if(selAt.get(par)!==x.q.id)pares.push({a:x.q.id,b:selAt.get(par),pista:r.pista||"",eixo:r.eixo||""});continue}
+        const q=questaoDoAtomo(par,pool,sel);if(!q)continue;extras.push({q,motivo:"par de confusão: "+rotuloAtomo(par)});sel.add(q.id);selAt.set(par,q.id);pares.push({a:x.q.id,b:q.id,pista:r.pista||"",eixo:r.eixo||""})}}}
+  if(!extras.length)return{picks,pares};
+  let lista=picks.slice();
+  extras.forEach(e=>{const it={q:e.q,P:0.5,R:0.5,visto:!!ATOM_HIST[(atomoDecide(e.q)||{}).id],motivo:e.motivo,regra:true};
+    const i=e.antesDe?lista.findIndex(x=>x.q.id===e.antesDe):-1;if(i>=0)lista.splice(i,0,it);else lista.push(it)});
+  /* mantém a meta: tira do fim o que não é regra nem termômetro */
+  for(let i=lista.length-1;i>=0&&lista.length>meta;i--){if(!lista[i].regra&&!/termômetro/.test(lista[i].motivo||""))lista.splice(i,1)}
+  return{picks:lista,pares}}
+function posicionarPares(lista,pares){if(!pares||!pares.length)return lista;const ids=()=>lista.map(q=>q.id);
+  pares.forEach(pr=>{let ia=ids().indexOf(pr.a),ib=ids().indexOf(pr.b);if(ia<0||ib<0)return;if(ib<ia){[ia,ib]=[ib,ia]}
+    const d=ib-ia,[mn,mx]=EST_CFG.parDist;if(d>=mn&&d<=mx)return;const q=lista.splice(ib,1)[0];const alvo=Math.min(lista.length,ia+mn+Math.floor(Math.random()*(mx-mn+1)));lista.splice(alvo,0,q)});
+  return lista}
+function pistasDaSessao(pares){const m={};(pares||[]).forEach(pr=>{m[pr.a]=m[pr.a]||[];m[pr.a].push({outro:pr.b,pista:pr.pista,eixo:pr.eixo});m[pr.b]=m[pr.b]||[];m[pr.b].push({outro:pr.a,pista:pr.pista,eixo:pr.eixo})});return m}
+/* cadeia após erro: a próxima questão é do elo seguinte (diagnóstico → conduta) */
+function cadeiaAposErro(S,q,i,ok){if(ok||!S.motor||!temEstrutura())return;const at=atomoDecide(q);if(!at)return;
+  const prox=relsDe(at.id).find(r=>r.tipo==="cadeia"&&r.souA);if(!prox)return;
+  const depoisRespondida=Object.keys(S.resp).some(j=>+j>i);
+  const jaNaLista=S.lista.findIndex((x,k)=>k>i&&S.resp[k]===undefined&&(x.atomos||[]).some(l=>resolverAtomo(l.id)===prox.outro));
+  let item,n;
+  if(jaNaLista>=0){if(depoisRespondida||!st.umaQ||jaNaLista===i+1)return;item=S.lista.splice(jaNaLista,1)[0];item.cadeia=true;n=item}
+  else{const ex=new Set(S.lista.map(x=>x.id));n=questaoDoAtomo(prox.outro,QS.filter(x=>!incompleta(x)),ex);if(!n)return;item={...n,opcoes:mistura(n.alts.map((t,ii)=>({t,c:LET[ii]===n.gab}))),cadeia:true}}
+  if(depoisRespondida||!st.umaQ)S.lista.push(item);else S.lista.splice(i+1,0,item);
+  S.motivos=S.motivos||{};S.motivos[n.id]="cadeia: depois de "+rotuloAtomo(at.id)+" vem "+rotuloAtomo(prox.outro)}
+
+/* ---------- feedback que usa a estrutura ---------- */
+function feedbackAtomos(q,i,S){if(!temEstrutura()||!q.atomos||!q.atomos.length||S.resp[i]===undefined||S.prova)return "";
+  const erro=S.resp[i]===false,l=atomosDaQ(q),dec=l.find(x=>x.papel==="decide")||l[0];if(!dec)return "";
+  const a=dec.a,p=S.projId?db.projetos.find(x=>x.id===S.projId):null;let h=`<div class="atomo-fb"><div><b>Afirmação:</b> ${esc(rotuloAtomo(a.id))}${naoValidado(a)?' <span class="tag">não validado</span>':""}</div>`;
+  if(a.condicao)h+=`<div class="meta">Quando: ${esc(a.condicao)}</div>`;
+  if(erro&&a.excecao)h+=`<div class="meta">Exceção: ${esc(a.excecao)}</div>`;
+  if(erro){const letra=LET[S.esc[i]];const dis=l.find(x=>x.distrator&&x.distrator.split("→")[0].trim().toUpperCase()===letra);
+    if(dis){const idc=resolverAtomo(dis.distrator.split("→")[1]||"");const ac=atomoDe(idc);if(ac){const rel=relsDe(a.id).find(r=>r.outro===idc);h+=`<div class="res err">Você confundiu com: ${esc(rotuloAtomo(idc))}${rel&&rel.pista?`<br>Pista: ${esc(rel.pista)}`:""}</div>`}}
+    const pre=relsDe(a.id).filter(r=>r.tipo==="prerequisito"&&!r.souA).map(r=>r.outro).filter(id=>estadoAtomo(id,p).dominio<EST_CFG.fraco);
+    if(pre.length)h+=`<div class="meta">Pré-requisito fraco: ${pre.map(id=>esc(rotuloAtomo(id))).join("; ")}</div>`}
+  const pist=(S.pistas||{})[q.id];if(pist&&pist.length)h+=pist.map(x=>`<div class="meta">Par de confusão${x.eixo?" ("+esc(x.eixo)+")":""}: ${esc(x.pista||rotuloAtomo(atomoDecide(POR_ID[x.outro]||{})?atomoDecide(POR_ID[x.outro]).id:x.outro))}</div>`).join("");
+  return h+"</div>"}
+function resumoEstrutura(S){if(!temEstrutura()||!S.att||!S.att.length)return null;const p=S.projId?db.projetos.find(x=>x.id===S.projId):null;
+  const ids=new Set();S.att.forEach(a=>{const q=POR_ID[a.q];if(q)atomosDaQ(q).forEach(l=>ids.add(l.id))});if(!ids.size)return null;
+  /* domínio antes: recalcula o histórico sem as tentativas desta sessão */
+  const sesIds=new Set(S.att.map(a=>a.fim+"|"+a.q)),salvo={};[...ids].forEach(id=>salvo[id]=ATOM_HIST[id]);
+  [...ids].forEach(id=>delete ATOM_HIST[id]);const porQ=indiceAtomosPorQ();db.attempts.forEach(a=>{if(sesIds.has(a.fim+"|"+a.q))return;(porQ[a.q]||[]).forEach(id=>{if(ids.has(id))registrarAtomHist(id,a)})});
+  const antes={};[...ids].forEach(id=>antes[id]=estadoAtomo(id,p).dominio);[...ids].forEach(id=>{if(salvo[id])ATOM_HIST[id]=salvo[id];else delete ATOM_HIST[id]});
+  const porIdeia={};[...ids].forEach(id=>{const a=atomoDe(id);const k=a.ideia_central||"—";(porIdeia[k]=porIdeia[k]||{nome:k,sub:a.subtopico,tema:a.tema,materia:a.materia,ids:[]}).ids.push(id)});
+  const ideias=Object.values(porIdeia).map(x=>{const w=x.ids.map(id=>importanciaDe(id,p)),sw=w.reduce((a,b)=>a+b,0)||1;
+    return{nome:x.nome,sub:x.sub,antes:Math.round(x.ids.reduce((s,id,j)=>s+antes[id]*w[j],0)/sw*100),depois:Math.round(x.ids.reduce((s,id,j)=>s+estadoAtomo(id,p).dominio*w[j],0)/sw*100)}});
+  const subs=[...new Set([...ids].map(id=>{const a=atomoDe(id);return[codMateria(a.materia)||a.materia,a.tema,a.subtopico].join("|")}))].map(k=>{const [d,t,s]=k.split("|");const r=((ESTR.resumos[d]||{})[t]||{})[s];return r?{nome:t+" › "+s,texto:r}:null}).filter(Boolean);
+  return{ideias,resumos:subs}}
+function relEstrutura(m){if(!m||!m.estr)return "";const e=m.estr;
+  return `<h3>Ideias centrais desta sessão (domínio antes → depois)</h3>${e.ideias.map(x=>`<div class="lin"><span class="nome"><span><b>${esc(x.nome)}</b><br><span class="meta">${esc(x.sub||"")}</span></span></span><span class="meta">${x.antes}% → <b>${x.depois}%</b></span></div>`).join("")}
+    ${e.resumos.length?`<h3>O que é preciso saber (resumos dos subtópicos)</h3>${e.resumos.map(r=>`<div class="card"><b>${esc(r.nome)}</b><div class="meta">${esc(r.texto)}</div></div>`).join("")}`:""}`}
+function cardEstruturaHoje(r,p){if(!temEstrutura()||!r||!r.lista||!r.lista.length)return "";
+  const ids=new Set(),porSub={},pares=(r.pares||[]).length;let novas=0;
+  r.lista.forEach(q=>{const l=atomosDaQ(q);if(!l.length)return;const a=(l.find(x=>x.papel==="decide")||l[0]).a;const k=a.topico+" › "+a.subtopico;porSub[k]=(porSub[k]||0)+1;l.forEach(x=>ids.add(x.id));if(!ATOM_HIST[a.id])novas++});
+  if(!ids.size)return "";const sub=Object.entries(porSub).sort((a,b)=>b[1]-a[1])[0];const dom=Math.round([...ids].reduce((s,id)=>s+estadoAtomo(id,p).dominio,0)/ids.size*100);
+  const motivo=q=>{const a=atomoDecide(q);if(!a)return "";const h=ATOM_HIST[a.id];const qs=QS_TODAS.filter(x=>(x.atomos||[]).some(l=>resolverAtomo(l.id)===a.id));const bancas={};qs.forEach(x=>{if(x.banca){const b=bancas[x.banca]||(bancas[x.banca]={n:0,ano:9999});b.n++;if(+x.ano&&+x.ano<b.ano)b.ano=+x.ano}});
+    const top=Object.entries(bancas).sort((x,y)=>y[1].n-x[1].n)[0];const parte=[];if(top)parte.push(`caiu ${top[1].n}× na ${top[0]}${top[1].ano<9999?" desde "+top[1].ano:""}`);
+    if(h&&h.ults.length)parte.push(`você errou ${h.ults.filter(x=>!x).length} das últimas ${h.ults.length}`);else parte.push("ainda sem histórico");return parte.join("; ")};
+  const linhas=r.lista.filter(q=>atomoDecide(q)).slice(0,6).map(q=>`<div class="lin"><span class="nome"><span>${esc(rotuloAtomo(atomoDecide(q).id))}<br><span class="meta">${esc(motivo(q))}</span></span></span></div>`).join("");
+  return `<div class="card"><b>Hoje na estrutura</b>: ${ids.size} átomos${sub?` · mais em ${esc(sub[0])} (${sub[1]} questões)`:""} · domínio médio ${dom}% · ${pares} par(es) de confusão · ${novas} átomo(s) novo(s)
+    ${linhas}${r.lista.length>6?`<p class="meta">… e mais ${r.lista.length-6} questões.</p>`:""}</div>`}
+
+/* ---------- mapa de desenvolvimento ---------- */
+function arvoreMapa(d){const no=(o,k)=>o[k]||(o[k]={nome:k,filhos:{},atomos:[],qs:[]});const T={};
+  const arv=ESTR.arvore[d]||{};
+  Object.entries(arv).forEach(([tema,tops])=>{const nT=no(T,tema);Object.entries(tops||{}).forEach(([top,subs])=>{const nTo=no(nT.filhos,top);Object.entries(subs||{}).forEach(([sub,ideias])=>{const nS=no(nTo.filhos,sub);
+    Object.entries(ideias||{}).forEach(([ideia,ids])=>{const nI=no(nS.filhos,ideia);nI.atomos=(ids||[]).map(resolverAtomo).filter((id,j,arr)=>ESTR.atomos[id]&&ESTR.atomos[id].status!=="excluido"&&arr.indexOf(id)===j)})})})});
+  /* átomos que não estão na árvore entram pela própria hierarquia */
+  Object.values(ESTR.atomos).forEach(a=>{if(codMateria(a.materia)!==d||a.status==="excluido")return;const nI=no(no(no(no(T,a.tema||"Geral").filhos,a.topico||"Geral").filhos,a.subtopico||"Geral").filhos,a.ideia_central||"Geral");if(!nI.atomos.includes(a.id))nI.atomos.push(a.id)});
+  /* questões encaixam pelo nome; as que não têm nó criam o seu */
+  const idx={};const chave=(...p)=>p.map(normTxt).join("|");
+  Object.values(T).forEach(nT=>{idx[chave(nT.nome)]=nT;Object.values(nT.filhos).forEach(nTo=>{idx[chave(nT.nome,nTo.nome)]=nTo;Object.values(nTo.filhos).forEach(nS=>{idx[chave(nT.nome,nTo.nome,nS.nome)]=nS;Object.values(nS.filhos).forEach(nI=>{idx[chave(nT.nome,nTo.nome,nS.nome,nI.nome)]=nI})})})});
+  QS.filter(q=>q.disc===d).forEach(q=>{const t=q.tema||"Geral",to=aspOf(q)==="Sem aspecto"?(q.aspecto||"Geral"):aspOf(q),s=q.subtema||t,ideia=q.ideia||s;
+    const nI=idx[chave(t,to,s,ideia)]||(()=>{const nT=idx[chave(t)]||(idx[chave(t)]=no(T,t));const nTo=idx[chave(t,to)]||(idx[chave(t,to)]=no(nT.filhos,to));const nS=idx[chave(t,to,s)]||(idx[chave(t,to,s)]=no(nTo.filhos,s));return idx[chave(t,to,s,ideia)]=no(nS.filhos,ideia)})();
+    nI.qs.push(q)});
+  const agregar=n=>{Object.values(n.filhos).forEach(f=>{agregar(f);n.atomos=n.atomos.concat(f.atomos);n.qs=n.qs.concat(f.qs)});n.atomos=[...new Set(n.atomos)];return n};
+  Object.values(T).forEach(agregar);return T}
+let _accQ=null;
+function accPorQuestao(){const m={};db.attempts.forEach(a=>{const x=m[a.q]||(m[a.q]={n:0,ok:0});x.n++;if(a.ok&&!a.ch)x.ok++});return m}
+function statsNo(n,p){const acc=_accQ||(_accQ=accPorQuestao());let nr=0,ok=0;n.qs.forEach(q=>{const x=acc[q.id];if(x){nr+=x.n;ok+=x.ok}});
+  const agora=Date.now();let conh=0,dom=0,sw=0,imp=0,ni=0,fraco=0;
+  if(n.atomos.length){n.atomos.forEach(id=>{const e=estadoAtomo(id,p,agora),w=importanciaDe(id,p);if(e.estado==="conhecido")conh++;dom+=e.dominio*w;sw+=w;imp+=w;ni++;if(w>=0.6&&e.dominio<0.5)fraco++})}
+  else{const m=ideiasDe(n.qs);Object.keys(m).forEach(k=>{const e=db.ideias[k];ni++;if(e&&e.e==="conhecido")conh++;const R=(!e||!e.ultU)?0:Rh((agora-e.ultU)/DIA,e.h||1);dom+=R;sw++})}
+  const accPct=nr?Math.round(ok*100/nr):null;
+  return{n:nr,acc:accPct,comp:ni?Math.round(conh*100/ni):null,dom:sw?Math.round(dom/sw*100):null,imp:n.atomos.length?Math.round(imp/n.atomos.length*100):null,fraco,nAt:n.atomos.length,nQ:n.qs.length,ni,
+    cor:accPct===null?"nd":accPct>=80?"ok":accPct>=60?"at":"cr"}}
+const ROTULO_COR={ok:"bom",at:"atenção",cr:"crítico",nd:"sem respostas"};
+function indicadores(s){return `<span class="ind"><span class="dot ${s.cor}" title="${ROTULO_COR[s.cor]}"></span>${s.acc===null?'<span class="meta">—</span>':`<b>${s.acc}%</b>`}<span class="meta"> ${s.n} resp.</span></span>
+    <span class="ind"><span class="cbar" title="completado"><i style="width:${s.comp||0}%"></i></span><span class="meta">${s.comp===null?"—":s.comp+"%"}</span></span>
+    ${s.imp!==null?`<span class="ind meta" title="importância média">imp ${s.imp}%</span>`:""}${s.fraco?`<span class="tag r" title="importante e fraco">${s.fraco} importante${s.fraco>1?"s":""} e fraco${s.fraco>1?"s":""}</span>`:""}`}
+function vMapa(){const m=st.mapa||(st.mapa={});_accQ=null;const p=db.projetos.find(x=>x.id===(st.projId||(db.projetos[0]||{}).id))||null;
+  const topo=(t,voltaAct,voltaD)=>`<div class="topo"><button data-act="${voltaAct}"${voltaD?` data-d="${esc(voltaD)}"`:""}>← Voltar</button><h2>${t}</h2><button class="sm" data-act="listaMestra">Lista mestra</button></div>`;
+  const legenda=`<p class="meta">Cor: acerto nas respostas (verde ≥80%, âmbar 60–79%, vermelho &lt;60%). Barra: % completado${temEstrutura()?" (átomos conhecidos)":" (ideias conhecidas)"}. "imp" é a importância média da estrutura${p&&p.banca?", ajustada à banca "+esc(p.banca):""}. Toque para abrir.</p>`;
+  if(!m.disc){const tiles=Object.keys(DISC_VIS()).map(d=>{const T=arvoreMapa(d);const raiz={filhos:T,atomos:[],qs:[]};Object.values(T).forEach(n=>{raiz.atomos=raiz.atomos.concat(n.atomos);raiz.qs=raiz.qs.concat(n.qs)});raiz.atomos=[...new Set(raiz.atomos)];
+      if(!raiz.qs.length&&!raiz.atomos.length)return "";const s=statsNo(raiz,p);
+      return `<button class="mtile ${s.cor}" data-act="mapaDisc" data-d="${d}"><b>${esc(DISC[d])}</b><span class="meta">${s.nAt?s.nAt+" átomos · ":""}${s.nQ} questões</span>${indicadores(s)}</button>`}).join("");
+    return `${topo("Mapa de desenvolvimento","menu")}${legenda}<div class="mgrid">${tiles||'<p class="empty">Sem questões nem estrutura nesta área.</p>'}</div>
+      ${temEstrutura()?"":`<div class="card"><b>Estrutura ainda não importada.</b> <span class="meta">O mapa mostra a hierarquia das questões. Para ver as afirmações (átomos) com importância e domínio, importe o pacote export/&lt;MATERIA&gt;/ em Configurações → Estrutura.</span></div>`}${msgBox()}`}
+  const T=arvoreMapa(m.disc);const linha=(n,act,d,extra)=>{const s=statsNo(n,p);return `<button class="mrow ${s.cor}" data-act="${act}" data-d="${esc(d)}"><span class="nome"><b>${esc(n.nome)}</b>${extra||""}<br><span class="meta">${s.nAt?s.nAt+" átomos · ":""}${s.nQ} questões</span></span><span class="inds">${indicadores(s)}</span></button>`};
+  const crumbs=[DISC[m.disc],m.tema,m.top,m.sub].filter(Boolean).map(esc).join(" › ");
+  const estudar=n=>n.qs.length?`<div class="acoes"><button class="sm primary" data-act="mapaEstudar">Estudar este nó (${Math.min(20,n.qs.length)} questões)</button></div>`:"";
+  if(!m.tema){const corpo=Object.values(T).map(nT=>{const s=statsNo(nT,p);return `<div class="card"><div class="mrow hdr ${s.cor}"><span class="nome"><b>${esc(nT.nome)}</b><br><span class="meta">tema · ${nT.qs.length} questões</span></span><span class="inds">${indicadores(s)}</span></div>
+      ${Object.values(nT.filhos).map(nTo=>linha(nTo,"mapaTop",nT.nome+"\u0001"+nTo.nome)).join("")}</div>`}).join("");
+    return `${topo(crumbs,"mapaVoltar")}${legenda}${corpo||'<p class="empty">Sem conteúdo.</p>'}${msgBox()}`}
+  const nT=T[m.tema],nTo=nT&&nT.filhos[m.top];if(!nTo){m.tema=null;m.top=null;return vMapa()}
+  if(!m.sub){return `${topo(crumbs,"mapaVoltar")}${legenda}<div class="card"><div class="mrow hdr"><span class="nome"><b>${esc(nTo.nome)}</b><br><span class="meta">tópico</span></span><span class="inds">${indicadores(statsNo(nTo,p))}</span></div>${estudar(nTo)}</div>
+      ${Object.values(nTo.filhos).map(nS=>linha(nS,"mapaSub",nS.nome)).join("")||'<p class="empty">Sem subtópicos.</p>'}${msgBox()}`}
+  const nS=nTo.filhos[m.sub];if(!nS){m.sub=null;return vMapa()}
+  registrarLeitura(nS.atomos);
+  const d=m.disc,resumo=((ESTR.resumos[d]||{})[m.tema]||{})[m.sub];
+  const atomoRow=id=>{const a=atomoDe(id),e=estadoAtomo(id,p),imp=importanciaDe(id,p),marca=(db.marcas||{})[id],val=(db.valid||{})[id];const cor=e.n<2?"nd":(e.ac/e.n)>=0.8?"ok":(e.ac/e.n)>=0.6?"at":"cr";
+    const sup=a.status==="superado"?` <span class="tag">superado${a.superado_por?" por "+esc(a.superado_por):""}</span>`:"";
+    return `<div class="atomo ${cor}"><div class="atxt"><span class="dot ${cor}"></span><b>${esc(a.sujeito?a.sujeito+": ":"")}${esc(a.afirmacao)}</b>${a.condicao?`<div class="meta">Quando: ${esc(a.condicao)}</div>`:""}${a.excecao?`<div class="meta">Exceção: ${esc(a.excecao)}</div>`:""}
+        <div class="meta">${esc(a.tipo_atomo||"")}${a.entidade?" · "+esc(a.entidade):""}${naoValidado(a)?' · <span class="tag">não validado</span>':""}${sup}${val?` · <span class="tag r">${val.decisao==="excluir"?"marcado para excluir":"para rever"}</span>`:""}</div>
+        <div class="meta">importância <b>${Math.round(imp*100)}%</b> · domínio <b>${Math.round(e.dominio*100)}%</b> · ${e.estado}${e.n?` · ${e.ac}/${e.n} certas${e.lap?" · "+e.lap+" lapso(s)":""}`:" · ainda sem histórico"}${imp>=0.6&&e.dominio<0.5?' · <span class="st-r">importante e fraco</span>':""}</div></div>
+      <div class="abtns">${[["estrela","⭐"],["dificil","difícil"],["pular","pular"]].map(([v,t])=>`<button class="sm ${marca===v?"primary":""}" data-act="atMarca" data-id="${esc(id)}" data-v="${v}" title="${v}">${t}</button>`).join("")}
+        <button class="sm ${val?"":"primary"}" data-act="atValid" data-id="${esc(id)}" data-v="ok" title="afirmação está correta">OK</button><button class="sm" data-act="atValid" data-id="${esc(id)}" data-v="rever">Rever</button><button class="sm" data-act="atValid" data-id="${esc(id)}" data-v="excluir">Excluir</button></div>
+      ${st.validando===id?`<div class="card" style="margin:6px 0 0"><div class="meta">Motivo:</div><div>${["errado","conferir_fonte","condicao","dividir","fundir","reclassificar","outro"].map(mo=>`<span class="chip ${(st.validMotivos||[]).includes(mo)?"on":""}" data-act="atMotivo" data-m="${mo}">${mo.replace("_"," ")}</span>`).join("")}</div>
+        <label><span>Nota (opcional)</span><input data-f="validNota" value="${esc(st.form.validNota||"")}"></label><div class="acoes"><button class="sm primary" data-act="atValidOk" data-id="${esc(id)}">Registrar</button><button class="sm" data-act="atValidCancel">Cancelar</button></div></div>`:""}</div>`};
+  const ideias=Object.values(nS.filhos).map(nI=>{const s=statsNo(nI,p);const k="i:"+normTxt(nI.nome),e=db.ideias[k];
+    return `<div class="card"><div class="mrow hdr ${s.cor}"><span class="nome"><b>${esc(nI.nome)}</b><br><span class="meta">ideia central · ${nI.atomos.length} afirmações · ${nI.qs.length} questões${e&&e.n?" · "+e.n+" · "+e.e:""}</span></span><span class="inds">${indicadores(s)}</span></div>
+      ${nI.atomos.map(atomoRow).join("")||'<p class="meta">Sem afirmações importadas para esta ideia.</p>'}</div>`}).join("");
+  return `${topo(crumbs,"mapaVoltar")}${legenda}<div class="card"><div class="mrow hdr"><span class="nome"><b>${esc(nS.nome)}</b><br><span class="meta">subtópico</span></span><span class="inds">${indicadores(statsNo(nS,p))}</span></div>
+    ${resumo?`<div class="meta" style="margin-top:6px"><b>O que é preciso saber:</b> ${esc(resumo)}</div>`:""}${estudar(nS)}</div>${ideias||'<p class="empty">Sem ideias centrais.</p>'}${msgBox()}`}
+function noAtualDoMapa(){const m=st.mapa||{};if(!m.disc)return null;const T=arvoreMapa(m.disc);const nT=T[m.tema];if(!nT)return null;const nTo=nT.filhos[m.top];if(!nTo)return null;return m.sub?nTo.filhos[m.sub]:nTo}
+function vListaMestra(){const f=st.form.lmBusca||"",d=st.form.lmDisc||"";const p=db.projetos[0]||null;
+  let L=ESTR.lista.length?ESTR.lista:Object.values(ESTR.atomos).map(a=>({id:a.id,materia:a.materia,tema:a.tema,ideia_central:a.ideia_central,conceito:a.afirmacao,status:a.status,importancia:a.importancia,disc:codMateria(a.materia)}));
+  if(d)L=L.filter(x=>x.disc===d);if(f)L=L.filter(x=>(x.conceito+" "+x.ideia_central+" "+x.tema).toLowerCase().includes(f.toLowerCase()));
+  L=L.map(x=>({...x,imp:importanciaDe(x.id,p),e:estadoAtomo(x.id,p),marca:(db.marcas||{})[resolverAtomo(x.id)]})).sort((a,b)=>b.imp-a.imp).slice(0,300);
+  return `<div class="topo">${voltar("mapa",0,"Mapa")}<h2>Lista mestra</h2><span class="meta">${L.length}</span></div>
+    <div class="row"><label><span>Matéria</span><select data-f="lmDisc"><option value="">todas</option>${Object.keys(DISC_VIS()).filter(k=>ESTR.pacotes[k]).map(k=>`<option value="${k}"${d===k?" selected":""}>${DISC[k]}</option>`).join("")}</select></label>
+      <label><span>Buscar</span><input data-f="lmBusca" value="${esc(f)}" placeholder="conceito, ideia ou tema"></label><button class="sm" data-act="lmFiltrar">Filtrar</button></div>
+    ${L.map(x=>`<div class="lin"><span class="nome"><span><b>${esc(x.conceito||"")}</b><br><span class="meta">${esc(x.tema||"")} › ${esc(x.ideia_central||"")} · ${x.status||""} · imp ${Math.round(x.imp*100)}% · domínio ${Math.round(x.e.dominio*100)}%</span></span></span>
+      <span class="acoes" style="margin:0">${[["estrela","⭐"],["pular","pular"]].map(([v,t])=>`<button class="sm ${x.marca===v?"primary":""}" data-act="atMarca" data-id="${esc(x.id)}" data-v="${v}">${t}</button>`).join("")}</span></div>`).join("")||'<p class="empty">Nada importado ainda.</p>'}${msgBox()}`}
+
+/* ---------- registro de erros do app ---------- */
+function registrarErro(msg,src,linha){try{db.erros=db.erros||[];const u=db.erros[db.erros.length-1];if(u&&u.msg===msg&&Date.now()-u.ts<5000)return;
+  db.erros.push({ts:Date.now(),msg:String(msg||"").slice(0,300),src:String(src||"").split("/").pop().slice(0,80),linha:linha||0,view:st.view,ver:APP_VERSAO});if(db.erros.length>EST_CFG.maxErros)db.erros.splice(0,db.erros.length-EST_CFG.maxErros);gravar()}catch(e){}}
+window.addEventListener("error",e=>registrarErro(e.message,e.filename,e.lineno));
+window.addEventListener("unhandledrejection",e=>registrarErro("Promise: "+((e.reason&&e.reason.message)||e.reason),"",0));
+
+/* ---------- painel do administrador ---------- */
+function vAdmin(){if(!ehAdmin()){st.view="home";return vHome()}const aba=st.abaAdmin||"geral";
+  const abas=[["geral","Visão geral"],["usuarios","Usuários e acertos"],["estrutura","Estrutura"],["logs","Logs de erros"],["exportar","Exportações"]];
+  let corpo="";
+  if(aba==="geral"){const pub=PUBLICAS.reduce((a,q)=>{const k=q.area||"*";a[k]=(a[k]||0)+1;return a},{});
+    corpo=`<div class="card"><b>Modo do administrador</b>
+      <label class="row" style="margin-top:8px"><input type="checkbox" data-cfg="verTudo" ${db.cfg.verTudo?"checked":""}> <span>Ver e editar tudo: todas as áreas e matérias ficam visíveis no Banco, no Inserir, no Mapa e nas sessões (os outros usuários continuam vendo só a área deles)</span></label>
+      <p class="meta">Área atual: ${esc(AREAS[areaAtual()]||areaAtual())}${db.cfg.verTudo?" · modo ver tudo ativo":""}. Inserir questões de outra área: ative "ver tudo" e escolha a matéria; a área da questão segue a matéria (ou o campo área, nas comuns).</p></div>
+      <div class="card"><b>Áreas ativas para os usuários</b> <span class="meta">· quem escolhe uma área inativa vê "em breve". Salvo na nuvem, vale para todos sem republicar o app.</span>
+      <div style="margin-top:6px">${Object.keys(AREAS).map(k=>`<span class="chip ${AREAS_ATIVAS.includes(k)?"on":""}" data-act="admArea" data-k="${k}">${esc(AREAS[k])}</span>`).join("")}</div>
+      <div class="acoes"><button class="sm primary" data-act="admSalvarAreas">Salvar áreas na nuvem</button></div></div>
+      <div class="card"><b>Banco público</b> <span class="meta">· ${PUBLICAS.length} questão(ões): ${Object.entries(pub).map(([k,v])=>(k==="*"?"comuns":AREAS[k]||k)+" "+v).join(", ")||"nenhuma"} · estrutura: ${Object.keys(ESTR.pacotes).map(d=>DISC[d]+" ("+(ESTR.pacotes[d].atomos||[]).length+" átomos)").join(", ")||"nenhuma"}</span>
+      <p class="meta">Publicar: Banco de questões → "Publicar" ou "Publicar todas da busca". Estrutura: aba Estrutura.</p></div>`}
+  else if(aba==="usuarios"){const d=st.adminDados;
+    const resumo=u=>{const pr=u.progresso||{};const att=pr.attempts||[];const ok=att.filter(a=>a.ok&&!a.ch).length;const porD={};att.forEach(a=>{const x=porD[a.d]||(porD[a.d]={n:0,ok:0});x.n++;if(a.ok&&!a.ch)x.ok++});
+      return{att:att.length,acc:att.length?Math.round(ok*100/att.length):null,ses:(pr.sessoes||[]).length,ult:att.length?new Date(att[att.length-1].fim).toLocaleDateString("pt-BR"):"—",ideias:Object.keys(pr.ideias||{}).length,erros:(pr.erros||[]).length,porD}};
+    let agreg="";if(d){const tot={};d.forEach(u=>{const r=resumo(u);Object.entries(r.porD).forEach(([k,v])=>{const x=tot[k]||(tot[k]={n:0,ok:0,u:0});x.n+=v.n;x.ok+=v.ok;x.u++})});
+      agreg=`<div class="card"><b>Acertos por matéria (todos os usuários)</b>${Object.entries(tot).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>{const pct=Math.round(v.ok*100/v.n);return `<div class="lin"><span class="nome">${esc(DISC[k]||k)}</span><span class="meta"><span class="dot ${pct>=80?"ok":pct>=60?"at":"cr"}"></span> ${pct}% · ${v.n} respostas · ${v.u} usuário(s)</span></div>`}).join("")||'<p class="meta">Sem respostas ainda.</p>'}</div>`}
+    corpo=`<div class="card"><b>Usuários</b> ${d?`<span class="meta">· ${d.length} conta(s)</span>`:""}<div class="acoes"><button class="primary sm" data-act="adminCarregar">${d?"Recarregar":"Carregar dados de todos"}</button>${d?'<button class="sm" data-act="adminExportar">Exportar tudo (.json)</button>':""}</div>
+      ${d?`<div class="tabela" style="overflow-x:auto"><table class="tab"><thead><tr><th>E-mail</th><th>Área</th><th>Criado</th><th>Último acesso</th><th>Respostas</th><th>Acerto</th><th>Sessões</th><th>Ideias</th><th>Questões próprias</th><th>Erros do app</th></tr></thead><tbody>${d.map(u=>{const r=resumo(u);return `<tr><td>${esc(u.email||"")}</td><td>${esc(AREAS[u.cargo]||u.cargo||"—")}</td><td>${u.criado?new Date(u.criado).toLocaleDateString("pt-BR"):"—"}</td><td>${u.ultimo_acesso?new Date(u.ultimo_acesso).toLocaleDateString("pt-BR"):"—"}</td><td>${r.att}</td><td>${r.acc===null?"—":r.acc+"%"}</td><td>${r.ses}</td><td>${r.ideias}</td><td>${u.questoes_proprias||0}</td><td>${r.erros?`<button class="sm" data-act="admErrosDe" data-e="${esc(u.email||"")}">${r.erros}</button>`:"0"}</td></tr>`}).join("")}</tbody></table></div>`:""}</div>${agreg}
+      ${st.admErrosDe&&d?(()=>{const u=d.find(x=>x.email===st.admErrosDe);const l=(u&&u.progresso&&u.progresso.erros)||[];return `<div class="card"><b>Erros do app de ${esc(st.admErrosDe)}</b>${l.slice().reverse().map(e=>`<div class="lin"><span class="nome"><span>${esc(e.msg)}<br><span class="meta">${new Date(e.ts).toLocaleString("pt-BR")} · tela ${esc(e.view||"")} · v${e.ver||"?"}${e.linha?" · linha "+e.linha:""}</span></span></span></div>`).join("")||'<p class="meta">Nenhum.</p>'}</div>`})():""}`}
+  else if(aba==="estrutura"){corpo=`<div class="card"><b>Importar pacote export/&lt;MATERIA&gt;/</b>
+      <p class="meta">Selecione de uma vez os arquivos da pasta: atomos.json, arvore.json, questoes.json, relacoes.json, resumos.json, lista_mestra.json e agregados.json (ou um JSON único com essas chaves). Reimportar atualiza pelo id, nunca duplica; aliases migram o histórico. As questões do pacote entram no seu banco; depois publique-as no Banco.</p>
+      <label><span>Arquivos do pacote</span><input type="file" multiple data-pacote="1"></label></div>
+      ${Object.keys(ESTR.pacotes).map(d=>{const pc=ESTR.pacotes[d];const st2={};(pc.atomos||[]).forEach(a=>st2[a.status||"?"]=(st2[a.status||"?"]||0)+1);
+        return `<div class="card"><b>${esc(DISC[d]||d)}</b> <span class="meta">· ${(pc.atomos||[]).length} átomos (${Object.entries(st2).map(([k,v])=>k+" "+v).join(", ")}) · ${(pc.relacoes||[]).length} relações${pc.arvore?" · árvore":""}${pc.resumos?" · resumos":""}${pc.lista?" · lista mestra":""}${pc.atualizado?" · importado "+new Date(pc.atualizado).toLocaleDateString("pt-BR"):""}</span>
+          <div class="acoes"><button class="sm primary" data-act="admPublicarEstr" data-d="${d}">Publicar estrutura para todos</button><button class="sm" data-act="admRemoverEstr" data-d="${d}">Remover deste aparelho</button></div></div>`}).join("")||'<p class="empty">Nenhum pacote importado.</p>'}`}
+  else if(aba==="logs"){const l=(db.erros||[]).slice().reverse();
+    corpo=`<div class="card"><b>Erros do app neste aparelho</b> <span class="meta">· capturados automaticamente; os de cada usuário aparecem na aba Usuários</span>
+      ${l.map(e=>`<div class="lin"><span class="nome"><span>${esc(e.msg)}<br><span class="meta">${new Date(e.ts).toLocaleString("pt-BR")} · tela ${esc(e.view||"")} · v${e.ver||"?"}${e.src?" · "+esc(e.src):""}${e.linha?":"+e.linha:""}</span></span></span></div>`).join("")||'<p class="meta">Nenhum erro registrado.</p>'}
+      <div class="acoes"><button class="sm" data-act="admLimparErros">Limpar</button></div></div>
+      <div class="card"><b>Uso neste aparelho</b><div class="meta">${db.attempts.length} respostas · ${db.sessoes.length} sessões · ${Object.keys(db.ideias).length} ideias · ${(db.eventos||[]).length} eventos de estrutura · ${db.added.length} questões próprias</div></div>`}
+  else{corpo=`<div class="card"><b>Exportações</b>
+      <div class="acoes"><button class="sm" data-act="adminCarregar">Carregar usuários</button>${st.adminDados?'<button class="sm primary" data-act="adminExportar">Usuários e progresso (.json)</button>':""}
+        <button class="sm" data-act="admExportPub">Banco público (.json)</button><button class="sm" data-act="admExportEstr">Estrutura (.json)</button><button class="sm" data-act="exportEventos">Eventos para a base (.jsonl)</button><button class="sm" data-act="uExportar">Modelo unificado (.json)</button></div>
+      <p class="meta">O .jsonl de eventos tem uma linha por evento (resposta por átomo, marcação, leitura, validação), no contrato da base de conhecimento.</p></div>`}
+  return `<div class="topo">${voltar("menu",0,"Menu")}<h2>Administração</h2><span></span></div>
+    <div class="aba">${abas.map(([k,t])=>`<button data-act="abaAdmin" data-k="${k}" aria-selected="${aba===k}">${t}</button>`).join("")}</div>${corpo}${msgBox()}`}
+
+/* ---------- ações (chamadas pelo clique geral) ---------- */
+function acaoEstrutura(a,el){const m=st.mapa||(st.mapa={});
+  switch(a){
+    case "mapa":st.view="mapa";st.mapa={};st.msg="";return true;
+    case "mapaDisc":m.disc=el.dataset.d;m.tema=null;m.top=null;m.sub=null;return true;
+    case "mapaTop":{const [t,to]=el.dataset.d.split("\u0001");m.tema=t;m.top=to;m.sub=null;return true}
+    case "mapaSub":m.sub=el.dataset.d;return true;
+    case "mapaVoltar":if(m.sub)m.sub=null;else if(m.top){m.top=null;m.tema=null}else m.disc=null;return true;
+    case "mapaEstudar":{const n=noAtualDoMapa();if(!n||!n.qs.length)return true;st.disc=n.qs[0].disc;st.sel=new Set();st.filtro="todas";st.qtd="";st.ordem="aleatoria";iniciar(mistura(n.qs).slice(0,20),0,false,"Mapa · "+n.nome,{ctx:"Mapa"});return "feito"}
+    case "listaMestra":st.view="listaMestra";return true;
+    case "lmFiltrar":return true;
+    case "atMarca":marcarAtomo(el.dataset.id,el.dataset.v);return true;
+    case "atValid":{const v=el.dataset.v;if(v==="ok"){validarAtomo(el.dataset.id,"ok",[],"")}else{st.validando=resolverAtomo(el.dataset.id);st.validDecisao=v;st.validMotivos=[]}return true}
+    case "atMotivo":{const l=st.validMotivos||(st.validMotivos=[]);const i=l.indexOf(el.dataset.m);if(i>=0)l.splice(i,1);else l.push(el.dataset.m);return true}
+    case "atValidOk":validarAtomo(el.dataset.id,st.validDecisao||"rever",st.validMotivos||[],st.form.validNota||"");st.validando=null;st.form.validNota="";return true;
+    case "atValidCancel":st.validando=null;return true;
+    case "exportEventos":baixar("eventos_"+hojeISO()+".jsonl",eventosJsonl(),"application/x-ndjson");return "feito";
+    case "abaAdmin":st.abaAdmin=el.dataset.k;st.msg="";return true;
+    case "admArea":{const k=el.dataset.k;const i=AREAS_ATIVAS.indexOf(k);if(i>=0){if(AREAS_ATIVAS.length>1)AREAS_ATIVAS.splice(i,1)}else AREAS_ATIVAS.push(k);return true}
+    case "admSalvarAreas":salvarConfigPublica("areas_ativas",AREAS_ATIVAS.slice());return "feito";
+    case "admPublicarEstr":publicarEstrutura(el.dataset.d);return "feito";
+    case "admRemoverEstr":pedir("Remover a estrutura de "+DISC[el.dataset.d]+" deste aparelho? As questões continuam; a versão publicada na nuvem não muda.",()=>{delete ESTR.pacotes[el.dataset.d];salvarEstruturaLocal();construirEstrutura();render()},"Remover");return "feito";
+    case "admLimparErros":db.erros=[];gravar();return true;
+    case "admErrosDe":st.admErrosDe=el.dataset.e;return true;
+    case "admExportPub":baixar("banco_publico_"+hojeISO()+".json",JSON.stringify(PUBLICAS,null,1),"application/json");return "feito";
+    case "admExportEstr":baixar("estrutura_"+hojeISO()+".json",JSON.stringify(ESTR.pacotes,null,1),"application/json");return "feito";
+  }
+  return false}
 
 construirAtt();curvaReconstruir();
 /* ============ projetos ============ */
@@ -2155,6 +2529,7 @@ function vMenu(){
       <button class="big b1" data-act="projetos"><b>Projetos</b><span>${db.projetos.length} projeto(s) · cronograma por matéria</span></button>
       <button class="big b5" data-act="simulados"><b>Simulados</b><span>Montar um novo ou refazer anteriores</span></button>
       <button class="big b2" data-act="revisarQ"><b>Revisar questões</b><span>O que você mais erra, com questões parecidas</span></button>
+      <button class="big b6" data-act="mapa"><b>Mapa de desenvolvimento</b><span>Calor por matéria, tópico e afirmação · completado e acertos${temEstrutura()?" · "+ESTR.n+" átomos":""}</span></button>
       <button class="big b6" data-act="banco"><b>Banco de questões</b><span>${QS.length} questões · conferir, marcar e editar</span></button>
       <button class="big b4" data-act="add"><b>Inserir questões</b><span>Colar em lote, planilha, JSON ou uma por vez</span></button>
     </div>
@@ -2165,7 +2540,7 @@ function vMenu(){
       <button data-act="rapida">Sessão rápida</button>
       <button data-act="materias">Matérias e temas</button>
       <button data-act="curvas">Curvas de retenção${curvaVencidas().length?` <span class="tag r">${curvaVencidas().length}</span>`:""}</button>
-      <button data-act="relatos">Problemas relatados${nRep?` <span class="tag r">${nRep}</span>`:""}</button></div>${msgBox()}`}
+      <button data-act="relatos">Problemas relatados${nRep?` <span class="tag r">${nRep}</span>`:""}</button>${ehAdmin()?'<button class="primary" data-act="admin">Administração</button>':""}</div>${msgBox()}`}
 
 function vProjetos(){
   const cards=db.projetos.slice().sort((a,b)=>(b.ultimo||b.criado)-(a.ultimo||a.criado)).map(p=>{const pr=progProj(p),at=atrasados(p),sl=proxSlot(p);
@@ -2278,6 +2653,7 @@ function vProjeto(){
       <label><span>Retenção-alvo</span><select data-ch="pj_retencao"><option value="0.8"${p.ajustes.retencao==0.8?" selected":""}>80% (padrão)</option><option value="0.9"${p.ajustes.retencao==0.9?" selected":""}>90% (exigente)</option></select></label>
       <label><span>Alerta de fadiga</span><select data-ch="pj_fadiga">${[["normal","Normal: avisa pelos gatilhos e pela binomial"],["sensivel","Sensível: avisa mais cedo"],["off","Desligado: só registra, não interrompe"]].map(([v,t])=>`<option value="${v}"${p.ajustes.fadiga===v?" selected":""}>${t}</option>`).join("")}</select></label>
       <label><span>Repetição espaçada</span><select data-ch="pj_espacamento">${[["padrao","Padrão: 1 → 3 → 7 → 14 → 30 → 60 → 120 dias"],["curto","Curta: intervalos 30% menores"],["longo","Longa: intervalos 30% maiores"]].map(([v,t])=>`<option value="${v}"${p.ajustes.espacamento===v?" selected":""}>${t}</option>`).join("")}</select></label>
+      <label><span>Banca-alvo (opcional: a importância das afirmações passa a pesar o que essa banca cobra)</span><input data-ch="pj_banca" list="bancasAlvo" value="${esc(p.banca||"")}" placeholder="Ex.: ABP, SES-RJ"><datalist id="bancasAlvo">${[...new Set(QS.map(q=>q.banca).filter(Boolean))].sort().map(b=>`<option>${esc(b)}</option>`).join("")}</datalist></label>
       <label><span>Nota de corte da prova (% de acertos; opcional, só se for oficial)</span><input type="number" min="0" max="100" data-ch="pj_corte" value="${p.corte||""}" placeholder="—" style="width:110px"></label>
       <label><span>Minutos por dia (padrão para dias sem valor próprio)</span><input type="number" min="10" data-ch="pj_minDia" value="${p.minDia}" style="width:110px"></label>
       <div class="acoes"><button data-act="projExcluir" data-id="${p.id}">Excluir projeto</button></div></div>`;
@@ -2793,6 +3169,10 @@ function vDados(){
     <div class="card"><h3 style="margin-top:0">Conta</h3>
       <p class="meta">${usuario?"Conectado como "+esc(usuario.email||""):"Sem conta conectada neste aparelho: os dados ficam só aqui."}</p>
       <div class="acoes">${usuario?'<button data-act="sair">Sair desta conta</button><button data-act="excluirConta">Excluir minha conta e dados</button>':(sb?'<button class="primary" data-act="entrar">Entrar ou criar conta</button>':"")}${ehAdmin()?'<button class="primary" data-act="admin">Administração</button>':""}</div></div>
+    <div class="card"><b>Estrutura de conhecimento</b> <span class="meta">· ${temEstrutura()?ESTR.n+" átomos em "+Object.keys(ESTR.pacotes).map(d=>DISC[d]).join(", "):"nenhum pacote importado"}</span>
+      <p class="meta">Importe o pacote export/&lt;MATERIA&gt;/ (atomos, arvore, questoes, relacoes, resumos, lista_mestra, agregados) para ver as afirmações no Mapa e deixar a importância guiar as sessões. Os eventos (respostas por átomo, marcações, leituras, validações) saem em .jsonl para a base recalcular.</p>
+      <label><span>Arquivos do pacote</span><input type="file" multiple data-pacote="1"></label>
+      <div class="acoes"><button class="sm" data-act="mapa">Abrir o mapa</button>${temEstrutura()?'<button class="sm" data-act="exportEventos">Exportar eventos (.jsonl)</button>':""}</div></div>
     <div class="card"><h3 style="margin-top:0">Ajustes</h3>
       <label><span>Área</span><select data-cfg="cargo">${Object.entries(AREAS).map(([v,t])=>`<option value="${v}"${(db.cfg.cargo||"medico")===v?" selected":""}${AREAS_ATIVAS.includes(v)?"":" disabled"}>${t}${AREAS_ATIVAS.includes(v)?"":" (em breve)"}</option>`).join("")}</select></label>
       <label><span>Tempo de atenção (min; sugestão de duração nos projetos)</span><input type="number" min="0" data-cfg="tempoBase" value="${db.cfg.tempoBase||0}" style="width:110px"></label>
@@ -2811,7 +3191,7 @@ function vDados(){
       <div class="acoes"><button data-act="importar">Importar e mesclar</button></div>
       <p class="meta">A importação soma ao que já existe: questões e relatos são acrescentados, e o histórico de acertos prevalece o de maior número de respostas.</p></div>${msgBox()}`}
 
-const VIEWS={entrar:vEntrar,novaSenha:vNovaSenha,admin:vAdmin,home:vHome,menu:vMenu,projetos:vProjetos,novoProj:vNovoProj,projeto:vProjeto,simulados:vSimulados,revisarQ:vRevisarQ,atencao:vAtencao,neuro:vNeuro,curvas:vCurvas,abertura:vAbertura,ideias:vIdeias,recordar:vRecordar,config:vDados,materias:vMaterias,disc:vDisc,tema:vTema,asp:vAsp,lista:vLista,rapida:vRapida,caps:vCaps,dx:vDx,classif:vClassif,revisar:vRevisar,quiz:vQuiz,stats:vStats,add:vAdd,rel:vRel,banco:vBanco,edit:vEdit,relatos:vRelatos,dados:vDados};
+const VIEWS={entrar:vEntrar,novaSenha:vNovaSenha,admin:vAdmin,mapa:vMapa,listaMestra:vListaMestra,home:vHome,menu:vMenu,projetos:vProjetos,novoProj:vNovoProj,projeto:vProjeto,simulados:vSimulados,revisarQ:vRevisarQ,atencao:vAtencao,neuro:vNeuro,curvas:vCurvas,abertura:vAbertura,ideias:vIdeias,recordar:vRecordar,config:vDados,materias:vMaterias,disc:vDisc,tema:vTema,asp:vAsp,lista:vLista,rapida:vRapida,caps:vCaps,dx:vDx,classif:vClassif,revisar:vRevisar,quiz:vQuiz,stats:vStats,add:vAdd,rel:vRel,banco:vBanco,edit:vEdit,relatos:vRelatos,dados:vDados};
 let ultView="";
 function render(){
   const y=scrollY,mesma=ultView===st.view;
@@ -2850,6 +3230,7 @@ document.addEventListener("click",e=>{
   if(a==="resp"){responder(+el.dataset.q,+el.dataset.i);return}
   if(a==="conf"){marcarConfianca(+el.dataset.q,el.dataset.v);return}
   if(a==="conf2"){marcarConf(+el.dataset.q,el.dataset.v);return}
+  {const r=acaoEstrutura(a,el);if(r==="feito")return;if(r){gravar();render();return}}
   switch(a){
     case "enviarLink":enviarLink();break;
     case "confirmarCodigo":confirmarCodigo();break;
@@ -3153,6 +3534,7 @@ document.addEventListener("click",e=>{
 document.addEventListener("change",e=>{
   const t=e.target,d=t.dataset||{};
   if(d.fileMany!==undefined){receberArquivos([...t.files]);return}
+  if(d.pacote!==undefined){st.msg="Lendo o pacote…";render();receberPacote([...t.files]);return}
   if(d.cfg){db.cfg[d.cfg]=t.type==="checkbox"?t.checked:t.value;gravar();if(d.cfg==="cargo")construir();render();return}
   if(d.file){const f=t.files&&t.files[0];if(f){colher();guardarImagem(f,d.file)}return}
   if(d.ch){colher();
@@ -3166,7 +3548,7 @@ document.addEventListener("change",e=>{
     if(k==="umaQ")st.umaQ=t.value==="1";
     if(k==="feedN")st.feedN=+t.value;
     if(k==="bancoF")st.bancoF=t.value;
-    if(k.startsWith("pj_")){const p=db.projetos.find(x=>x.id===st.projId);if(p){const c=k.slice(3);if(c==="minDia")p.minDia=Math.max(10,parseInt(t.value,10)||p.minDia);else if(c==="corte")p.corte=parseInt(t.value,10)||0;else{p.ajustes[c]=c==="retencao"?+t.value:t.value;if(c==="retencao")p.retencao=+t.value}gravar()}}
+    if(k.startsWith("pj_")){const p=db.projetos.find(x=>x.id===st.projId);if(p){const c=k.slice(3);if(c==="minDia")p.minDia=Math.max(10,parseInt(t.value,10)||p.minDia);else if(c==="corte")p.corte=parseInt(t.value,10)||0;else if(c==="banca"){p.banca=t.value.trim();_freqBanca={}}else{p.ajustes[c]=c==="retencao"?+t.value:t.value;if(c==="retencao")p.retencao=+t.value}gravar()}}
     render()}});
 /* colar, arrastar e soltar imagens */
 const alvoImagem=()=>st.view==="edit"?"eFig":(st.view==="add"&&st.abaAdd==="form")?"fFig":null;
@@ -3222,7 +3604,7 @@ const SB_URL="https://zuxssudbatkrlrxclpvc.supabase.co";
 const SB_CHAVE="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1eHNzdWRiYXRrcmxyeGNscHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MDk0ODksImV4cCI6MjEwNzk4NTQ4OX0.KzekfbeyngWpxtwStcsz0MpqwclQeAlWh5-VNvhJmAI";
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_CHAVE,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 let usuario=null,nuvem={carregado:false},ultimoSalvo=new Map(),progSalvo="",_nuvemT=null,_fila=Promise.resolve();
-const progDe=d=>({stats:d.stats,sched:d.sched,flags:d.flags,reports:d.reports,edits:d.edits,seq:d.seq,sessoes:d.sessoes,cfg:d.cfg,projetos:d.projetos,simulados:d.simulados,atencao:d.atencao,notas:d.notas,neuro:d.neuro,attempts:d.attempts.slice(-5000),ideias:d.ideias,faixas:d.faixas,avisos:d.avisos,recordacoes:d.recordacoes,motor:d.motor,curvas:d.curvas,curvaParams:d.curvaParams,curvaLog:d.curvaLog,u:d.u});
+const progDe=d=>({stats:d.stats,sched:d.sched,flags:d.flags,reports:d.reports,edits:d.edits,seq:d.seq,sessoes:d.sessoes,cfg:d.cfg,projetos:d.projetos,simulados:d.simulados,atencao:d.atencao,notas:d.notas,neuro:d.neuro,attempts:d.attempts.slice(-5000),ideias:d.ideias,faixas:d.faixas,avisos:d.avisos,recordacoes:d.recordacoes,motor:d.motor,curvas:d.curvas,curvaParams:d.curvaParams,curvaLog:d.curvaLog,u:d.u,marcas:d.marcas,valid:d.valid,eventos:d.eventos,erros:d.erros,leituras:d.leituras});
 function setSync(s){const el=document.getElementById("estado");
   if(el)el.textContent={ok:"☁ sincronizado",pendente:"☁ pendente: envia quando houver conexão",carregando:"☁ carregando…",erro:"☁ sem conexão com a nuvem",local:""}[s]||""}
 const salvarNuvemFila=()=>{_fila=_fila.then(salvarNuvem)};
@@ -3243,7 +3625,7 @@ async function lerNuvem(){
 function aplicarNuvem(c){
   const pr=c.progresso||{};
   Object.assign(db,{stats:pr.stats||{},sched:pr.sched||{},flags:pr.flags||[],reports:pr.reports||[],edits:pr.edits||{},
-    seq:pr.seq||0,sessoes:pr.sessoes||[],projetos:pr.projetos||[],simulados:pr.simulados||[],atencao:pr.atencao||[],notas:pr.notas||{},neuro:pr.neuro||[],attempts:pr.attempts||[],ideias:pr.ideias||{},faixas:pr.faixas||{},avisos:pr.avisos||[],recordacoes:pr.recordacoes||[],curvas:pr.curvas||{sub:{},tema:{},disc:{}},curvaParams:pr.curvaParams||null,curvaLog:pr.curvaLog||[],u:pr.u||null,motor:Object.assign({q0s:[],exaustasSeg:0,alvo:0,ponto:0,calib:0,folgas:[],ultimoSnap:{},recallPend:null},pr.motor||{}),cfg:Object.assign({conf:false,teclado:true,tema:"",meta:20,tempoBase:0},pr.cfg||{})});
+    seq:pr.seq||0,sessoes:pr.sessoes||[],projetos:pr.projetos||[],simulados:pr.simulados||[],atencao:pr.atencao||[],notas:pr.notas||{},neuro:pr.neuro||[],attempts:pr.attempts||[],ideias:pr.ideias||{},faixas:pr.faixas||{},avisos:pr.avisos||[],recordacoes:pr.recordacoes||[],curvas:pr.curvas||{sub:{},tema:{},disc:{}},curvaParams:pr.curvaParams||null,curvaLog:pr.curvaLog||[],u:pr.u||null,marcas:pr.marcas||{},valid:pr.valid||{},eventos:pr.eventos||[],erros:pr.erros||[],leituras:pr.leituras||{},motor:Object.assign({q0s:[],exaustasSeg:0,alvo:0,ponto:0,calib:0,folgas:[],ultimoSnap:{},recallPend:null},pr.motor||{}),cfg:Object.assign({conf:false,teclado:true,tema:"",meta:20,tempoBase:0},pr.cfg||{})});
   db.added=c.linhas.map(r=>({...r.dados,id:r.id}));
   db.added.forEach(q=>{if(!q.seq)q.seq=++db.seq;if(!q.cod)q.cod=(PRE[q.disc]||"CM")+"-A"+String(q.seq).padStart(2,"0")});
   ultimoSalvo=new Map(db.added.map(q=>[q.id,JSON.stringify(q)]));
@@ -3276,7 +3658,7 @@ async function entrarComSessao(u){
       nuvem.carregado=true;ultimoSalvo=new Map();progSalvo="";
     }else{aplicarNuvem(c);nuvem.carregado=true}
     if(!db.cfg.cargo&&u.user_metadata&&u.user_metadata.cargo)db.cfg.cargo=u.user_metadata.cargo;
-    construir();gravar();await carregarAdmin();carregarPublicas().catch(()=>{});carregarGlobal().then(()=>render()).catch(()=>{});
+    construir();gravar();await carregarAdmin();carregarPublicas().catch(()=>{});carregarEstruturaPublica().catch(()=>{});carregarGlobal().then(()=>render()).catch(()=>{});
     if(st.view==="entrar")st.view="home";
     render();setSync("ok");
     salvarNuvemFila();
@@ -3326,16 +3708,6 @@ async function adminCarregar(){if(!ehAdmin())return;st.adminDados=null;st.msg="C
   const {data,error}=await sb.rpc("admin_exportar");if(error){st.msg="Erro: "+error.message;render();return}
   st.adminDados=data||[];st.msg="";render()}
 function adminExportar(){if(!st.adminDados)return;baixar("usuarios_"+hojeISO()+".json",JSON.stringify({exportado:new Date().toISOString(),usuarios:st.adminDados},null,1),"application/json")}
-function vAdmin(){if(!ehAdmin()){st.view="home";return vHome()}
-  const d=st.adminDados;const porArea={};(d||[]).forEach(u=>porArea[u.cargo||"?"]=(porArea[u.cargo||"?"]||0)+1);
-  const resumo=u=>{const p=u.progresso||{};const att=(p.attempts||[]).length,ses=(p.sessoes||[]).length;const ult=(p.attempts||[]).slice(-1)[0];return{att,ses,ult:ult?new Date(ult.fim).toLocaleDateString("pt-BR"):"—",ideias:Object.keys(p.ideias||{}).length}};
-  return `<div class="topo">${voltar("dados",0,"Configurações")}<h2>Administração</h2><span></span></div>
-    <div class="card"><b>Banco público</b> <span class="meta">· ${PUBLICAS.length} questão(ões) publicadas: ${Object.entries(PUBLICAS.reduce((a,q)=>{const k=q.area||"*";a[k]=(a[k]||0)+1;return a},{})).map(([k,v])=>(k==="*"?"comuns":AREAS[k]||k)+" "+v).join(", ")||"nenhuma"}</span>
-      <p class="meta">Para publicar: Banco de questões → botão "Publicar" em cada questão, ou "Publicar todas da busca". A área é a da matéria; em matéria comum, o campo "area" da questão restringe.</p></div>
-    <div class="card"><b>Usuários</b> ${d?`<span class="meta">· ${d.length} conta(s): ${Object.entries(porArea).map(([k,v])=>(AREAS[k]||k)+" "+v).join(", ")}</span>`:""}
-      <div class="acoes"><button class="primary sm" data-act="adminCarregar">${d?"Recarregar":"Carregar dados de todos"}</button>${d?'<button class="sm" data-act="adminExportar">Exportar tudo (.json)</button>':""}</div>
-      ${d?`<div class="tabela" style="overflow-x:auto"><table class="tab"><thead><tr><th>E-mail</th><th>Área</th><th>Criado</th><th>Último acesso</th><th>Respostas</th><th>Sessões</th><th>Ideias</th><th>Questões próprias</th></tr></thead><tbody>${d.map(u=>{const r=resumo(u);return `<tr><td>${esc(u.email||"")}</td><td>${esc(AREAS[u.cargo]||u.cargo||"—")}</td><td>${u.criado?new Date(u.criado).toLocaleDateString("pt-BR"):"—"}</td><td>${u.ultimo_acesso?new Date(u.ultimo_acesso).toLocaleDateString("pt-BR"):"—"}</td><td>${r.att}</td><td>${r.ses}</td><td>${r.ideias}</td><td>${u.questoes_proprias||0}</td></tr>`}).join("")}</tbody></table></div>`:""}
-      <p class="meta">Os dados de cada usuário também ficam no painel do Supabase (Table Editor → progresso). A exportação traz o JSON completo de cada conta.</p></div>${msgBox()}`}
 async function sair(){
   if(!st.saidaConfirmada){pedir("Sair deste aparelho? Confira que o indicador no canto mostra 'sincronizado'.",()=>{st.saidaConfirmada=true;sair()},"Sair");return}
   if(sb)await sb.auth.signOut().catch(()=>{});
@@ -3390,6 +3762,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catc
 
 carregarSessaoSalva();
 carregarPublicasLocal();
+carregarEstruturaLocal();
+carregarConfigPublica();
 render();
 carregarAdded().then(iniciarNuvem);
 </script>
