@@ -1101,14 +1101,15 @@ function parseLote(txt){
 function parseJSON(txt){
   const out=[],erros=[];
   let o; try{o=JSON.parse(txt)}catch(e){return{out,erros:["JSON inválido: "+e.message]}}
-  (Array.isArray(o)?o:[o]).forEach((x,i)=>{
+  const lista=Array.isArray(o)?o:(o&&Array.isArray(o.questoes)?o.questoes:[o]);
+  lista.forEach((x,i)=>{
     const d=normDisc(x.disciplina||x.disc);
     const alts=x.alternativas||x.alts,g=String(x.gabarito||x.gab||"").toUpperCase();
     if(!d)return erros.push(`Item ${i+1}: disciplina inválida`);
     if(!x.enunciado&&!x.enun)return erros.push(`Item ${i+1}: falta o enunciado`);
     if(alts!==undefined&&!Array.isArray(alts))return erros.push(`Item ${i+1}: alternativas devem ser uma lista`);
     if(g&&(LET.indexOf(g)<0||LET.indexOf(g)>=(alts||[]).length))return erros.push(`Item ${i+1}: gabarito "${g}" inválido`);
-    out.push({disc:d,tema:x.tema||"Geral",subtema:x.subtema||x.tema||"Geral",enun:x.enunciado||x.enun,
+    out.push({disc:d,tema:x.tema||"Geral",subtema:x.subtema||x.tema||"Geral",enun:x.enunciado||x.enun,cod:String(x.codigo||x.cod||"").toUpperCase()||null,
       alts:(alts||[]).map(String),gab:g,anulada:!!x.anulada,fig:x.figura||x.fig||null,
       banca:x.banca||"",ano:x.ano||"",definicao:x.definicao||"",capitulo:capDe(x.capitulo||""),aspecto:aspDe(x.aspecto||""),cargo:x.cargo||"",idioma:x.idioma||"",ideia:x.ideia||"",explicacao:x.explicacao||"",area:AREAS[x.area]?x.area:"",complexidade:x.complexidade||"",grupos:Array.isArray(x.grupos)?x.grupos:[]})});
   return{out,erros}}
@@ -1165,7 +1166,7 @@ function csvParaQuestoes(txt){
 async function receberArquivos(lista){
   for(const f of lista){
     if(/^image\//.test(f.type))st.impImg[f.name.toLowerCase()]=await reduzir(f);
-    else if(/\.(csv|txt|md)$/i.test(f.name)){st.impTxt=await f.text();st.impTxtNome=f.name}
+    else if(/\.(csv|txt|md|json)$/i.test(f.name)){st.impTxt=await f.text();st.impTxtNome=f.name}
     else st.msg="Arquivo ignorado: "+f.name}
   st.previa=null;render()}
 
@@ -1174,8 +1175,8 @@ const assinatura=q=>JSON.stringify([q.alts,q.gab,!!q.anulada]);
 function conferir(){
   const txt=st.impTxt;
   if(!txt){st.msg="Escolha a planilha (.csv) ou o texto primeiro.";return}
-  const csv=/\.csv$/i.test(st.impTxtNome||"");
-  const r=csv?csvParaQuestoes(txt):parseLote(txt);
+  const nome=st.impTxtNome||"";
+  const r=/\.csv$/i.test(nome)?csvParaQuestoes(txt):/\.json$/i.test(nome)?parseJSON(txt):parseLote(txt);
   const usados=new Set();
   const itens=r.out.map(q=>{const it={q,imgData:null,erro:null};
     if(q.fig&&!/^https?:\/\//i.test(q.fig)){
@@ -2685,8 +2686,9 @@ function vAdd(){
       <p class="meta"><b>Código:</b> identificador fixo da questão, gravado já na planilha · <b>Disciplina:</b> ${Object.values(DISC).join(", ")}. Opcionais: area (medico ou social, só para restringir uma questão de matéria comum), ideia (a ideia central, uma frase), explicacao, complexidade (simples, complexa ou muito complexa), cargo (ex.: Residência acesso direto), idioma, definicao, aspecto (ex.: Epidemiologia), capitulo (ex.: depressivos) e grupos (separados por vírgula) · <b>Gabarito:</b> a letra certa · <b>Anulada:</b> "sim" ou vazio · <b>Figura:</b> o nome do arquivo da imagem, enviado junto (ex.: CM-035.png), ou um endereço começando com http. Imagens não entram dentro da planilha: envie o arquivo com o mesmo nome. Excel e Planilhas Google funcionam, com ";" ou ",".</p>
       <div class="acoes"><button class="primary" data-act="baixarModelo">Baixar planilha modelo (.csv)</button></div></div>
     <div class="card">
-      <label><span>Envie a planilha (.csv) ou um texto (.txt/.md) no formato de lote, junto com as imagens, se houver. Pode selecionar tudo de uma vez.</span>
-        <input type="file" multiple accept=".csv,.txt,.md,image/*" data-file-many="1"></label>
+      <label><span>Envie a planilha (.csv), um texto (.txt/.md) no formato de lote ou um arquivo .json, junto com as imagens, se houver. Pode selecionar tudo de uma vez.</span>
+        <input type="file" multiple accept=".csv,.txt,.md,.json,application/json,text/csv,text/plain,text/markdown" data-file-many="1"></label>
+      <label><span>Imagens das questões (só se houver figura)</span><input type="file" multiple accept="image/*" data-file-many="1"></label>
       <div class="meta">${st.impTxtNome?"Arquivo: "+esc(st.impTxtNome)+" · ":"Nenhuma planilha escolhida · "}Imagens recebidas: ${Object.keys(st.impImg).length}</div>
       <div class="acoes"><button class="primary" data-act="conferirArq">Conferir antes de gravar</button><button data-act="limparArq">Limpar</button></div></div>`}
   else{
@@ -2695,12 +2697,16 @@ function vAdd(){
       <pre>[{"disciplina":"Clínica Médica","tema":"Cardiologia","subtema":"Arritmias",
   "enunciado":"...","alternativas":["a","b","c","d"],"gabarito":"C",
   "anulada":false,"figura":null}]</pre>
-      <label><span>JSON</span><textarea class="mono" data-f="json">${esc(f.json||"")}</textarea></label>
-      <div class="acoes"><button class="primary" data-act="impJson">Conferir e adicionar</button></div></div>`}
+      <label><span>JSON colado</span><textarea class="mono" data-f="json">${esc(f.json||"")}</textarea></label>
+      <div class="acoes"><button class="primary" data-act="impJson">Conferir e adicionar</button></div>
+      <p class="meta" style="margin-top:12px">Ou envie um arquivo .json, com as imagens citadas em <code>figura</code>, se houver. Aceita uma lista de questões, uma questão só ou um objeto com <code>questoes</code>.</p>
+      <label><span>Arquivo .json</span><input type="file" accept=".json,application/json,text/plain" data-file-many="1"></label>
+      <label><span>Imagens das questões (só se houver figura)</span><input type="file" multiple accept="image/*" data-file-many="1"></label>
+      ${/\.json$/i.test(st.impTxtNome||"")?`<div class="meta">Arquivo: ${esc(st.impTxtNome)} · Imagens recebidas: ${Object.keys(st.impImg).length}</div><div class="acoes"><button class="primary" data-act="conferirArq">Conferir arquivo antes de gravar</button><button data-act="limparArq">Limpar</button></div>`:""}</div>`}
   return `<div class="topo">${voltar("menu",0,"Menu")}<h2>Adicionar questões</h2>
     <button class="sm" data-act="banco">Ver banco</button></div>
     <div class="aba">${abas.map(([k,t])=>`<button data-act="aba" data-k="${k}" aria-selected="${ab===k}">${t}</button>`).join("")}</div>
-    ${corpo}${ab==="arq"?vPrevia():""}${msgBox()}`}
+    ${corpo}${ab==="arq"||ab==="json"?vPrevia():""}${msgBox()}`}
 
 function vStats(){
   const porD=Object.keys(DISC_VIS()).map(d=>{const e=estat(QS.filter(q=>q.disc===d));
