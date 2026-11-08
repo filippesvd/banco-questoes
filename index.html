@@ -288,7 +288,7 @@ const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG",fm:"FM",ec:"EC",rx:"RX",tc:"TC",us:"U
 const zeros=()=>Object.fromEntries(Object.keys(DISC).map(k=>[k,0]));
 const TI_IDS=[37,44];                 /* questões do PDF que pertencem a Terapia Intensiva */
 const LIMITE=70;                      /* % abaixo do qual o subtema precisa de reforço */
-const APP_VERSAO="20";
+const APP_VERSAO="22";
 const KEY="banco_questoes_v2";        /* mesma chave das versões anteriores: histórico preservado */
 const TIPOS={transc:"Transcrição / texto errado",gab:"Gabarito errado",alt:"Alternativa errada ou faltando",fig:"Figura faltando ou errada",outro:"Outro"};
 const DSM_CAPS=[["neurodesenv","Transtornos do neurodesenvolvimento"],["esquizofrenia","Espectro da esquizofrenia e outros transtornos psicóticos"],
@@ -2165,27 +2165,36 @@ function importarPacote(p){const erros=[];
   const d=codMateria((p.atomos&&p.atomos[0]&&p.atomos[0].materia)||(p.questoes&&p.questoes[0]&&(p.questoes[0].materias||[])[0])||(p.lista_mestra&&p.lista_mestra[0]&&p.lista_mestra[0].materia));
   if(!d)return{resumo:"Matéria não reconhecida no pacote.",erros};
   const pac=ESTR.pacotes[d]||(ESTR.pacotes[d]={atomos:[],relacoes:[],arvore:null,resumos:null,lista:null,agregados:null});
-  let nAt=0,nRel=0,nQ=0,nQnov=0;
+  let nAt=0,nRel=0,nQ=0,nQnov=0;const motivos={};
   if(p.atomos){const porId=Object.fromEntries(pac.atomos.map(a=>[a.id,a]));p.atomos.forEach(a=>{if(!a.id||!a.afirmacao){erros.push("átomo sem id ou afirmação");return}porId[a.id]=a;nAt++});pac.atomos=Object.values(porId)}
   if(p.relacoes){const k=r=>[r.a,r.b,r.tipo].join("|");const porK=Object.fromEntries(pac.relacoes.map(r=>[k(r),r]));p.relacoes.forEach(r=>{if(!r.a||!r.b||!r.tipo)return;porK[k(r)]=r;nRel++});pac.relacoes=Object.values(porK)}
   if(p.arvore)pac.arvore=p.arvore;if(p.resumos)pac.resumos=p.resumos;if(p.lista_mestra)pac.lista=p.lista_mestra;if(p.agregados)pac.agregados=p.agregados;
   pac.atualizado=Date.now();
   if(p.questoes){const porId=Object.fromEntries(db.added.map((q,i)=>[q.id,i]));
     const porAt=Object.fromEntries(pac.atomos.map(a=>[a.id,a]));(pac.atomos||[]).forEach(a=>(a.aliases||[]).forEach(al=>{porAt[al]=porAt[al]||a}));
-    p.questoes.forEach(x=>{const q=questaoDoPacote(x,d,porAt);if(!q){erros.push("questão "+(x.id||"?")+" inválida");return}
+    p.questoes.forEach(x=>{const q=questaoDoPacote(x,d,porAt);if(!q){const m=motivoQuestao(x)||"inválida";motivos[m]=(motivos[m]||0)+1;return}
       if(porId[q.id]!==undefined){const v=db.added[porId[q.id]];db.added[porId[q.id]]={...q,seq:v.seq};}
       else if(POR_ID[q.id]&&POR_ID[q.id].pub){/* já existe no banco público: atualiza o próprio e o admin republica */db.added.push({...q,seq:++db.seq});nQnov++}
       else{db.added.push({...q,seq:++db.seq});nQnov++}nQ++})}
   salvarEstruturaLocal();gravar();construir();construirEstrutura();
-  return{resumo:`${DISC[d]}: ${nAt} átomo(s), ${nRel} relação(ões), ${nQ} questão(ões) (${nQnov} novas)${p.arvore?", árvore":""}${p.resumos?", resumos":""}${p.lista_mestra?", lista mestra":""}.`,erros,disc:d}}
-function questaoDoPacote(x,d,porAt){if(!x||!x.id||!x.enunciado||!Array.isArray(x.alternativas)||x.alternativas.length<2)return null;
-  const alts=x.alternativas.map(a=>typeof a==="string"?a:(a.texto||"")),gab=String(x.gabarito||"").toUpperCase();
-  if(!gab||LET.indexOf(gab)<0||LET.indexOf(gab)>=alts.length)return null;
+  const rec=Object.entries(motivos).map(([k,v])=>v+" "+k).join(", ");
+  return{resumo:`${DISC[d]}: ${nAt} átomo(s), ${nRel} relação(ões), ${nQ} questão(ões) (${nQnov} novas)${rec?"; recusadas: "+rec:""}${p.arvore?", árvore":""}${p.resumos?", resumos":""}${p.lista_mestra?", lista mestra":""}.`,erros,disc:d}}
+/* certo/errado (vf) vira múltipla escolha com duas alternativas */
+function normVF(x){if(x&&x.tipo==="vf"&&Array.isArray(x.alternativas)&&x.alternativas.length===0&&/^[CE]$/i.test(String(x.gabarito||"")))return{...x,alternativas:[{letra:"A",texto:"Certo"},{letra:"B",texto:"Errado"}],gabarito:/^C$/i.test(x.gabarito)?"A":"B"};return x}
+/* motivo da recusa (null se a questão serve) */
+function motivoQuestao(x){x=normVF(x);if(!x||!x.id)return "sem identificador";if(!x.enunciado)return "sem enunciado";
+  if(x.tipo==="vf"&&(!Array.isArray(x.alternativas)||x.alternativas.length<2))return "certo/errado sem gabarito";
+  if(!Array.isArray(x.alternativas)||x.alternativas.length<2)return "discursiva (sem alternativas)";
+  if(x.gabarito_status==="anulada")return null;
+  const g=String(x.gabarito||"").toUpperCase();if(!g||LET.indexOf(g)<0||LET.indexOf(g)>=x.alternativas.length)return "sem gabarito válido";return null}
+function questaoDoPacote(x,d,porAt){x=normVF(x);if(motivoQuestao(x))return null;
+  const alts=x.alternativas.map(a=>typeof a==="string"?a:(a.texto||"")),gab=String(x.gabarito||"").toUpperCase(),anul=x.gabarito_status==="anulada";
+  if(!anul&&(!gab||LET.indexOf(gab)<0||LET.indexOf(gab)>=alts.length))return null;
   const links=(x.atomos||[]).filter(l=>l&&l.id).map(l=>({id:l.id,papel:l.papel||"apoia",tipo_cobranca:l.tipo_cobranca||"",distrator:l.distrator||""}));
   const dec=links.find(l=>l.papel==="decide")||links[0];const at=dec?((porAt&&porAt[dec.id])||atomoDe(dec.id)):null;
   const disc=codMateria((x.materias||[])[0])||d;
   return{id:x.id,cod:x.id,disc,tema:x.tema||"Geral",aspecto:x.topico||"",subtema:x.subtopico||x.tema||"Geral",ideia:(at&&at.ideia_central)||x.ideia_central||"",
-    enun:x.enunciado,alts,gab,anulada:false,fig:x.figura||null,banca:x.banca||"",ano:x.ano||"",uf:x.uf||"",complexidade:x.complexidade||"",explicacao:x.analise||"",
+    enun:x.enunciado,alts,gab,anulada:anul,fig:x.figura||null,banca:x.banca||"",ano:x.ano||"",uf:x.uf||"",complexidade:x.complexidade||"",explicacao:x.analise||"",
     atomos:links,gabStatus:x.gabarito_status||"",hash:x.hash_conteudo||"",area:AREAS[x.area]?x.area:""}}
 async function salvarEstruturaLocal(){try{await kvPut("estrutura",ESTR.pacotes)}catch(e){}}
 async function carregarEstruturaLocal(){try{const p=await kvGet("estrutura");if(p&&typeof p==="object"){ESTR.pacotes=p;construirEstrutura();render()}}catch(e){}}

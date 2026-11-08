@@ -1,4 +1,4 @@
-const CACHE = "bq-cloud-v21";
+const CACHE = "bq-cloud-v22";
 const ARQUIVOS = [
   "./detalhe_01.webp",
   "./detalhe_02.webp",
