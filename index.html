@@ -36,6 +36,11 @@
   .row>label{flex:1 1 180px;margin:0}
   .acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   .topo{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
+  .tbase{white-space:pre-line;font-size:14px;border-left:3px solid var(--bd);padding:8px 10px;margin:8px 0 6px;background:var(--bg);border-radius:6px}
+  .disc-an{margin:8px 0}.disc-an summary{cursor:pointer;color:var(--acc)}.disc-an p{white-space:pre-line;margin:6px 0 0}
+  .fig-falta{border:1px dashed var(--bd);border-radius:6px;padding:6px 8px;margin:6px 0}
+  .versao{margin:20px 0 8px;font-size:12px;color:var(--mut);line-height:1.45}
+  .versao summary{cursor:pointer}.versao ul{margin:6px 0 0;padding-left:18px}.versao li{margin:4px 0}
   .topo h2{margin:0;display:flex;align-items:center;gap:8px}
   .topo h2::before{content:"";flex:0 0 26px;width:26px;height:26px;background:var(--ilus) center/contain no-repeat}
   .ico{display:block;width:44px;height:44px;object-fit:contain;margin:0 0 6px}
@@ -278,17 +283,28 @@ const LET=["A","B","C","D","E"];
 const AREAS={medico:"Médico",social:"Assistente Social",enfermeiro:"Enfermeiro",psicologo:"Psicólogo",fisioterapeuta:"Fisioterapeuta",farmaceutico:"Farmacêutico",nutricionista:"Nutricionista",dentista:"Cirurgião-dentista",advogado:"Advogado",professor:"Professor",administrativo:"Analista ou técnico administrativo"};
 const AREAS_ATIVAS=["medico","social"];
 const DISC={cm:"Clínica Médica",ti:"Medicina Intensiva",ps:"Psiquiatria",lg:"Medicina Legal",fm:"Farmacologia",ec:"ECG",rx:"Radiografia (RX)",tc:"Tomografia (TC)",us:"Ultrassonografia (USG)",rv:"Revalidação",
-  ss:"Serviço Social",pl:"Política Social e SUAS",pt:"Língua Portuguesa",dr:"Direito",su:"SUS e Saúde Pública",et:"Ética Profissional",rl:"Raciocínio Lógico",in:"Informática"};
+  ss:"Serviço Social",pl:"Política Social e SUAS",pt:"Língua Portuguesa",dr:"Direito",su:"SUS e Saúde Pública",et:"Ética Profissional",rl:"Raciocínio Lógico",in:"Informática",ap:"Ética e Administração Pública",rd:"Redação"};
 /* a que área cada matéria pertence; "*" = comum a todas (uma questão pode restringir pelo campo "area") */
-const DISC_AREA={cm:"medico",ti:"medico",ps:"medico",lg:"medico",fm:"medico",ec:"medico",rx:"medico",tc:"medico",us:"medico",rv:"medico",ss:"social",pl:"social",pt:"*",dr:"*",su:"*",et:"*",rl:"*",in:"*"};
+const DISC_AREA={cm:"medico",ti:"medico",ps:"medico",lg:"medico",fm:"medico",ec:"medico",rx:"medico",tc:"medico",us:"medico",rv:"medico",ss:"social",pl:"social",pt:"*",dr:"*",su:"*",et:"*",rl:"*",in:"*",ap:"*",rd:"*"};
 const areaAtual=()=>db.cfg.cargo||"medico";
 const verTudo=()=>{try{return !!(usuario&&db.adminOk&&db.cfg.verTudo)}catch(e){return false}};
 const visivel=q=>{if(verTudo())return true;const a=areaAtual(),da=DISC_AREA[q.disc]||"medico";return (da==="*"||da===a)&&(!q.area||q.area===a)};
-const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG",fm:"FM",ec:"EC",rx:"RX",tc:"TC",us:"US",rv:"RV",ss:"SS",pl:"PL",pt:"PT",dr:"DR",su:"SU",et:"ET",rl:"RL",in:"IN"};
+const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG",fm:"FM",ec:"EC",rx:"RX",tc:"TC",us:"US",rv:"RV",ss:"SS",pl:"PL",pt:"PT",dr:"DR",su:"SU",et:"ET",rl:"RL",in:"IN",ap:"AP",rd:"RD"};
 const zeros=()=>Object.fromEntries(Object.keys(DISC).map(k=>[k,0]));
 const TI_IDS=[37,44];                 /* questões do PDF que pertencem a Terapia Intensiva */
 const LIMITE=70;                      /* % abaixo do qual o subtema precisa de reforço */
-const APP_VERSAO="22";
+const APP_VERSAO="24";
+/* o que mudou em cada versão (a primeira é a atual) */
+const APP_NOTAS=[
+  {v:"24",d:"08/11/2026",t:"Mapa das matérias: escolha a matéria e veja o mapa por tópico e subtópico. Pacotes de Português, Direito, Informática, Raciocínio Lógico, Ética e Administração Pública e Redação reconhecidos. Todas as questões entram (discursivas só com o texto), com texto-base e figuras do pacote."},
+  {v:"23",d:"08/11/2026",t:"Versão e novidades no rodapé do Início, do Menu e das Configurações."},
+  {v:"22",d:"08/11/2026",t:"Pacote de estrutura aceita questões certo/errado (viram Certo/Errado) e anuladas; a mensagem diz quantas foram recusadas e por quê."},
+  {v:"21",d:"06/11/2026",t:"Imagens do visual na raiz do site, sem a pasta assets, para subir pelo GitHub."},
+  {v:"20",d:"06/11/2026",t:"Visual Confluência: cores suaves nos blocos, banner no Início, textura de papel leve, faixa e ilustração diferentes em cada tela."},
+  {v:"19",d:"06/11/2026",t:"Ícones da biblioteca visual nos blocos do Início e do Menu."},
+  {v:"18",d:"06/11/2026",t:"Estrutura de conhecimento (átomos, árvore, relações), Mapa de desenvolvimento e painel de Administração."}];
+function rodapeVersao(){const a=APP_NOTAS[0];
+  return `<details class="versao"><summary>Versão ${APP_VERSAO} · ${a.d} · ${esc(a.t)}</summary><ul>${APP_NOTAS.slice(1).map(n=>`<li><b>Versão ${n.v}</b> · ${n.d} · ${esc(n.t)}</li>`).join("")}</ul></details>`}
 const KEY="banco_questoes_v2";        /* mesma chave das versões anteriores: histórico preservado */
 const TIPOS={transc:"Transcrição / texto errado",gab:"Gabarito errado",alt:"Alternativa errada ou faltando",fig:"Figura faltando ou errada",outro:"Outro"};
 const DSM_CAPS=[["neurodesenv","Transtornos do neurodesenvolvimento"],["esquizofrenia","Espectro da esquizofrenia e outros transtornos psicóticos"],
@@ -388,6 +404,8 @@ const hojeISO=()=>isoDe(new Date());
 const fmtData=iso=>{const [a,m,d]=iso.split("-").map(Number);const dt=new Date(a,m-1,d);return SEMANA[dt.getDay()]+" "+String(d).padStart(2,"0")+"/"+String(m).padStart(2,"0")};
 const fmtMs=ms=>{const s=Math.round(ms/1000);return s<60?s+" s":Math.floor(s/60)+" min "+String(s%60).padStart(2,"0")+" s"};
 const incompleta=q=>!q.anulada&&(!q.gab||(q.alts||[]).length<2);
+const ehDisc=q=>!!q&&q.tipo==="discursiva";
+const faltaDado=q=>incompleta(q)&&!ehDisc(q);
 const motivoIncompleta=q=>(!q.gab&&!q.anulada)?"sem gabarito":((q.alts||[]).length<2?"menos de 2 alternativas":"");
 const ultimaRev=qs=>{let m=0;qs.forEach(q=>{const u=db.stats[q.id]&&db.stats[q.id].u;if(u&&u>m)m=u});return m};
 function selo(ms){if(!ms)return '<span class="rev n">nunca revisado</span>';
@@ -870,13 +888,14 @@ function figTag(fig,cod,extra){
   if(!fig)return"";
   const a=`class="fig" ${extra||""} alt="Figura da questão ${esc(cod||"")}"`;
   return fig.startsWith("img:")?`<img ${a} data-img="${esc(fig.slice(4))}">`:`<img ${a} src="${esc(fig)}">`}
+const figsTag=q=>(q.figs&&q.figs.length?q.figs:[q.fig]).filter(Boolean).map(f=>figTag(f,q.cod)).join("");
 function pintarImagens(){
   document.querySelectorAll("img[data-img]").forEach(el=>{
     const k=el.dataset.img;
     if(IMGC.has(k)){el.src=IMGC.get(k);return}
     imgGet(k).then(v=>v||baixarFigura(k)).then(v=>{
       if(v){IMGC.set(k,v);el.src=v}
-      else if(usuario){const d=document.createElement("div");d.className="meta";d.textContent="(imagem não encontrada neste aparelho nem na nuvem)";el.replaceWith(d)}
+      else{const d=document.createElement("div");d.className="meta fig-falta";d.textContent="(figura ainda não enviada: "+k+")";el.replaceWith(d)}
     }).catch(()=>{})})}
 
 /* figuras na nuvem: bucket privado "figuras", pasta de cada usuário (ver SQL no resumo) */
@@ -957,14 +976,14 @@ function limparSessaoSalva(){try{localStorage.removeItem(KEY+"_sessao")}catch(e)
 function carregarSessaoSalva(){
   try{const x=JSON.parse(localStorage.getItem(KEY+"_sessao"));
     if(x&&x.S&&x.S.lista&&x.S.lista.length&&!x.S.encerrada){st.S=x.S;st.disc=x.disc||null;st.feedback=x.feedback!==false;st.umaQ=!!x.umaQ;
-      st.S.lista=st.S.lista.map((q,i)=>st.S.resp[i]===undefined?{...q,opcoes:mistura(q.alts.map((t,k)=>({t,c:LET[k]===q.gab})))}:q)}}catch(e){}}
+      st.S.lista=st.S.lista.map((q,i)=>st.S.resp[i]===undefined?{...q,opcoes:mistura(q.alts.map((t,k)=>({t,c:LET[k]===q.gab,f:(q.altFigs||{})[LET[k]]||""})))}:q)}}catch(e){}}
 
 function iniciar(l,dur,forca,rot,opts){
-  l=l.filter(q=>!incompleta(q));
+  l=l.filter(q=>!incompleta(q)||ehDisc(q));
   if(!l.length){st.msg="Estas questões estão incompletas (sem gabarito ou alternativas). Complete-as em Para revisar.";render();return}
   const S=sessaoAtiva();
   if(!forca&&S&&Object.keys(S.resp).length){pedir("Você tem uma sessão em andamento. Começar outra substitui a atual.",()=>iniciar(l,dur,true,rot,opts),"Substituir e começar");return}
-  let b=(st.ordem==="aleatoria"?mistura(l):l.slice()).map(q=>({...q,opcoes:mistura(q.alts.map((t,i)=>({t,c:LET[i]===q.gab})))}));
+  let b=(st.ordem==="aleatoria"?mistura(l):l.slice()).map(q=>({...q,opcoes:mistura(q.alts.map((t,i)=>({t,c:LET[i]===q.gab,f:(q.altFigs||{})[LET[i]]||""})))}));
   const n=parseInt(st.qtd,10); if(n>0) b=b.slice(0,n);
   const min=dur!==undefined?+dur:(parseInt(st.dur,10)||0);
   st.S={...S_VAZIA(),id:"s"+Date.now().toString(36),lista:b,inicio:Date.now(),ult:Date.now(),dur:min,fim:min?Date.now()+min*6e4:0,
@@ -999,7 +1018,7 @@ function encerrarSessao(motivo){
 function responder(i,j){
   const S=st.S;
   if(!S.lista[i]||S.resp[i]!==undefined||S.encerrada)return;
-  const q=S.lista[i],ok=q.opcoes[j].c||q.anulada;
+  const q=S.lista[i];if(!q.opcoes||!q.opcoes[j])return;const ok=q.opcoes[j].c||q.anulada;
   S.resp[i]=ok;S.esc[i]=j;
   if(S.emPausa)encerrarPausa();
   const agora=Date.now(),ms=Math.min(agora-(S.ult||S.inicio||agora),20*6e4);S.tempos[i]=ms;S.ult=agora;
@@ -1076,7 +1095,7 @@ function relTexto(r){
 /* ============ importar questões ============ */
 const normDisc=v=>{const s=String(v||"").toLowerCase();
   return Object.keys(DISC).find(k=>k===s||DISC[k].toLowerCase()===s)
-    ||(/cl[íi]n/.test(s)?"cm":/intens|terap|cti|uti/.test(s)?"ti":/psiq/.test(s)?"ps"
+    ||(/reda[cç][aã]o/.test(s)?"rd":/administra[cç][aã]o p[uú]blica/.test(s)?"ap":/cl[íi]n/.test(s)?"cm":/intens|terap|cti|uti/.test(s)?"ti":/psiq/.test(s)?"ps"
       :/legist|legal|per[íi]cia|forense|tanato/.test(s)?"lg":/farmac/.test(s)?"fm":/ecg|eletro/.test(s)?"ec":/\brx\b|radiograf|raio/.test(s)?"rx":/\btc\b|tomograf/.test(s)?"tc":/\bus[g]?\b|ultrass|ecograf/.test(s)?"us":/revalid/.test(s)?"rv":/servi[cç]o social/.test(s)?"ss":/pol[ií]tica social|suas\b|assist[eê]ncia social/.test(s)?"pl":/portugu/.test(s)?"pt":/direito|constitui|administrativ|legisla/.test(s)?"dr":/\bsus\b|sa[uú]de p[uú]blica|coletiva/.test(s)?"su":/[eé]tica/.test(s)?"et":/racioc[ií]nio|l[oó]gic/.test(s)?"rl":/inform[aá]tica/.test(s)?"in":null)};
 
 function parseLote(txt){
@@ -1126,6 +1145,7 @@ function parseJSON(txt){
   let o;
   try{o=JSON.parse(txt)}
   catch(e){try{o=txt.split(/\r?\n/).filter(l=>l.trim()).map(l=>JSON.parse(l))}catch(e2){return{out,erros:["JSON inválido: "+e.message]}}}
+  if(o&&!Array.isArray(o)&&(o.atomos||o.arvore))return{out,erros:["Este arquivo é um pacote de estrutura (matéria, árvore, afirmações e questões). Importe em Configurações → Estrutura de conhecimento → Arquivos do pacote."]};
   const lista=Array.isArray(o)?o:(o&&Array.isArray(o.questoes)?o.questoes:[o]);
   lista.forEach((x,i)=>{
     const d=normDisc(x.disciplina||x.disc);
@@ -1139,7 +1159,7 @@ function parseJSON(txt){
       banca:x.banca||"",ano:x.ano||"",definicao:x.definicao||"",capitulo:capDe(x.capitulo||""),aspecto:aspDe(x.aspecto||""),cargo:x.cargo||"",idioma:x.idioma||"",ideia:x.ideia||"",explicacao:x.explicacao||"",area:AREAS[x.area]?x.area:"",complexidade:x.complexidade||"",grupos:Array.isArray(x.grupos)?x.grupos:[]})});
   return{out,erros}}
 
-const COD_RE=/^(CM|TI|PS|LG|FM|EC|RX|TC|US|RV|SS|PL|PT|DR|SU|ET|RL|IN)-A(\d{2,})$/;
+const COD_RE=/^(CM|TI|PS|LG|FM|EC|RX|TC|US|RV|SS|PL|PT|DR|SU|ET|RL|IN|AP|RD)-A(\d{2,})$/;
 const codigoLivre=c=>!QS.some(q=>q.cod===c);
 function salvarNovas(l){
   const novas=l.map(q=>{
@@ -1539,7 +1559,7 @@ function marcarConf(i,v){const S=st.S,q=S.lista[i],a=S.att&&S.att.find(x=>x.i===
 function motorReinserir(S,q,k,ok,e){
   const outras=QS.filter(x=>x.id!==q.id&&ideiaDe(x)===k&&!incompleta(x)&&!S.lista.some(y=>y.id===x.id));
   const precisa=(!ok)||(!e.cal&&e.apr>0);if(!precisa||!outras.length)return;
-  const n=mistura(outras)[0];S.lista.push({...n,opcoes:mistura(n.alts.map((t,ii)=>({t,c:LET[ii]===n.gab}))),reinserida:true})}
+  const n=mistura(outras)[0];S.lista.push({...n,opcoes:mistura(n.alts.map((t,ii)=>({t,c:LET[ii]===n.gab,f:(n.altFigs||{})[LET[ii]]||""}))),reinserida:true})}
 function checkpointDe(S){const n=Object.keys(S.resp).length,bl=S.att.slice(-MC.checkpoint);
   const acc=bl.length?Math.round(bl.filter(a=>a.ok&&!a.ch).length*100/bl.length):0,tMed=bl.length?Math.round(bl.reduce((x,y)=>x+y.t,0)/bl.length):0;
   return{N:n,acc,tMed,estado:estadoSessao(S)}}
@@ -1614,7 +1634,7 @@ function estenderSessao(S,n){const falta=S.meta-S.lista.length;if(falta<=0)retur
   const p=S.projId?db.projetos.find(x=>x.id===S.projId):null;const mats=p?p.materias.filter(m=>m.k&&S.lista.some(q=>matFiltro(m)(q))):[...new Set(S.lista.map(q=>q.disc))].map(k=>({k,nome:DISC[k]}));
   const r=U4()?montarSessaoUnificada(p,mats,falta,new Set(S.lista.map(q=>q.id))):montarSessaoMotor(p,mats,falta,new Set(S.lista.map(q=>q.id)));
   if(r.motivos)Object.assign(S.motivos=S.motivos||{},r.motivos);
-  r.lista.forEach(q=>S.lista.push({...q,opcoes:mistura(q.alts.map((t,i)=>({t,c:LET[i]===q.gab})))}))}
+  r.lista.forEach(q=>S.lista.push({...q,opcoes:mistura(q.alts.map((t,i)=>({t,c:LET[i]===q.gab,f:(q.altFigs||{})[LET[i]]||""})))}))}
 function iniciarPausa(){const S=st.S;S.pausaIni=Date.now();S.emPausa=true;S.pausouNaQ=true;render()}
 function encerrarPausa(){const S=st.S;S.pausasMs=(S.pausasMs||0)+(Date.now()-S.pausaIni);S.emPausa=false;S.pausaIni=0;
   S.testePausa={N0:S.att.length,accRef:accDe(S.att.slice(0,8))};if(S.fim)S.fim+=Date.now()-(S.ult||Date.now());S.ult=Date.now();render()}
@@ -2076,7 +2096,9 @@ const ESTR={pacotes:{},atomos:{},alias:{},relIdx:{},arvore:{},resumos:{},lista:[
 const ATOM_HIST={};
 const ARQ_PACOTE=["atomos","arvore","questoes","relacoes","resumos","lista_mestra","agregados"];
 const temEstrutura=()=>ESTR.n>0;
-const codMateria=m=>{const s=String(m||"").trim();const up=s.toUpperCase();const k=Object.keys(PRE).find(k=>PRE[k]===up);if(k)return k;if(DISC[s.toLowerCase()])return s.toLowerCase();return normDisc(s)};
+/* códigos de matéria usados pelo extrator nos pacotes */
+const COD_EXTRATOR={LP:"pt",POR:"pt",DIR:"dr",INF:"in",RLM:"rl",EAP:"ap",RED:"rd",ML:"lg"};
+const codMateria=m=>{const s=String(m||"").trim();const up=s.toUpperCase();if(COD_EXTRATOR[up])return COD_EXTRATOR[up];const k=Object.keys(PRE).find(k=>PRE[k]===up);if(k)return k;if(DISC[s.toLowerCase()])return s.toLowerCase();return normDisc(s)};
 const resolverAtomo=id=>{let x=id,g=0;while(ESTR.alias[x]&&g++<10)x=ESTR.alias[x];return x};
 const atomoDe=id=>ESTR.atomos[resolverAtomo(id)]||null;
 const atomoKeyIdeia=a=>"i:"+normTxt(a.ideia_central||a.subtopico||"");
@@ -2088,11 +2110,12 @@ const clamp01=x=>Math.max(0,Math.min(1,x));
 
 /* ---------- construção dos índices ---------- */
 function construirEstrutura(){
-  ESTR.atomos={};ESTR.alias={};ESTR.relIdx={};ESTR.arvore={};ESTR.resumos={};ESTR.lista=[];ESTR.agregados={};ESTR.n=0;
+  ESTR.atomos={};ESTR.alias={};ESTR.relIdx={};ESTR.arvore={};ESTR.temaNomes={};ESTR.resumos={};ESTR.lista=[];ESTR.agregados={};ESTR.n=0;
   const rels=[];
   Object.entries(ESTR.pacotes).forEach(([d,p])=>{
     (p.atomos||[]).forEach(a=>{ESTR.atomos[a.id]=a;ESTR.n++;(a.aliases||[]).forEach(al=>{if(al&&al!==a.id)ESTR.alias[al]=a.id})});
     (p.relacoes||[]).forEach(r=>rels.push(r));
+    {const tn={};Object.entries(p.arvore||{}).forEach(([c,tops])=>{const ks=Object.keys(tops||{});if(ks.length===1)tn[c]=ks[0]});ESTR.temaNomes[d]=Object.assign(tn,p.temaNomes||{})}
     if(p.arvore)ESTR.arvore[d]=p.arvore;if(p.resumos)ESTR.resumos[d]=p.resumos;if(p.agregados)ESTR.agregados[d]=p.agregados;
     if(p.lista)ESTR.lista=ESTR.lista.concat(p.lista.map(x=>({...x,disc:d})))});
   const visto=new Set();
@@ -2152,22 +2175,26 @@ function eventosJsonl(){const porQ=indiceAtomosPorQ(),L=[];
   (db.eventos||[]).forEach(e=>L.push(e));L.sort((x,y)=>x.ts<y.ts?-1:x.ts>y.ts?1:0);return L.map(l=>JSON.stringify(l)).join("\n")+"\n"}
 
 /* ---------- importação do pacote ---------- */
-async function receberPacote(files){const p={};let erros=[];
-  for(const f of files){const nome=f.name.toLowerCase().replace(/\.json$/,"");let o;try{o=JSON.parse(await f.text())}catch(e){erros.push(f.name+": JSON inválido");continue}
+async function receberPacote(files){const p={};let erros=[],nImg=0;const inteiros=[];
+  for(const f of files){if(/^image\//.test(f.type)||/\.(png|jpe?g|webp|gif)$/i.test(f.name)){try{const k=nomeArq(f.name),v=await reduzir(f);await imgPut(k,v);IMGC.set(k,v);nImg++}catch(e){erros.push(f.name+": imagem ilegível")}continue}
+    const nome=f.name.toLowerCase().replace(/\.json$/,"");let o;try{o=JSON.parse(await f.text())}catch(e){erros.push(f.name+": JSON inválido");continue}
     if(ARQ_PACOTE.includes(nome))p[nome]=o;
-    else if(o&&!Array.isArray(o)&&(o.atomos||o.arvore))ARQ_PACOTE.forEach(k=>{if(o[k]!==undefined)p[k]=o[k]});
+    else if(o&&!Array.isArray(o)&&(o.atomos||o.arvore||o.questoes)){const u={};ARQ_PACOTE.forEach(k=>{if(o[k]!==undefined)u[k]=o[k]});if(o.materia)u.materia=o.materia;inteiros.push(u)}
     else if(Array.isArray(o)&&o[0]&&o[0].afirmacao)p.atomos=o;
     else if(Array.isArray(o)&&o[0]&&o[0].enunciado&&o[0].atomos)p.questoes=o;
     else erros.push(f.name+": não reconheci (esperava atomos, arvore, questoes, relacoes, resumos, lista_mestra ou agregados)")}
-  if(!p.atomos&&!p.questoes){st.msg=(erros.join(" · ")||"Nenhum arquivo do pacote.");render();return}
-  const r=importarPacote(p);st.msg=[r.resumo].concat(erros,r.erros.slice(0,5)).join(" · ");render()}
+  const tImg=nImg?nImg+" imagem(ns) guardada(s) neste aparelho":"";
+  const lotes=inteiros.concat(p.atomos||p.questoes?[p]:[]);
+  if(!lotes.length){st.msg=(tImg?[tImg].concat(erros):erros).join(" · ")||"Nenhum arquivo do pacote.";render();return}
+  const rs=lotes.map(importarPacote);st.msg=rs.map(r=>r.resumo).concat(tImg?[tImg]:[],erros,[].concat(...rs.map(r=>r.erros)).slice(0,5)).join(" · ");render()}
 function importarPacote(p){const erros=[];
-  const d=codMateria((p.atomos&&p.atomos[0]&&p.atomos[0].materia)||(p.questoes&&p.questoes[0]&&(p.questoes[0].materias||[])[0])||(p.lista_mestra&&p.lista_mestra[0]&&p.lista_mestra[0].materia));
+  const d=codMateria(p.materia||(p.atomos&&p.atomos[0]&&p.atomos[0].materia)||(p.questoes&&p.questoes[0]&&(p.questoes[0].materias||[])[0])||(p.lista_mestra&&p.lista_mestra[0]&&p.lista_mestra[0].materia));
   if(!d)return{resumo:"Matéria não reconhecida no pacote.",erros};
   const pac=ESTR.pacotes[d]||(ESTR.pacotes[d]={atomos:[],relacoes:[],arvore:null,resumos:null,lista:null,agregados:null});
   let nAt=0,nRel=0,nQ=0,nQnov=0;const motivos={};
   if(p.atomos){const porId=Object.fromEntries(pac.atomos.map(a=>[a.id,a]));p.atomos.forEach(a=>{if(!a.id||!a.afirmacao){erros.push("átomo sem id ou afirmação");return}porId[a.id]=a;nAt++});pac.atomos=Object.values(porId)}
   if(p.relacoes){const k=r=>[r.a,r.b,r.tipo].join("|");const porK=Object.fromEntries(pac.relacoes.map(r=>[k(r),r]));p.relacoes.forEach(r=>{if(!r.a||!r.b||!r.tipo)return;porK[k(r)]=r;nRel++});pac.relacoes=Object.values(porK)}
+  if(p.questoes){const tn=pac.temaNomes||(pac.temaNomes={});p.questoes.forEach(x=>{if(x&&x.tema&&(x.tema_banco||x.topico))tn[x.tema]=x.tema_banco||x.topico})}
   if(p.arvore)pac.arvore=p.arvore;if(p.resumos)pac.resumos=p.resumos;if(p.lista_mestra)pac.lista=p.lista_mestra;if(p.agregados)pac.agregados=p.agregados;
   pac.atualizado=Date.now();
   if(p.questoes){const porId=Object.fromEntries(db.added.map((q,i)=>[q.id,i]));
@@ -2179,22 +2206,31 @@ function importarPacote(p){const erros=[];
   salvarEstruturaLocal();gravar();construir();construirEstrutura();
   const rec=Object.entries(motivos).map(([k,v])=>v+" "+k).join(", ");
   return{resumo:`${DISC[d]}: ${nAt} átomo(s), ${nRel} relação(ões), ${nQ} questão(ões) (${nQnov} novas)${rec?"; recusadas: "+rec:""}${p.arvore?", árvore":""}${p.resumos?", resumos":""}${p.lista_mestra?", lista mestra":""}.`,erros,disc:d}}
-/* certo/errado (vf) vira múltipla escolha com duas alternativas */
-function normVF(x){if(x&&x.tipo==="vf"&&Array.isArray(x.alternativas)&&x.alternativas.length===0&&/^[CE]$/i.test(String(x.gabarito||"")))return{...x,alternativas:[{letra:"A",texto:"Certo"},{letra:"B",texto:"Errado"}],gabarito:/^C$/i.test(x.gabarito)?"A":"B"};return x}
-/* motivo da recusa (null se a questão serve) */
-function motivoQuestao(x){x=normVF(x);if(!x||!x.id)return "sem identificador";if(!x.enunciado)return "sem enunciado";
-  if(x.tipo==="vf"&&(!Array.isArray(x.alternativas)||x.alternativas.length<2))return "certo/errado sem gabarito";
-  if(!Array.isArray(x.alternativas)||x.alternativas.length<2)return "discursiva (sem alternativas)";
-  if(x.gabarito_status==="anulada")return null;
-  const g=String(x.gabarito||"").toUpperCase();if(!g||LET.indexOf(g)<0||LET.indexOf(g)>=x.alternativas.length)return "sem gabarito válido";return null}
-function questaoDoPacote(x,d,porAt){x=normVF(x);if(motivoQuestao(x))return null;
-  const alts=x.alternativas.map(a=>typeof a==="string"?a:(a.texto||"")),gab=String(x.gabarito||"").toUpperCase(),anul=x.gabarito_status==="anulada";
-  if(!anul&&(!gab||LET.indexOf(gab)<0||LET.indexOf(gab)>=alts.length))return null;
+/* certo/errado (vf) vira múltipla escolha com duas alternativas; sem gabarito, entra incompleta */
+function normVF(x){if(x&&x.tipo==="vf"&&Array.isArray(x.alternativas)&&x.alternativas.length===0){const g=String(x.gabarito||"").toUpperCase();
+  return{...x,alternativas:[{letra:"A",texto:"Certo"},{letra:"B",texto:"Errado"}],gabarito:g==="C"?"A":g==="E"?"B":""}}return x}
+/* só recusa o que não tem como mostrar */
+function motivoQuestao(x){if(!x||!x.id)return "sem identificador";if(!String(x.enunciado||"").trim())return "sem enunciado";return null}
+const nomeArq=s=>String(s||"").split(/[\\/]/).pop().toLowerCase();
+function questaoDoPacote(x,d,porAt){if(motivoQuestao(x))return null;x=normVF(x);const ex=x.extras||{};
+  const imgs=(Array.isArray(x.imagens)?x.imagens:[]).filter(i=>i&&i.arquivo);
+  const altFigs={};imgs.forEach(i=>{const o=String(i.onde||"").toUpperCase();if(LET.includes(o))altFigs[o]="img:"+nomeArq(i.arquivo)});
+  let gab=String(x.gabarito||"").toUpperCase(),src=Array.isArray(x.alternativas)?x.alternativas:[];
+  const letrasFig=Object.keys(altFigs).sort();
+  if(src.length<2&&letrasFig.length>=2&&LET.includes(gab))src=LET.slice(0,LET.indexOf(letrasFig[letrasFig.length-1])+1).map(l=>({letra:l,texto:""}));
+  const ehD=src.length<2;
+  const alts=ehD?[]:src.map(a=>typeof a==="string"?a:(a.texto||"")),anul=x.gabarito_status==="anulada";
+  if(ehD||LET.indexOf(gab)<0||LET.indexOf(gab)>=alts.length)gab="";
   const links=(x.atomos||[]).filter(l=>l&&l.id).map(l=>({id:l.id,papel:l.papel||"apoia",tipo_cobranca:l.tipo_cobranca||"",distrator:l.distrator||""}));
   const dec=links.find(l=>l.papel==="decide")||links[0];const at=dec?((porAt&&porAt[dec.id])||atomoDe(dec.id)):null;
   const disc=codMateria((x.materias||[])[0])||d;
-  return{id:x.id,cod:x.id,disc,tema:x.tema||"Geral",aspecto:x.topico||"",subtema:x.subtopico||x.tema||"Geral",ideia:(at&&at.ideia_central)||x.ideia_central||"",
-    enun:x.enunciado,alts,gab,anulada:anul,fig:x.figura||null,banca:x.banca||"",ano:x.ano||"",uf:x.uf||"",complexidade:x.complexidade||"",explicacao:x.analise||"",
+  const figs=[...new Set(imgs.filter(i=>!i.onde||i.onde==="enunciado").map(i=>"img:"+nomeArq(i.arquivo)).concat(x.figura?["img:"+nomeArq(x.figura)]:[]))];
+  const base=String(x.texto_base||"").trim();
+  return{id:x.id,cod:String(ex.codigo||x.id).toUpperCase(),disc,tipo:ehD?"discursiva":(x.tipo==="discursiva"?"me"+alts.length:(x.tipo||"")),tema:x.tema_banco||x.topico||x.tema||"Geral",aspecto:x.topico||"",
+    subtema:x.subtopico||x.tema_banco||x.tema||"Geral",ideia:(at&&at.ideia_central)||x.ideia_central||ex.ideia_central||"",
+    enun:x.enunciado,base:base&&!String(x.enunciado).includes(base.slice(0,60))?base:"",alts,gab,anulada:anul,
+    fig:figs[0]||null,figs:figs.length>1?figs:undefined,altFigs:Object.keys(altFigs).length?altFigs:undefined,
+    banca:x.banca||"",ano:x.ano||"",uf:x.uf||"",cargo:ex.cargo||"",complexidade:x.complexidade||ex.complexidade||"",explicacao:x.analise||"",
     atomos:links,gabStatus:x.gabarito_status||"",hash:x.hash_conteudo||"",area:AREAS[x.area]?x.area:""}}
 async function salvarEstruturaLocal(){try{await kvPut("estrutura",ESTR.pacotes)}catch(e){}}
 async function carregarEstruturaLocal(){try{const p=await kvGet("estrutura");if(p&&typeof p==="object"){ESTR.pacotes=p;construirEstrutura();render()}}catch(e){}}
@@ -2244,7 +2280,7 @@ function cadeiaAposErro(S,q,i,ok){if(ok||!S.motor||!temEstrutura())return;const 
   const jaNaLista=S.lista.findIndex((x,k)=>k>i&&S.resp[k]===undefined&&(x.atomos||[]).some(l=>resolverAtomo(l.id)===prox.outro));
   let item,n;
   if(jaNaLista>=0){if(depoisRespondida||!st.umaQ||jaNaLista===i+1)return;item=S.lista.splice(jaNaLista,1)[0];item.cadeia=true;n=item}
-  else{const ex=new Set(S.lista.map(x=>x.id));n=questaoDoAtomo(prox.outro,QS.filter(x=>!incompleta(x)),ex);if(!n)return;item={...n,opcoes:mistura(n.alts.map((t,ii)=>({t,c:LET[ii]===n.gab}))),cadeia:true}}
+  else{const ex=new Set(S.lista.map(x=>x.id));n=questaoDoAtomo(prox.outro,QS.filter(x=>!incompleta(x)),ex);if(!n)return;item={...n,opcoes:mistura(n.alts.map((t,ii)=>({t,c:LET[ii]===n.gab,f:(n.altFigs||{})[LET[ii]]||""}))),cadeia:true}}
   if(depoisRespondida||!st.umaQ)S.lista.push(item);else S.lista.splice(i+1,0,item);
   S.motivos=S.motivos||{};S.motivos[n.id]="cadeia: depois de "+rotuloAtomo(at.id)+" vem "+rotuloAtomo(prox.outro)}
 
@@ -2286,16 +2322,18 @@ function cardEstruturaHoje(r,p){if(!temEstrutura()||!r||!r.lista||!r.lista.lengt
     ${linhas}${r.lista.length>6?`<p class="meta">… e mais ${r.lista.length-6} questões.</p>`:""}</div>`}
 
 /* ---------- mapa de desenvolvimento ---------- */
-function arvoreMapa(d){const no=(o,k)=>o[k]||(o[k]={nome:k,filhos:{},atomos:[],qs:[]});const T={};
+/* matérias do mapa: as da área e, para o administrador, também as que têm estrutura ou questões */
+function discsDoMapa(){const vis=Object.keys(DISC_VIS());if(!ehAdmin())return vis;return vis.concat(Object.keys(DISC).filter(d=>!vis.includes(d)&&(ESTR.pacotes[d]||QS_TODAS.some(q=>q.disc===d))))}
+function arvoreMapa(d){const no=(o,k)=>o[k]||(o[k]={nome:k,filhos:{},atomos:[],qs:[]});const T={};const tn=ESTR.temaNomes[d]||{};
   const arv=ESTR.arvore[d]||{};
-  Object.entries(arv).forEach(([tema,tops])=>{const nT=no(T,tema);Object.entries(tops||{}).forEach(([top,subs])=>{const nTo=no(nT.filhos,top);Object.entries(subs||{}).forEach(([sub,ideias])=>{const nS=no(nTo.filhos,sub);
+  Object.entries(arv).forEach(([tema,tops])=>{const nT=no(T,tn[tema]||tema);Object.entries(tops||{}).forEach(([top,subs])=>{const nTo=no(nT.filhos,top);Object.entries(subs||{}).forEach(([sub,ideias])=>{const nS=no(nTo.filhos,sub);
     Object.entries(ideias||{}).forEach(([ideia,ids])=>{const nI=no(nS.filhos,ideia);nI.atomos=(ids||[]).map(resolverAtomo).filter((id,j,arr)=>ESTR.atomos[id]&&ESTR.atomos[id].status!=="excluido"&&arr.indexOf(id)===j)})})})});
   /* átomos que não estão na árvore entram pela própria hierarquia */
-  Object.values(ESTR.atomos).forEach(a=>{if(codMateria(a.materia)!==d||a.status==="excluido")return;const nI=no(no(no(no(T,a.tema||"Geral").filhos,a.topico||"Geral").filhos,a.subtopico||"Geral").filhos,a.ideia_central||"Geral");if(!nI.atomos.includes(a.id))nI.atomos.push(a.id)});
+  Object.values(ESTR.atomos).forEach(a=>{if(codMateria(a.materia)!==d||a.status==="excluido")return;const nI=no(no(no(no(T,tn[a.tema]||a.tema||"Geral").filhos,a.topico||"Geral").filhos,a.subtopico||"Geral").filhos,a.ideia_central||"Geral");if(!nI.atomos.includes(a.id))nI.atomos.push(a.id)});
   /* questões encaixam pelo nome; as que não têm nó criam o seu */
   const idx={};const chave=(...p)=>p.map(normTxt).join("|");
   Object.values(T).forEach(nT=>{idx[chave(nT.nome)]=nT;Object.values(nT.filhos).forEach(nTo=>{idx[chave(nT.nome,nTo.nome)]=nTo;Object.values(nTo.filhos).forEach(nS=>{idx[chave(nT.nome,nTo.nome,nS.nome)]=nS;Object.values(nS.filhos).forEach(nI=>{idx[chave(nT.nome,nTo.nome,nS.nome,nI.nome)]=nI})})})});
-  QS.filter(q=>q.disc===d).forEach(q=>{const t=q.tema||"Geral",to=aspOf(q)==="Sem aspecto"?(q.aspecto||"Geral"):aspOf(q),s=q.subtema||t,ideia=q.ideia||s;
+  (ehAdmin()?QS_TODAS:QS).filter(q=>q.disc===d).forEach(q=>{const t=tn[q.tema]||q.tema||"Geral",to=aspOf(q)==="Sem aspecto"?(q.aspecto||"Geral"):aspOf(q),s=q.subtema||t,ideia=q.ideia||s;
     const nI=idx[chave(t,to,s,ideia)]||(()=>{const nT=idx[chave(t)]||(idx[chave(t)]=no(T,t));const nTo=idx[chave(t,to)]||(idx[chave(t,to)]=no(nT.filhos,to));const nS=idx[chave(t,to,s)]||(idx[chave(t,to,s)]=no(nTo.filhos,s));return idx[chave(t,to,s,ideia)]=no(nS.filhos,ideia)})();
     nI.qs.push(q)});
   const agregar=n=>{Object.values(n.filhos).forEach(f=>{agregar(f);n.atomos=n.atomos.concat(f.atomos);n.qs=n.qs.concat(f.qs)});n.atomos=[...new Set(n.atomos)];return n};
@@ -2316,23 +2354,26 @@ function indicadores(s){return `<span class="ind"><span class="dot ${s.cor}" tit
 function vMapa(){const m=st.mapa||(st.mapa={});_accQ=null;const p=db.projetos.find(x=>x.id===(st.projId||(db.projetos[0]||{}).id))||null;
   const topo=(t,voltaAct,voltaD)=>`<div class="topo"><button data-act="${voltaAct}"${voltaD?` data-d="${esc(voltaD)}"`:""}>← Voltar</button><h2>${t}</h2><button class="sm" data-act="listaMestra">Lista mestra</button></div>`;
   const legenda=`<p class="meta">Cor: acerto nas respostas (verde ≥80%, âmbar 60–79%, vermelho &lt;60%). Barra: % completado${temEstrutura()?" (átomos conhecidos)":" (ideias conhecidas)"}. "imp" é a importância média da estrutura${p&&p.banca?", ajustada à banca "+esc(p.banca):""}. Toque para abrir.</p>`;
-  if(!m.disc){const tiles=Object.keys(DISC_VIS()).map(d=>{const T=arvoreMapa(d);const raiz={filhos:T,atomos:[],qs:[]};Object.values(T).forEach(n=>{raiz.atomos=raiz.atomos.concat(n.atomos);raiz.qs=raiz.qs.concat(n.qs)});raiz.atomos=[...new Set(raiz.atomos)];
+  if(!m.disc){const tiles=discsDoMapa().map(d=>{const T=arvoreMapa(d);const raiz={filhos:T,atomos:[],qs:[]};Object.values(T).forEach(n=>{raiz.atomos=raiz.atomos.concat(n.atomos);raiz.qs=raiz.qs.concat(n.qs)});raiz.atomos=[...new Set(raiz.atomos)];
       if(!raiz.qs.length&&!raiz.atomos.length)return "";const s=statsNo(raiz,p);
-      return `<button class="mtile ${s.cor}" data-act="mapaDisc" data-d="${d}"><b>${esc(DISC[d])}</b><span class="meta">${s.nAt?s.nAt+" átomos · ":""}${s.nQ} questões</span>${indicadores(s)}</button>`}).join("");
-    return `${topo("Mapa de desenvolvimento","menu")}${legenda}<div class="mgrid">${tiles||'<p class="empty">Sem questões nem estrutura nesta área.</p>'}</div>
+      return `<button class="mtile ${s.cor}" data-act="mapaDisc" data-d="${d}"><b>${esc(DISC[d])}</b><span class="meta">${(k=>k+(k===1?" tópico":" tópicos"))(Object.values(T).reduce((x,n)=>x+Object.keys(n.filhos).length,0))} · ${s.nAt?s.nAt+" afirmações · ":""}${s.nQ} questões</span>${indicadores(s)}</button>`}).join("");
+    return `${topo("Mapa das matérias","menu")}<p class="meta">Toque numa matéria para ver o mapa dela por tópico e subtópico.</p>${legenda}<div class="mgrid">${tiles||'<p class="empty">Sem questões nem estrutura nesta área.</p>'}</div>
       ${temEstrutura()?"":`<div class="card"><b>Estrutura ainda não importada.</b> <span class="meta">O mapa mostra a hierarquia das questões. Para ver as afirmações (átomos) com importância e domínio, importe o pacote export/&lt;MATERIA&gt;/ em Configurações → Estrutura.</span></div>`}${msgBox()}`}
   const T=arvoreMapa(m.disc);const linha=(n,act,d,extra)=>{const s=statsNo(n,p);return `<button class="mrow ${s.cor}" data-act="${act}" data-d="${esc(d)}"><span class="nome"><b>${esc(n.nome)}</b>${extra||""}<br><span class="meta">${s.nAt?s.nAt+" átomos · ":""}${s.nQ} questões</span></span><span class="inds">${indicadores(s)}</span></button>`};
   const crumbs=[DISC[m.disc],m.tema,m.top,m.sub].filter(Boolean).map(esc).join(" › ");
   const estudar=n=>n.qs.length?`<div class="acoes"><button class="sm primary" data-act="mapaEstudar">Estudar este nó (${Math.min(20,n.qs.length)} questões)</button></div>`:"";
-  if(!m.tema){const corpo=Object.values(T).map(nT=>{const s=statsNo(nT,p);return `<div class="card"><div class="mrow hdr ${s.cor}"><span class="nome"><b>${esc(nT.nome)}</b><br><span class="meta">tema · ${nT.qs.length} questões</span></span><span class="inds">${indicadores(s)}</span></div>
-      ${Object.values(nT.filhos).map(nTo=>linha(nTo,"mapaTop",nT.nome+"\u0001"+nTo.nome)).join("")}</div>`}).join("");
+  if(!m.tema){const corpo=Object.values(T).map(nT=>{const s=statsNo(nT,p),tops=Object.values(nT.filhos);const unico=tops.length===1&&normTxt(tops[0].nome)===normTxt(nT.nome);
+      const blocos=tops.map(nTo=>{const sT=statsNo(nTo,p);const tiles=Object.values(nTo.filhos).map(nS=>{const sS=statsNo(nS,p);
+          return `<button class="mtile ${sS.cor}" data-act="mapaIr" data-d="${esc([nT.nome,nTo.nome,nS.nome].join("\u0001"))}"><b>${esc(nS.nome)}</b><span class="meta">${sS.nAt?sS.nAt+" afirmações · ":""}${sS.nQ} questões</span>${indicadores(sS)}</button>`}).join("");
+        return `${unico?"":`<div class="mrow hdr ${sT.cor}" style="margin-top:10px"><span class="nome"><b>${esc(nTo.nome)}</b><br><span class="meta">tópico · ${nTo.atomos.length} afirmações · ${nTo.qs.length} questões</span></span><span class="inds">${indicadores(sT)}</span></div>`}<div class="mgrid" style="margin-top:8px">${tiles||'<p class="meta">Sem subtópicos.</p>'}</div>`}).join("");
+      return `<div class="card"><div class="mrow hdr ${s.cor}"><span class="nome"><b>${esc(nT.nome)}</b><br><span class="meta">${unico?"tópico":"tema"} · ${nT.atomos.length} afirmações · ${nT.qs.length} questões</span></span><span class="inds">${indicadores(s)}</span></div>${blocos}</div>`}).join("");
     return `${topo(crumbs,"mapaVoltar")}${legenda}${corpo||'<p class="empty">Sem conteúdo.</p>'}${msgBox()}`}
   const nT=T[m.tema],nTo=nT&&nT.filhos[m.top];if(!nTo){m.tema=null;m.top=null;return vMapa()}
   if(!m.sub){return `${topo(crumbs,"mapaVoltar")}${legenda}<div class="card"><div class="mrow hdr"><span class="nome"><b>${esc(nTo.nome)}</b><br><span class="meta">tópico</span></span><span class="inds">${indicadores(statsNo(nTo,p))}</span></div>${estudar(nTo)}</div>
       ${Object.values(nTo.filhos).map(nS=>linha(nS,"mapaSub",nS.nome)).join("")||'<p class="empty">Sem subtópicos.</p>'}${msgBox()}`}
   const nS=nTo.filhos[m.sub];if(!nS){m.sub=null;return vMapa()}
   registrarLeitura(nS.atomos);
-  const d=m.disc,resumo=((ESTR.resumos[d]||{})[m.tema]||{})[m.sub];
+  const d=m.disc,tcod=Object.keys(ESTR.temaNomes[d]||{}).find(c=>ESTR.temaNomes[d][c]===m.tema)||m.tema,resumo=((ESTR.resumos[d]||{})[tcod]||(ESTR.resumos[d]||{})[m.tema]||{})[m.sub];
   const atomoRow=id=>{const a=atomoDe(id),e=estadoAtomo(id,p),imp=importanciaDe(id,p),marca=(db.marcas||{})[id],val=(db.valid||{})[id];const cor=e.n<2?"nd":(e.ac/e.n)>=0.8?"ok":(e.ac/e.n)>=0.6?"at":"cr";
     const sup=a.status==="superado"?` <span class="tag">superado${a.superado_por?" por "+esc(a.superado_por):""}</span>`:"";
     return `<div class="atomo ${cor}"><div class="atxt"><span class="dot ${cor}"></span><b>${esc(a.sujeito?a.sujeito+": ":"")}${esc(a.afirmacao)}</b>${a.condicao?`<div class="meta">Quando: ${esc(a.condicao)}</div>`:""}${a.excecao?`<div class="meta">Exceção: ${esc(a.excecao)}</div>`:""}
@@ -2409,8 +2450,9 @@ function acaoEstrutura(a,el){const m=st.mapa||(st.mapa={});
     case "mapa":st.view="mapa";st.mapa={};st.msg="";return true;
     case "mapaDisc":m.disc=el.dataset.d;m.tema=null;m.top=null;m.sub=null;return true;
     case "mapaTop":{const [t,to]=el.dataset.d.split("\u0001");m.tema=t;m.top=to;m.sub=null;return true}
-    case "mapaSub":m.sub=el.dataset.d;return true;
-    case "mapaVoltar":if(m.sub)m.sub=null;else if(m.top){m.top=null;m.tema=null}else m.disc=null;return true;
+    case "mapaSub":m.sub=el.dataset.d;m.direto=false;return true;
+    case "mapaIr":{const [t,to,s]=el.dataset.d.split("\u0001");m.tema=t;m.top=to;m.sub=s;m.direto=true;return true}
+    case "mapaVoltar":if(m.sub){m.sub=null;if(m.direto){m.top=null;m.tema=null;m.direto=false}}else if(m.top){m.top=null;m.tema=null}else m.disc=null;return true;
     case "mapaEstudar":{const n=noAtualDoMapa();if(!n||!n.qs.length)return true;st.disc=n.qs[0].disc;st.sel=new Set();st.filtro="todas";st.qtd="";st.ordem="aleatoria";iniciar(mistura(n.qs).slice(0,20),0,false,"Mapa · "+n.nome,{ctx:"Mapa"});return "feito"}
     case "listaMestra":st.view="listaMestra";return true;
     case "lmFiltrar":return true;
@@ -2515,7 +2557,7 @@ function vHome(){
   if(!db.cfg.cargo&&st.view==="home")return vEscolherCargo();
   if(!AREAS_ATIVAS.includes(areaAtual())||(QS.length===0&&!ehAdmin()&&areaAtual()!=="medico"))return vCargo();
   const ativa=sessaoAtiva();
-  const nInc=QS.filter(incompleta).length;
+  const nInc=QS.filter(faltaDado).length;
   const p=db.projetos.slice().sort((a,b)=>(b.ultimo||b.criado)-(a.ultimo||a.criado))[0];
   const bloco=ativa?`<div class="card sessao"><b>Sessão em andamento</b>
     <span class="meta">· ${esc(ativa.rotulo||"Sessão")} · ${Object.keys(ativa.resp).length}/${ativa.lista.length} respondidas${ativa.fim?" · "+(Date.now()>=ativa.fim?"tempo esgotado":"restam "+tempoRestante(ativa)):""}</span>
@@ -2537,7 +2579,7 @@ function vHome(){
     <div class="bigs">
       <button class="big b1" data-act="menu"><img class="ico" src="icone_01.webp" alt="" aria-hidden="true"><b>Menu</b><span>Projetos, simulados, revisão, banco, inserir e teste de atenção</span></button>
       <button class="big b4" data-act="config"><img class="ico" src="icone_14.webp" alt="" aria-hidden="true"><b>Configurações</b><span>Conta, meta, tema, atalhos e backup</span></button>
-    </div>${msgBox()}`}
+    </div>${msgBox()}${rodapeVersao()}`}
 
 function vMenu(){
   const nRep=db.reports.filter(r=>!r.ok).length;
@@ -2547,7 +2589,7 @@ function vMenu(){
       <button class="big b1" data-act="projetos"><img class="ico" src="icone_07.webp" alt="" aria-hidden="true"><b>Projetos</b><span>${db.projetos.length} projeto(s) · cronograma por matéria</span></button>
       <button class="big b5" data-act="simulados"><img class="ico" src="icone_09.webp" alt="" aria-hidden="true"><b>Simulados</b><span>Montar um novo ou refazer anteriores</span></button>
       <button class="big b2" data-act="revisarQ"><img class="ico" src="icone_06.webp" alt="" aria-hidden="true"><b>Revisar questões</b><span>O que você mais erra, com questões parecidas</span></button>
-      <button class="big b6" data-act="mapa"><img class="ico" src="icone_11.webp" alt="" aria-hidden="true"><b>Mapa de desenvolvimento</b><span>Calor por matéria, tópico e afirmação · completado e acertos${temEstrutura()?" · "+ESTR.n+" átomos":""}</span></button>
+      <button class="big b6" data-act="mapa"><img class="ico" src="icone_11.webp" alt="" aria-hidden="true"><b>Mapa das matérias</b><span>Escolha a matéria e veja o mapa por tópico, subtópico e afirmação · acertos e progresso${temEstrutura()?" · "+ESTR.n+" átomos":""}</span></button>
       <button class="big b6" data-act="banco"><img class="ico" src="icone_02.webp" alt="" aria-hidden="true"><b>Banco de questões</b><span>${QS.length} questões · conferir, marcar e editar</span></button>
       <button class="big b4" data-act="add"><img class="ico" src="icone_05.webp" alt="" aria-hidden="true"><b>Inserir questões</b><span>Colar em lote, planilha, JSON ou uma por vez</span></button>
     </div>
@@ -2558,7 +2600,7 @@ function vMenu(){
       <button data-act="rapida">Sessão rápida</button>
       <button data-act="materias">Matérias e temas</button>
       <button data-act="curvas">Curvas de retenção${curvaVencidas().length?` <span class="tag r">${curvaVencidas().length}</span>`:""}</button>
-      <button data-act="relatos">Problemas relatados${nRep?` <span class="tag r">${nRep}</span>`:""}</button>${ehAdmin()?'<button class="primary" data-act="admin">Administração</button>':""}</div>${msgBox()}`}
+      <button data-act="relatos">Problemas relatados${nRep?` <span class="tag r">${nRep}</span>`:""}</button>${ehAdmin()?'<button class="primary" data-act="admin">Administração</button>':""}</div>${msgBox()}${rodapeVersao()}`}
 
 function vProjetos(){
   const cards=db.projetos.slice().sort((a,b)=>(b.ultimo||b.criado)-(a.ultimo||a.criado)).map(p=>{const pr=progProj(p),at=atrasados(p),sl=proxSlot(p);
@@ -2722,7 +2764,7 @@ function vRevisarQ(){
   const porD={};erra.forEach(q=>{(porD[q.disc]=porD[q.disc]||{});(porD[q.disc][q.tema]=porD[q.disc][q.tema]||[]).push(q)});
   const blocos=Object.keys(porD).map(d=>`<details class="card" open><summary><b>${DISC[d]}</b> <span class="meta">· ${Object.values(porD[d]).flat().length} questão(ões) erradas</span> <button class="sm primary" data-act="revSessao" data-d="${d}">Sessão da matéria</button></summary>
       ${Object.keys(porD[d]).sort().map(t=>`<div class="lin"><span class="nome">${esc(t)} <span class="meta">· ${porD[d][t].length} erradas · assuntos: ${[...new Set(porD[d][t].map(q=>q.subtema))].slice(0,4).map(esc).join(", ")}</span></span><button class="sm" data-act="revSessao" data-d="${d}" data-t="${esc(t)}">Sessão do tema</button></div>`).join("")}</details>`).join("");
-  const nF=db.flags.length,nNS=QS.filter(q=>{const a=db.stats[q.id]&&db.stats[q.id].av;return a&&(a.naosabia||a.chute)}).length,nInc=QS.filter(incompleta).length,nRev=QS.filter(q=>dentro(q)&&pred.revisar(q)).length;
+  const nF=db.flags.length,nNS=QS.filter(q=>{const a=db.stats[q.id]&&db.stats[q.id].av;return a&&(a.naosabia||a.chute)}).length,nInc=QS.filter(faltaDado).length,nRev=QS.filter(q=>dentro(q)&&pred.revisar(q)).length;
   const chips=`<div style="margin-bottom:10px"><span class="chip ${!f.disc&&!f.proj?"on":""}" data-act="revF" data-d="" data-p="">Tudo</span>${Object.keys(DISC_VIS()).map(d=>`<span class="chip ${f.disc===d?"on":""}" data-act="revF" data-d="${d}" data-p="">${DISC[d]}</span>`).join("")}${db.projetos.map(p=>`<span class="chip ${f.proj===p.id?"on":""}" data-act="revF" data-d="" data-p="${p.id}">📁 ${esc(p.nome)}</span>`).join("")}</div>`;
   return `<div class="topo">${voltar("menu",0,"Menu")}<h2>Revisar questões</h2><span></span></div>
     <p class="meta">Escolha o recorte: tudo, uma matéria ou um projeto em andamento. Cada sessão reúne as questões que você erra (acerto abaixo de 60%) e acrescenta outras parecidas do mesmo assunto.</p>
@@ -2882,6 +2924,8 @@ function vLista(){
     <label><span>Feedback parcial</span><select data-ch="feedN"><option value="0">Só no fim</option>${[5,10,20].map(n=>`<option value="${n}"${st.feedN===n?" selected":""}>A cada ${n}</option>`).join("")}</select></label>
     <button class="primary" data-act="iniciar" ${sel.length?"":"disabled"}>Iniciar</button></div>${msgBox()}`}
 
+/* discursiva: só o texto, sem alternativas; a análise fica recolhida */
+function blocoDisc(q){return `<div class="meta">Questão discursiva: sem alternativas.</div>${q.explicacao?`<details class="disc-an"><summary>Ver análise</summary><p>${esc(q.explicacao)}</p></details>`:""}`}
 function vQuiz(){
   const S=st.S,n=S.lista.length,r=Object.keys(S.resp).length;
   const ac=Object.values(S.resp).filter(Boolean).length,er=r-ac;
@@ -2904,7 +2948,7 @@ function vQuiz(){
       if(resp!==undefined){
         if(!fb){if(j===pick)c="pick"}
         else if(!q.anulada){if(o.c)c="correct";else if(j===pick)c="wrong"}}
-      return `<button class="opt ${c}" data-act="resp" data-q="${i}" data-i="${j}" ${resp!==undefined?"disabled":""}><span class="l">${LET[j]})</span><span>${esc(o.t)}</span></button>`}).join("");
+      return `<button class="opt ${c}" data-act="resp" data-q="${i}" data-i="${j}" ${resp!==undefined?"disabled":""}><span class="l">${LET[j]})</span><span>${esc(o.t)}${o.f?figTag(o.f,q.cod):""}</span></button>`}).join("");
     let res="";
     if(resp!==undefined&&!fb)res=`<div class="meta">Resposta registrada: ${LET[pick]}. O resultado aparece ao encerrar.</div>`;
     else if(resp!==undefined){
@@ -2915,12 +2959,12 @@ function vQuiz(){
       res+=botoesConf(i,S)+feedbackIdeia(q,i,S)}
     return `<section class="card" id="qc${i}">
       <div class="meta"><span class="cod">${q.cod}</span> · ${DISC[q.disc]} › <b>${esc(q.tema)}</b> › ${esc(q.subtema)}
-        ${q.cargo?`<span class="tag">${esc(q.cargo)}</span>`:""}${fonteTag(q)}${q.orig?`<span class="tag">prova nº ${q.orig}</span>`:'<span class="tag">própria</span>'}
+        ${q.cargo?`<span class="tag">${esc(q.cargo)}</span>`:""}${fonteTag(q)}${q.orig?`<span class="tag">prova nº ${q.orig}</span>`:(q.banca?"":'<span class="tag">própria</span>')}
         ${db.edits[q.id]?'<span class="tag e">editada</span>':""}${nr?`<span class="tag r">${nr} relato${nr>1?"s":""}</span>`:""}</div>
       ${S.motivos&&S.motivos[q.id]?`<div class="meta" style="margin:-4px 0 6px">Por que esta questão: ${esc(S.motivos[q.id])}</div>`:""}
-      <div class="enun">${esc(q.enun)}</div>
-      ${figTag(q.fig,q.cod)}
-      ${chipsDificuldade(i,S)}${opts}${res}${fb?`<div class="gab">Gabarito: ${LET[q.opcoes.findIndex(o=>o.c)]}</div>`:""}
+      ${q.base?`<div class="tbase">${esc(q.base)}</div>`:""}<div class="enun">${esc(q.enun)}</div>
+      ${figsTag(q)}
+      ${ehDisc(q)?blocoDisc(q):`${chipsDificuldade(i,S)}${opts}${res}${fb&&q.gab?`<div class="gab">Gabarito: ${LET[q.opcoes.findIndex(o=>o.c)]}</div>`:""}`}
       ${acoesQ(q)}</section>`}).join("");
   const nav=st.umaQ&&n?`<div class="acoes" style="justify-content:space-between;align-items:center">
       <button data-act="navQ" data-d="-1" ${S.cur<=0?"disabled":""}>← Anterior</button>
@@ -2974,7 +3018,7 @@ function vRelatos(){
     ${fe.length?idx.filter(r=>r.ok).map(linha).join(""):'<p class="meta">Nenhum.</p>'}${msgBox()}`}
 
 function vRevisar(){
-  const l=QS.filter(incompleta);
+  const l=QS.filter(faltaDado);
   return `<div class="topo">${voltar("revisarQ",0,"Revisar")}<h2>Questões incompletas</h2><button class="sm" data-act="classif">Classificação automática</button></div>
     <p class="meta">Questões sem gabarito ou com alternativas faltando. Elas não entram nas sessões até serem completadas. Você pode incluí-las agora e completar depois.</p>
     ${l.map(q=>`<div class="lin"><span class="nome"><span class="cod">${q.cod}</span><span>${esc(q.enun.slice(0,70))}…</span></span>
@@ -3001,9 +3045,9 @@ function vBanco(){
       return `<div class="lin"><span class="nome"><span class="cod">${q.cod}</span>
         <span>${esc(q.enun.slice(0,70))}…</span></span>
         <span class="meta">${esc(q.tema)} › ${esc(q.subtema)} ${fonteTag(q)}${db.edits[q.id]?' <span class="tag e">editada</span>':""}${nr?` <span class="tag r">${nr}</span>`:""}${q.anulada?' <span class="tag f">anulada</span>':""}${incompleta(q)?' <span class="tag r">'+motivoIncompleta(q)+'</span>':""}</span>
-        ${q.pub?'<span class="tag">pública</span>':""}${ehAdmin()&&!incompleta(q)?(PUB_IDS().has(q.id)?`<button class="sm" data-act="despublicar" data-id="${esc(q.id)}">Despublicar</button>`:`<button class="sm" data-act="publicar" data-id="${esc(q.id)}">Publicar</button>`):""}
+        ${q.pub?'<span class="tag">pública</span>':""}${ehAdmin()&&!faltaDado(q)?(PUB_IDS().has(q.id)?`<button class="sm" data-act="despublicar" data-id="${esc(q.id)}">Despublicar</button>`:`<button class="sm" data-act="publicar" data-id="${esc(q.id)}">Publicar</button>`):""}
         <button class="sm" data-act="bancoAbrir" data-id="${esc(q.id)}">${st.bancoQ===q.id?"Fechar":"Abrir"}</button></div>
-        ${st.bancoQ===q.id?`<div class="card" style="margin:0 0 10px"><div class="enun">${esc(q.enun)}</div>${figTag(q.fig,q.cod)}${q.alts.map((t,i)=>`<div class="opt" style="border:1px solid var(--bd);${LET[i]===q.gab?"background:var(--okbg)":""}"><span class="l">${LET[i]})</span><span>${esc(t)}</span></div>`).join("")}${acoesQ(q)}</div>`:""}`}).join("")
+        ${st.bancoQ===q.id?`<div class="card" style="margin:0 0 10px">${q.base?`<div class="tbase">${esc(q.base)}</div>`:""}<div class="enun">${esc(q.enun)}</div>${figsTag(q)}${q.alts.map((t,i)=>`<div class="opt" style="border:1px solid var(--bd);${LET[i]===q.gab?"background:var(--okbg)":""}"><span class="l">${LET[i]})</span><span>${esc(t)}${(q.altFigs||{})[LET[i]]?figTag(q.altFigs[LET[i]],q.cod):""}</span></div>`).join("")}${acoesQ(q)}</div>`:""}`}).join("")
       ||'<p class="empty">Nenhuma questão encontrada.</p>'}${msgBox()}`}
 
 function vEdit(){
@@ -3207,7 +3251,7 @@ function vDados(){
       <p class="meta">As figuras coladas vão junto no arquivo, o que pode deixá-lo grande.</p></div>
     <div class="card"><label><span>Importar backup — cole o conteúdo do arquivo</span><textarea class="mono" data-f="imp"></textarea></label>
       <div class="acoes"><button data-act="importar">Importar e mesclar</button></div>
-      <p class="meta">A importação soma ao que já existe: questões e relatos são acrescentados, e o histórico de acertos prevalece o de maior número de respostas.</p></div>${msgBox()}`}
+      <p class="meta">A importação soma ao que já existe: questões e relatos são acrescentados, e o histórico de acertos prevalece o de maior número de respostas.</p></div>${msgBox()}${rodapeVersao()}`}
 
 const VIEWS={entrar:vEntrar,novaSenha:vNovaSenha,admin:vAdmin,mapa:vMapa,listaMestra:vListaMestra,home:vHome,menu:vMenu,projetos:vProjetos,novoProj:vNovoProj,projeto:vProjeto,simulados:vSimulados,revisarQ:vRevisarQ,atencao:vAtencao,neuro:vNeuro,curvas:vCurvas,abertura:vAbertura,ideias:vIdeias,recordar:vRecordar,config:vDados,materias:vMaterias,disc:vDisc,tema:vTema,asp:vAsp,lista:vLista,rapida:vRapida,caps:vCaps,dx:vDx,classif:vClassif,revisar:vRevisar,quiz:vQuiz,stats:vStats,add:vAdd,rel:vRel,banco:vBanco,edit:vEdit,relatos:vRelatos,dados:vDados};
 let ultView="";
@@ -3286,7 +3330,7 @@ document.addEventListener("click",e=>{
     case "adminExportar":adminExportar();return;
     case "publicar":{const q=POR_ID[el.dataset.id];if(q)publicar([q]);return}
     case "despublicar":despublicar(el.dataset.id);return;
-    case "publicarBusca":{const b=(st.busca||"").trim().toLowerCase();let l=QS.filter(q=>!q.pub&&!incompleta(q));if(b)l=l.filter(q=>(q.cod+" "+q.tema+" "+q.subtema+" "+q.enun+" "+DISC[q.disc]).toLowerCase().includes(b));if(!l.length){st.msg="Nada para publicar.";break}pedir(`Publicar ${l.length} questão(ões) para a área correspondente de cada matéria?`,()=>publicar(l),"Publicar");return}
+    case "publicarBusca":{const b=(st.busca||"").trim().toLowerCase();let l=QS.filter(q=>!q.pub&&!faltaDado(q));if(b)l=l.filter(q=>(q.cod+" "+q.tema+" "+q.subtema+" "+q.enun+" "+DISC[q.disc]).toLowerCase().includes(b));if(!l.length){st.msg="Nada para publicar.";break}pedir(`Publicar ${l.length} questão(ões) para a área correspondente de cada matéria?`,()=>publicar(l),"Publicar");return}
     case "continuarSessao":{const S=st.S;S.pausa=false;const n=porResponder();if(n>=0)S.cur=n;break}
     /* marcas por questão */
     case "naosei":{const id=el.dataset.id,nt=db.notas[id]||{};nt.ns=!nt.ns;if(!nt.ns&&!nt.txt)delete db.notas[id];else db.notas[id]=nt;gravar();break}
