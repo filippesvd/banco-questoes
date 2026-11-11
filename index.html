@@ -39,6 +39,16 @@
   .tbase{white-space:pre-line;font-size:14px;border-left:3px solid var(--bd);padding:8px 10px;margin:8px 0 6px;background:var(--bg);border-radius:6px}
   .disc-an{margin:8px 0}.disc-an summary{cursor:pointer;color:var(--acc)}.disc-an p{white-space:pre-line;margin:6px 0 0}
   .fig-falta{border:1px dashed var(--bd);border-radius:6px;padding:6px 8px;margin:6px 0}
+  .banco-op.on{outline:3px solid var(--acc);outline-offset:2px}
+  .qxcam{font-size:12px;color:var(--mut);margin:-4px 0 8px}
+  .qxbusca{margin-bottom:6px}.qxbar{margin:6px 0 10px}
+  .qxrow{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-left:6px solid var(--bd);border-radius:10px;padding:6px 8px;margin:6px 0;background:var(--card)}
+  .qxrow.v{border-left-color:var(--ok)}.qxrow.a{border-left-color:var(--warn)}.qxrow.r{border-left-color:var(--err)}
+  .qxnome{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:none;border:none;padding:4px 2px;color:var(--txt);min-width:0}
+  .qxnome b{font-size:15px;line-height:1.3}
+  .qxq{border:1px solid var(--bd);border-radius:10px;margin:6px 0;background:var(--card)}
+  .qxqhead{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;text-align:left;background:none;border:none;padding:10px;color:var(--txt)}
+  .qxtxt{font-size:14px;line-height:1.4}.qxdet{padding:0 10px 10px}.qxalt{margin:4px 0;border:1px solid var(--bd)}.qxalt.ok{border-color:var(--ok);background:var(--okbg)}
   .rvfiltros{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 10px;margin-top:6px}
   .rvfiltros label{margin:0}.rvfiltros label:last-child{grid-column:1/-1}.rvfiltros select,.rvfiltros input{width:100%}
   .rvnav{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -293,15 +303,22 @@ const DISC={cm:"Clínica Médica",ti:"Medicina Intensiva",ps:"Psiquiatria",lg:"M
 /* a que área cada matéria pertence; "*" = comum a todas (uma questão pode restringir pelo campo "area") */
 const DISC_AREA={cm:"medico",ti:"medico",ps:"medico",lg:"medico",fm:"medico",ec:"medico",rx:"medico",tc:"medico",us:"medico",rv:"medico",ss:"social",pl:"social",pt:"*",dr:"*",su:"*",et:"*",rl:"*",in:"*",ap:"*",rd:"*"};
 const areaAtual=()=>db.cfg.cargo||"medico";
+/* bancos de questões: o usuário pode usar mais de um ao mesmo tempo */
+const BANCOS={medico:{nome:"Medicina",desc:"Residência, título, concursos e revalidação"},social:{nome:"Serviço Social",desc:"Concursos e aperfeiçoamento para assistente social"}};
+const GRUPOS_BANCO=[["medico","Medicina"],["social","Serviço Social"],["*","Matérias gerais de concurso"]];
+const bancosAtivos=()=>{const b=(db&&db.cfg&&Array.isArray(db.cfg.bancos))?db.cfg.bancos.filter(k=>BANCOS[k]):[];return b.length?b:(db&&db.cfg&&BANCOS[db.cfg.cargo]?[db.cfg.cargo]:["medico"])};
+const nomesBancos=()=>bancosAtivos().map(k=>BANCOS[k].nome).join(" e ");
+const temMedicina=()=>bancosAtivos().includes("medico");
 const verTudo=()=>{try{return !!(usuario&&db.adminOk&&db.cfg.verTudo)}catch(e){return false}};
-const visivel=q=>{if(verTudo())return true;const a=areaAtual(),da=DISC_AREA[q.disc]||"medico";return (da==="*"||da===a)&&(!q.area||q.area===a)};
+const visivel=q=>{if(verTudo())return true;const bs=bancosAtivos(),da=DISC_AREA[q.disc]||"medico";return (da==="*"||bs.includes(da))&&(!q.area||bs.includes(q.area))};
 const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG",fm:"FM",ec:"EC",rx:"RX",tc:"TC",us:"US",rv:"RV",ss:"SS",pl:"PL",pt:"PT",dr:"DR",su:"SU",et:"ET",rl:"RL",in:"IN",ap:"AP",rd:"RD"};
 const zeros=()=>Object.fromEntries(Object.keys(DISC).map(k=>[k,0]));
 const TI_IDS=[37,44];                 /* questões do PDF que pertencem a Terapia Intensiva */
 const LIMITE=70;                      /* % abaixo do qual o subtema precisa de reforço */
-const APP_VERSAO="25";
+const APP_VERSAO="26";
 /* o que mudou em cada versão (a primeira é a atual) */
 const APP_NOTAS=[
+  {v:"26",d:"11/11/2026",t:"Bancos de questões: escolha Medicina, Serviço Social ou os dois (primeira tela, Início e Configurações). Nova tela Questões: banco → matéria → tema → tópico → questões, com nomes completos, busca e botão Estudar em cada nível. Temas em sigla viram nome por extenso."},
   {v:"25",d:"09/11/2026",t:"Administração → Revisar questões: filtros por matéria, banca, ano, origem, arquivo, data de adição e situação; gabarito, anulada, dificuldade, complexidade, editar, apagar e publicar em um toque. Questões de revisão geradas por IA entram direto pelo Inserir → JSON ou pelo campo do pacote."},
   {v:"24",d:"08/11/2026",t:"Mapa das matérias: escolha a matéria e veja o mapa por tópico e subtópico. Pacotes de Português, Direito, Informática, Raciocínio Lógico, Ética e Administração Pública e Redação reconhecidos. Todas as questões entram (discursivas só com o texto), com texto-base e figuras do pacote."},
   {v:"23",d:"08/11/2026",t:"Versão e novidades no rodapé do Início, do Menu e das Configurações."},
@@ -378,7 +395,7 @@ const PROPOSTA_DX=[
 ];
 const OBJ={concurso:"Concurso",titulo:"Título de especialista",residencia:"Residência médica",revalidacao:"Revalidação",aperfeicoamento:"Aperfeiçoamento"};
 const PRESET={concurso:["cm","lg","ps"],titulo:["ps","ti"],residencia:["cm","ps"],revalidacao:["rv","cm"],aperfeicoamento:Object.keys(DISC)};
-const DISC_VIS=()=>verTudo()?{...DISC}:Object.fromEntries(Object.entries(DISC).filter(([k])=>{const da=DISC_AREA[k]||"medico";return da==="*"||da===areaAtual()}));
+const DISC_VIS=()=>verTudo()?{...DISC}:Object.fromEntries(Object.entries(DISC).filter(([k])=>{const da=DISC_AREA[k]||"medico";return da==="*"||bancosAtivos().includes(da)}));
 const SUBOBJ={
   concurso:["Médico legista","Médico clínico","Médico intensivista","Médico psiquiatra","Médico de família","Médico do trabalho","Perito médico","Médico emergencista","Médico pediatra"],
   concursoSocial:["Assistente social (prefeitura/estado)","Assistente social (saúde)","Assistente social (judiciário)","Assistente social (INSS)"],
@@ -792,6 +809,8 @@ function construir(){
   const c=zeros();const proprias=new Set(db.added.map(q=>q.id));
   QS_TODAS=SEED.concat(db.added).concat(PUBLICAS.filter(q=>!proprias.has(q.id)).map(q=>({...q,pub:true}))).map(q=>{
     const m={...q,...(db.edits[q.id]||{})};
+    /* pacotes antigos gravaram o tema em sigla (ex.: CA, ELP); no app ele aparece sempre por extenso */
+    if(Array.isArray(m.atomos)&&/^[A-Z0-9]{2,8}$/.test(String(m.tema||""))){let tn={};try{tn=(ESTR.temaNomes||{})[m.disc]||{}}catch(e){}const nm=tn[m.tema]||m.aspecto;if(nm){m.temaCod=m.tema;m.tema=nm}}
     /* o código vem da disciplina de origem e nunca muda, mesmo se a questão for reclassificada */
     m.cod=q.cod||PRE[q.disc]+"-"+String(++c[q.disc]).padStart(3,"0");
     return m;
@@ -2099,7 +2118,7 @@ function uExportar(){baixar("motor_unificado_"+hojeISO()+".json",JSON.stringify(
    O app não edita átomos: importa o pacote export/<MATERIA>/ e devolve eventos.
    ============================================================ */
 const EST_CFG={aprendido:3,alvoPadrao:0.8,fraco:0.6,confusaoMin:0.6,parDist:[3,8],leitor:{estrela:1,neutro:0.5,pular:0,dificil:0.75},pesoBanca:0.5,maxRegras:0.3,maxEventos:4000,maxErros:40};
-const ESTR={pacotes:{},atomos:{},alias:{},relIdx:{},arvore:{},resumos:{},lista:[],agregados:{},n:0};
+const ESTR={pacotes:{},atomos:{},alias:{},relIdx:{},arvore:{},resumos:{},lista:[],agregados:{},temaNomes:{},n:0};
 const ATOM_HIST={};
 const ARQ_PACOTE=["atomos","arvore","questoes","relacoes","resumos","lista_mestra","agregados"];
 const temEstrutura=()=>ESTR.n>0;
@@ -2631,19 +2650,22 @@ function iniciarSimulado(sm){
 
 /* ============ telas novas ============ */
 function cardConta(){
-  if(!sb)return `<div class="conta"><span>Cargo: ${db.cfg.cargo==="social"?"Assistente Social":"Médico"} · versão de teste, sem conta</span><button class="sm" data-act="config">Trocar</button></div>`;
-  return usuario?`<div class="conta"><span>☁ ${esc(usuario.email||"conectado")} · ${db.cfg.cargo==="social"?"Assistente Social":"Médico"}</span><button class="sm" data-act="config">Conta</button></div>`
+  if(!sb)return `<div class="conta"><span>Bancos: ${esc(nomesBancos())} · versão de teste, sem conta</span><button class="sm" data-act="config">Trocar</button></div>`;
+  return usuario?`<div class="conta"><span>☁ ${esc(usuario.email||"conectado")} · ${esc(nomesBancos())}</span><button class="sm" data-act="config">Conta</button></div>`
     :`<div class="conta"><span>Sem conta: os dados ficam só neste aparelho.</span><button class="sm primary" data-act="entrar">Entrar ou criar conta</button></div>`}
 
 function vCargo(){const a=areaAtual();return `<div class="card" style="max-width:420px;margin:40px auto"><h2 style="margin-top:0">${esc(AREAS[a]||a)}</h2>
     <p>${AREAS_ATIVAS.includes(a)?"O conteúdo desta área ainda está em preparação: não há questões publicadas. Assim que entrarem, o app mostra as matérias e os projetos dela aqui.":"Esta área ainda não está disponível. Por enquanto, o app atende Médico e Assistente Social."}</p>
     <p class="meta">${usuario?"Conectado como "+esc(usuario.email||""):""}</p>
     <div class="acoes"><button class="primary" data-act="trocarCargo" data-k="medico">Usar como Médico</button>${usuario?'<button data-act="sair">Sair</button>':""}</div></div>`}
-function vEscolherCargo(){return `<div class="card" style="max-width:460px;margin:40px auto"><h2 style="margin-top:0">Qual é a sua área?</h2>
-    <p class="meta">Define as matérias, os objetivos de projeto e o conteúdo que o app mostra. Dá para trocar depois em Configurações.</p>
-    <div class="bigs">${AREAS_ATIVAS.map((k,i)=>`<button class="big b${i+1}" data-act="trocarCargo" data-k="${k}"><b>${esc(AREAS[k])}</b><span>${k==="medico"?"Residência, título, concursos, revalidação":"Concursos e aperfeiçoamento"}</span></button>`).join("")}</div>
-    <p class="meta" style="margin-top:10px">Em breve: ${Object.keys(AREAS).filter(k=>!AREAS_ATIVAS.includes(k)).map(k=>esc(AREAS[k])).join(", ")}.</p>
-    ${sb?'<div class="acoes"><button class="sm" data-act="entrar">Já tenho conta: entrar</button></div>':""}</div>`}
+function contaBanco(k){return QS_TODAS.filter(q=>!q.oculta&&(DISC_AREA[q.disc]||"medico")===k).length}
+function botoesBancos(act,sel){return `<div class="bigs">${Object.entries(BANCOS).map(([k,b],i)=>{const on=sel.has(k),n=contaBanco(k);
+  return `<button class="big b${i+1} banco-op${on?" on":""}" data-act="${act}" data-k="${k}" aria-pressed="${on}"><b>${on?"✓ ":""}${esc(b.nome)}</b><span>${esc(b.desc)}${n?" · "+n+" questões":""}</span></button>`}).join("")}</div>`}
+function vEscolherCargo(){const sel=st.bancosSel||(st.bancosSel=new Set(Array.isArray(db.cfg.bancos)?db.cfg.bancos:[]));
+  return `<div class="hero" role="img" aria-label="Ilustração"></div><div class="card" style="max-width:480px;margin:16px auto"><h2 style="margin-top:0">Quais bancos de questões você quer usar?</h2>
+    <p class="meta">Marque um ou os dois. As matérias gerais de concurso (Português, Direito, Informática e outras) aparecem em qualquer escolha. Dá para mudar depois, no Início ou em Configurações.</p>
+    ${botoesBancos("bancoSel",sel)}
+    <div class="acoes"><button class="primary" data-act="bancosOk" ${sel.size?"":"disabled"}>Começar</button>${sb&&!usuario?'<button class="sm" data-act="entrar">Já tenho conta: entrar</button>':""}</div></div>`}
 function vHome(){
   if(!db.cfg.cargo&&st.view==="home")return vEscolherCargo();
   if(!AREAS_ATIVAS.includes(areaAtual())||(QS.length===0&&!ehAdmin()&&areaAtual()!=="medico"))return vCargo();
@@ -2668,9 +2690,14 @@ function vHome(){
     ${nInc?`<div class="card aviso-card"><b>${nInc} questão(ões) incompletas</b> <span class="meta">sem gabarito ou com alternativas faltando.</span>
     <div class="acoes"><button class="primary sm" data-act="paraRevisar">Completar</button></div></div>`:""}
     <div class="bigs">
-      <button class="big b1" data-act="menu"><img class="ico" src="icone_01.webp" alt="" aria-hidden="true"><b>Menu</b><span>Projetos, simulados, revisão, banco, inserir e teste de atenção</span></button>
-      <button class="big b4" data-act="config"><img class="ico" src="icone_14.webp" alt="" aria-hidden="true"><b>Configurações</b><span>Conta, meta, tema, atalhos e backup</span></button>
-    </div>${msgBox()}${rodapeVersao()}`}
+      <button class="big b6" data-act="questoes" data-k="raiz"><img class="ico" src="icone_02.webp" alt="" aria-hidden="true"><b>Questões</b><span>${QS.length} questões de ${esc(nomesBancos())} · por matéria, tema e tópico</span></button>
+      <button class="big b1" data-act="menu"><img class="ico" src="icone_01.webp" alt="" aria-hidden="true"><b>Menu</b><span>Projetos, simulados, revisão, mapa, inserir e teste de atenção</span></button>
+      <button class="big b4" data-act="config"><img class="ico" src="icone_14.webp" alt="" aria-hidden="true"><b>Configurações</b><span>Conta, bancos de questões, meta, tema e backup</span></button>
+    </div>
+    ${cardBancos()}${msgBox()}${rodapeVersao()}`}
+function cardBancos(){const sel=new Set(bancosAtivos());
+  return `<div class="card"><b>Bancos de questões</b> <span class="meta">· toque para incluir ou tirar; as matérias gerais de concurso aparecem sempre</span>
+    <div class="rvlinha">${Object.entries(BANCOS).map(([k,b])=>`<span class="chip ${sel.has(k)?"on":""}" data-act="bancoTroca" data-k="${k}">${sel.has(k)?"✓ ":""}${esc(b.nome)} (${contaBanco(k)})</span>`).join("")}</div></div>`}
 
 function vMenu(){
   const nRep=db.reports.filter(r=>!r.ok).length;
@@ -2681,7 +2708,7 @@ function vMenu(){
       <button class="big b5" data-act="simulados"><img class="ico" src="icone_09.webp" alt="" aria-hidden="true"><b>Simulados</b><span>Montar um novo ou refazer anteriores</span></button>
       <button class="big b2" data-act="revisarQ"><img class="ico" src="icone_06.webp" alt="" aria-hidden="true"><b>Revisar questões</b><span>O que você mais erra, com questões parecidas</span></button>
       <button class="big b6" data-act="mapa"><img class="ico" src="icone_11.webp" alt="" aria-hidden="true"><b>Mapa das matérias</b><span>Escolha a matéria e veja o mapa por tópico, subtópico e afirmação · acertos e progresso${temEstrutura()?" · "+ESTR.n+" átomos":""}</span></button>
-      <button class="big b6" data-act="banco"><img class="ico" src="icone_02.webp" alt="" aria-hidden="true"><b>Banco de questões</b><span>${QS.length} questões · conferir, marcar e editar</span></button>
+      <button class="big b6" data-act="questoes" data-k="raiz"><img class="ico" src="icone_02.webp" alt="" aria-hidden="true"><b>Questões</b><span>${QS.length} questões · por banco, matéria, tema e tópico</span></button>
       <button class="big b4" data-act="add"><img class="ico" src="icone_05.webp" alt="" aria-hidden="true"><b>Inserir questões</b><span>Colar em lote, planilha, JSON ou uma por vez</span></button>
     </div>
 
@@ -2689,7 +2716,7 @@ function vMenu(){
     <div class="acoes" style="margin:0">
       <button data-act="stats">Desempenho</button>
       <button data-act="rapida">Sessão rápida</button>
-      <button data-act="materias">Matérias e temas</button>
+      <button data-act="banco">Lista com filtros (rever depois, chutei, comentários)</button>
       <button data-act="curvas">Curvas de retenção${curvaVencidas().length?` <span class="tag r">${curvaVencidas().length}</span>`:""}</button>
       <button data-act="relatos">Problemas relatados${nRep?` <span class="tag r">${nRep}</span>`:""}</button>${ehAdmin()?'<button class="primary" data-act="admin">Administração</button>':""}</div>${msgBox()}${rodapeVersao()}`}
 
@@ -2906,6 +2933,61 @@ function vRapida(){
     <div class="acoes" style="margin:0">${[10,20,30].map(m=>`<button data-act="cron" data-m="${m}">${m} min</button>`).join("")}</div>
     <p class="meta">Ao acabar o tempo, a sessão é encerrada e o relatório aparece.</p>${msgBox()}`}
 
+/* ============ Questões: banco → matéria → tema → tópico → subtópico → questões ============ */
+const qxTemaNome=q=>q.tema||"Geral";
+const qxTopico=q=>{const a=String(q.aspecto||"").trim();return !a||a==="Sem aspecto"||normTxt(a)===normTxt(qxTemaNome(q))?"":a};
+const qxSub=q=>{const s=String(q.subtema||"").trim();return !s||normTxt(s)===normTxt(qxTemaNome(q))?"":s};
+const QX_CHAVE={disc:q=>q.disc,tema:qxTemaNome,top:q=>qxTopico(q)||"Geral",sub:q=>qxSub(q)||"Geral"};
+const qxEst=()=>st.qx||(st.qx={});
+function qxPool(){return qxEst().todos?QS_TODAS.filter(q=>!q.oculta):QS}
+function qxLista(){const x=qxEst();return qxPool().filter(q=>(!x.disc||q.disc===x.disc)&&(x.tema==null||qxTemaNome(q)===x.tema)&&(x.top==null||QX_CHAVE.top(q)===x.top)&&(x.sub==null||QX_CHAVE.sub(q)===x.sub))}
+/* próximo nível; pula níveis com um grupo só */
+function qxNivel(L){const x=qxEst();if(!x.disc)return "disc";if(x.tema==null)return "tema";
+  if(x.top==null&&new Set(L.map(QX_CHAVE.top)).size>1)return "top";
+  if(x.sub==null&&new Set(L.map(QX_CHAVE.sub)).size>1)return "sub";return "q"}
+function qxGrupos(L,nivel){const m={};L.forEach(q=>{const k=QX_CHAVE[nivel](q);(m[k]=m[k]||[]).push(q)});
+  return Object.entries(m).sort((a,b)=>a[0]==="Geral"?1:b[0]==="Geral"?-1:a[0].localeCompare(b[0],"pt"))}
+function qxCaminho(){const x=qxEst(),p=[x.todos?"Todos os bancos":nomesBancos()];if(x.disc)p.push(DISC[x.disc]);if(x.tema!=null)p.push(x.tema);if(x.top!=null)p.push(x.top);if(x.sub!=null)p.push(x.sub);return p}
+function qxCartaoQ(q){const x=qxEst(),ab=x.aberta===q.id,id=esc(q.id);
+  const info=[fonte(q),ehDisc(q)?"discursiva":"",q.anulada?"anulada":"",q.origemTipo==="revisao"?"revisão (IA)":"",faltaDado(q)?"sem gabarito":""].filter(Boolean).join(" · ");
+  const det=ab?`<div class="qxdet">${q.base?`<div class="tbase">${esc(q.base)}</div>`:""}<div class="enun">${esc(q.enun)}</div>${figsTag(q)}
+    ${ehDisc(q)?'<div class="meta">Questão discursiva: sem alternativas.</div>':q.alts.map((t,i)=>`<div class="opt qxalt${x.gab===q.id&&LET[i]===q.gab?" ok":""}"><span class="l">${LET[i]})</span><span>${esc(t)}${(q.altFigs||{})[LET[i]]?figTag(q.altFigs[LET[i]],q.cod):""}</span></div>`).join("")}
+    ${q.explicacao&&(x.gab===q.id||ehDisc(q))?`<details class="disc-an" open><summary>Análise</summary><p>${esc(q.explicacao)}</p></details>`:""}
+    <div class="acoes">${ehDisc(q)?"":`<button class="sm" data-act="qxGab" data-id="${id}">${x.gab===q.id?"Esconder gabarito":"Mostrar gabarito e análise"}</button>`}
+      <button class="sm primary" data-act="qxUma" data-id="${id}" ${incompleta(q)&&!ehDisc(q)?"disabled":""}>Estudar esta</button><button class="sm" data-act="edit" data-id="${id}">Editar</button></div></div>`:"";
+  return `<div class="qxq${ab?" aberta":""}"><button class="qxqhead" data-act="qxAbrir" data-id="${id}"><span class="meta"><b>${esc(q.cod)}</b>${info?" · "+esc(info):""}</span>
+    <span class="qxtxt">${esc(q.enun.length>150&&!ab?q.enun.slice(0,150)+"…":ab?"":q.enun)}</span></button>${det}</div>`}
+function vQuestoes(){const x=qxEst(),pool=qxPool(),L=qxLista(),b=normTxt(x.busca||"");
+  const voltarBtn=`<button data-act="qxVoltar">← ${x.disc?"Voltar":"Início"}</button>`;
+  const titulo=x.sub!=null?x.sub:x.top!=null?x.top:x.tema!=null?x.tema:x.disc?DISC[x.disc]:"Questões";
+  const head=`<div class="topo"><span class="acoes" style="margin:0">${voltarBtn}</span><h2>${esc(titulo)}</h2><span></span></div>
+    <div class="qxcam">${qxCaminho().map(esc).join(" › ")}</div>
+    <div class="row qxbusca"><label style="flex:1 1 220px"><span>Buscar ${x.disc?"aqui dentro":"em todas"} (texto, código, banca)</span><input data-f="qxBusca" data-ch="qx" value="${esc(x.busca||"")}" placeholder="Ex.: Código de Ética, ECA, lítio, SS-A0033"></label>${x.busca?'<button class="sm" data-act="qxLimpar">Limpar busca</button>':""}</div>`;
+  const nRev=L.filter(pred.revisar).length;
+  const barra=L.length?`<div class="acoes qxbar"><button class="primary" data-act="qxEstudar" data-n="aqui">Estudar ${x.disc?"tudo daqui":"tudo"} (${L.filter(q=>!incompleta(q)).length})</button>${nRev&&nRev<L.length?`<button data-act="qxEstudar" data-n="revisar">Só as pendentes (${nRev})</button>`:""}</div>`:"";
+  /* busca: lista de questões do recorte atual */
+  if(b){const R=L.filter(q=>normTxt([q.cod,q.enun,q.base,q.tema,q.aspecto,q.subtema,fonte(q),q.cargo,DISC[q.disc]].join(" ")).includes(b));
+    return head+`<p class="meta">${R.length} questão(ões) encontradas${R.length>(x.lim||40)?`; mostrando ${x.lim||40}`:""}.</p>${R.slice(0,x.lim||40).map(qxCartaoQ).join("")}
+      ${R.length>(x.lim||40)?'<div class="acoes"><button data-act="qxMais">Mostrar mais</button></div>':""}${R.length?`<div class="acoes"><button class="primary" data-act="qxEstudar" data-n="busca">Estudar as encontradas (${R.filter(q=>!incompleta(q)).length})</button></div>`:""}${msgBox()}`}
+  /* raiz: bancos e matérias */
+  if(!x.disc){const porD={};pool.forEach(q=>{(porD[q.disc]=porD[q.disc]||[]).push(q)});
+    const secoes=GRUPOS_BANCO.map(([ga,gn])=>{const ds=Object.keys(DISC).filter(d=>(DISC_AREA[d]||"medico")===ga&&porD[d]);if(!ds.length)return "";
+      return `<h3>${esc(gn)}</h3><div class="grid2">${ds.map(d=>{const l=porD[d],a=alerta(l),nt=new Set(l.map(qxTemaNome)).size;
+        return `<button class="mat ${a.c}" data-act="qxIr" data-n="disc" data-k="${d}"><b>${esc(DISC[d])}</b><span>${l.length} questões · ${nt} tema(s)</span><small>${esc(a.t)}</small></button>`}).join("")}</div>`}).join("");
+    const escopo=`<div class="rvlinha"><span class="chip ${x.todos?"":"on"}" data-act="qxEscopo" data-k="meus">Meus bancos: ${esc(nomesBancos())} (${QS.length})</span><span class="chip ${x.todos?"on":""}" data-act="qxEscopo" data-k="todos">Todos os bancos (${QS_TODAS.filter(q=>!q.oculta).length})</span></div>`;
+    return head+escopo+(secoes||'<p class="empty">Nenhuma questão neste recorte. Em Configurações, marque outro banco ou use Inserir.</p>')+barra+
+      `<div class="acoes"><button class="sm" data-act="banco">Lista com filtros (rever depois, chutei, comentários)</button>${temMedicina()?'<button class="sm" data-act="caps">Capítulos do DSM</button><button class="sm" data-act="dx">Diagnósticos diferenciais</button>':""}</div>
+      <p class="meta">A cor mostra a última revisão: verde, até 7 dias; amarelo, de 8 a 21 dias; vermelho, mais de 21 dias ou acerto abaixo de ${LIMITE}%; cinza, ainda não estudado.</p>${msgBox()}`}
+  const nivel=qxNivel(L);
+  if(nivel==="q"){const lim=x.lim||40;
+    return head+barra+`<p class="meta">${L.length} questão(ões). Toque numa questão para ler inteira.</p>${L.slice(0,lim).map(qxCartaoQ).join("")}
+      ${L.length>lim?'<div class="acoes"><button data-act="qxMais">Mostrar mais</button></div>':""}${msgBox()}`}
+  const rotN={tema:"Temas",top:"Tópicos",sub:"Subtópicos"}[nivel];
+  const linhas=qxGrupos(L,nivel).map(([k,l])=>{const a=alerta(l);
+    return `<div class="qxrow ${a.c}"><button class="qxnome" data-act="qxIr" data-n="${nivel}" data-k="${esc(k)}"><b>${esc(k)}</b><span class="meta">${l.length} questões · ${esc(a.t)}</span></button>
+      <button class="sm" data-act="qxEstudar" data-n="${nivel}" data-k="${esc(k)}" ${l.some(q=>!incompleta(q))?"":"disabled"}>Estudar</button></div>`}).join("");
+  return head+barra+`<h3>${rotN} (${qxGrupos(L,nivel).length})</h3>${linhas}
+    ${x.disc==="ps"&&temMedicina()?'<div class="acoes"><button class="sm" data-act="caps">Capítulos do DSM</button><button class="sm" data-act="dx">Diagnósticos diferenciais</button></div>':""}${msgBox()}`}
 function vMaterias(){
   const cards=Object.keys(DISC_VIS()).map(d=>{const l=QS.filter(q=>q.disc===d),a=alerta(l);
     return `<button class="mat ${a.c}" data-act="disc" data-d="${d}"><b>${DISC[d]}</b><span>${l.length} questão(ões)</span><small>${esc(a.t)}</small></button>`}).join("");
@@ -2916,7 +2998,7 @@ function vMaterias(){
 function barraAcoes(){
   const L=escopo(),nR=L.filter(pred.revisar).length;
   return `<div class="acoes-base">
-    <button class="shp dx" data-act="dx">Diagnósticos diferenciais</button>
+    ${(DISC_AREA[st.disc]||"medico")==="medico"?'<button class="shp dx" data-act="dx">Diagnósticos diferenciais</button>':""}
     <button class="shp tr" data-act="revEscopo" ${nR?"":"disabled"}>Revisar (${nR})</button>
     <button class="shp ci" data-act="tudoEscopo" ${L.length?"":"disabled"}>Tudo (${L.length})</button>
     <button class="shp di" data-act="ajuste">Ajuste</button></div>`}
@@ -3124,13 +3206,13 @@ function vBanco(){
   l=l.filter(BF[st.bancoF]||BF.todas);
   if(b)l=l.filter(q=>(q.cod+" "+q.tema+" "+q.subtema+" "+q.enun+" "+(q.orig||"")+" "+fonte(q)+" "+DISC[q.disc]).toLowerCase().includes(b));
   const lim=l.slice(0,120);
-  return `<div class="topo">${voltar("menu",0,"Menu")}<h2>Banco de questões</h2>
+  return `<div class="topo">${voltar("menu",0,"Menu")}<h2>Lista com filtros</h2>
     <button class="sm primary" data-act="add">+ Adicionar</button></div>
     <div class="row" style="margin-bottom:10px"><label style="flex:1 1 240px"><span>Buscar por código, tema, subtema ou texto (${QS.length} questões no total)</span>
       <input data-f="busca" data-ch="busca" value="${esc(st.busca)}" placeholder="Ex.: CM-012, fibrilação, Nefrologia"></label>
       <label style="flex:0 1 200px"><span>Mostrar</span><select data-ch="bancoF">${[["todas","Todas"],["sinal","Rever depois"],["naosei","Não sabia ou chutei"],["coment","Com comentário"],["prob","Com problema"],["inc","Incompletas"],["imagem","Com imagem"]].map(([v,t])=>`<option value="${v}"${st.bancoF===v?" selected":""}>${t}</option>`).join("")}</select></label>
       <button data-act="buscar">Buscar</button>${st.busca?'<button data-act="limparBusca">Limpar</button>':""}</div>
-    <div class="acoes" style="margin:0 0 10px">${ehAdmin()?'<button class="sm primary" data-act="publicarBusca">Publicar todas da busca</button>':""}<button class="sm" data-act="materias">Navegar por matéria e tema</button><button class="sm" data-act="caps">Capítulos do DSM</button><button class="sm" data-act="dx">Diagnósticos diferenciais</button><button class="sm" data-act="classif">Classificação automática</button></div>
+    <div class="acoes" style="margin:0 0 10px">${ehAdmin()?'<button class="sm primary" data-act="publicarBusca">Publicar todas da busca</button>':""}<button class="sm" data-act="questoes" data-k="raiz">Navegar por banco, matéria e tema</button>${temMedicina()?'<button class="sm" data-act="caps">Capítulos do DSM</button><button class="sm" data-act="dx">Diagnósticos diferenciais</button><button class="sm" data-act="classif">Classificação automática</button>':""}</div>
     ${l.length>120?`<p class="meta">Mostrando as 120 primeiras de ${l.length}. Refine a busca.</p>`:`<p class="meta">${l.length} questão(ões).</p>`}
     ${lim.map(q=>{const nr=relAbertos(q.cod).length;
       return `<div class="lin"><span class="nome"><span class="cod">${q.cod}</span>
@@ -3149,7 +3231,7 @@ function vEdit(){
   const alts=v("eAlts",q.alts.join("\n"));
   const nAlts=alts.split(/\n/).filter(s=>s.trim()).length;
   const rel=relAbertos(q.cod);
-  const volta={quiz:"voltarQuiz",relatos:"relatos",banco:"banco",revisar:"revisar",admin:"admin"}[st.volta]||"banco";
+  const volta={quiz:"voltarQuiz",relatos:"relatos",banco:"banco",revisar:"revisar",admin:"admin",questoes:"questoes"}[st.volta]||"banco";
   return `<div class="topo">${voltar(volta,0,"Voltar")}
     <h2>Editar ${q.cod}</h2><button class="sm" data-act="editReset" ${db.edits[q.id]?"":"disabled"}>Desfazer edições</button></div>
     ${rel.length?`<div class="msg"><b>${rel.length} problema(s) relatado(s):</b><br>${rel.map(r=>esc((TIPOS[r.tipo]||r.tipo)+(r.txt?" — "+r.txt:""))).join("<br>")}</div>`:""}
@@ -3323,12 +3405,16 @@ function vDados(){
     <div class="card"><h3 style="margin-top:0">Conta</h3>
       <p class="meta">${usuario?"Conectado como "+esc(usuario.email||""):"Sem conta conectada neste aparelho: os dados ficam só aqui."}</p>
       <div class="acoes">${usuario?'<button data-act="sair">Sair desta conta</button><button data-act="excluirConta">Excluir minha conta e dados</button>':(sb?'<button class="primary" data-act="entrar">Entrar ou criar conta</button>':"")}${ehAdmin()?'<button class="primary" data-act="admin">Administração</button>':""}</div></div>
+    <div class="card"><h3 style="margin-top:0">Bancos de questões</h3>
+      <p class="meta">Escolha um ou mais. O app mostra as matérias, os projetos e as sessões dos bancos marcados, mais as matérias gerais de concurso.</p>
+      ${botoesBancos("bancoTroca",new Set(bancosAtivos()))}
+      <div class="acoes"><button class="primary" data-act="questoesTodas">Abrir o banco com todas as questões (${QS_TODAS.filter(q=>!q.oculta).length})</button><button data-act="banco">Lista com filtros</button></div></div>
     <div class="card"><b>Estrutura de conhecimento</b> <span class="meta">· ${temEstrutura()?ESTR.n+" átomos em "+Object.keys(ESTR.pacotes).map(d=>DISC[d]).join(", "):"nenhum pacote importado"}</span>
       <p class="meta">Importe o pacote export/&lt;MATERIA&gt;/ (atomos, arvore, questoes, relacoes, resumos, lista_mestra, agregados) para ver as afirmações no Mapa e deixar a importância guiar as sessões. Os eventos (respostas por átomo, marcações, leituras, validações) saem em .jsonl para a base recalcular.</p>
       <label><span>Arquivos do pacote</span><input type="file" multiple data-pacote="1"></label>
       <div class="acoes"><button class="sm" data-act="mapa">Abrir o mapa</button>${temEstrutura()?'<button class="sm" data-act="exportEventos">Exportar eventos (.jsonl)</button>':""}</div></div>
     <div class="card"><h3 style="margin-top:0">Ajustes</h3>
-      <label><span>Área</span><select data-cfg="cargo">${Object.entries(AREAS).map(([v,t])=>`<option value="${v}"${(db.cfg.cargo||"medico")===v?" selected":""}${AREAS_ATIVAS.includes(v)?"":" disabled"}>${t}${AREAS_ATIVAS.includes(v)?"":" (em breve)"}</option>`).join("")}</select></label>
+
       <label><span>Tempo de atenção (min; sugestão de duração nos projetos)</span><input type="number" min="0" data-cfg="tempoBase" value="${db.cfg.tempoBase||0}" style="width:110px"></label>
       <label><span>Meta por sessão (questões; 0 desliga)</span><input type="number" min="0" data-cfg="meta" value="${db.cfg.meta??20}" style="width:110px"></label>
       <label><input type="checkbox" data-cfg="cronOculto" ${db.cfg.cronOculto?"checked":""}> Ocultar o cronômetro no foco intenso</label>
@@ -3345,7 +3431,7 @@ function vDados(){
       <div class="acoes"><button data-act="importar">Importar e mesclar</button></div>
       <p class="meta">A importação soma ao que já existe: questões e relatos são acrescentados, e o histórico de acertos prevalece o de maior número de respostas.</p></div>${msgBox()}${rodapeVersao()}`}
 
-const VIEWS={entrar:vEntrar,novaSenha:vNovaSenha,admin:vAdmin,mapa:vMapa,listaMestra:vListaMestra,home:vHome,menu:vMenu,projetos:vProjetos,novoProj:vNovoProj,projeto:vProjeto,simulados:vSimulados,revisarQ:vRevisarQ,atencao:vAtencao,neuro:vNeuro,curvas:vCurvas,abertura:vAbertura,ideias:vIdeias,recordar:vRecordar,config:vDados,materias:vMaterias,disc:vDisc,tema:vTema,asp:vAsp,lista:vLista,rapida:vRapida,caps:vCaps,dx:vDx,classif:vClassif,revisar:vRevisar,quiz:vQuiz,stats:vStats,add:vAdd,rel:vRel,banco:vBanco,edit:vEdit,relatos:vRelatos,dados:vDados};
+const VIEWS={questoes:vQuestoes,entrar:vEntrar,novaSenha:vNovaSenha,admin:vAdmin,mapa:vMapa,listaMestra:vListaMestra,home:vHome,menu:vMenu,projetos:vProjetos,novoProj:vNovoProj,projeto:vProjeto,simulados:vSimulados,revisarQ:vRevisarQ,atencao:vAtencao,neuro:vNeuro,curvas:vCurvas,abertura:vAbertura,ideias:vIdeias,recordar:vRecordar,config:vDados,materias:vMaterias,disc:vDisc,tema:vTema,asp:vAsp,lista:vLista,rapida:vRapida,caps:vCaps,dx:vDx,classif:vClassif,revisar:vRevisar,quiz:vQuiz,stats:vStats,add:vAdd,rel:vRel,banco:vBanco,edit:vEdit,relatos:vRelatos,dados:vDados};
 let ultView="";
 function render(){
   const y=scrollY,mesma=ultView===st.view;
@@ -3408,7 +3494,27 @@ document.addEventListener("click",e=>{
     case "iniciar":return iniciar(selecionadas(st.disc));
     case "glob":st.disc=null;st.sel=new Set();st.filtro="todas";st.msg="";return iniciar(QS.filter(pred[el.dataset.f]),0);
     case "menu":if(st.neuro){clearTimeout(st.neuro._t);st.neuro=null}st.view="menu";st.msg="";break;
-    case "trocarCargo":db.cfg.cargo=el.dataset.k;gravar();construir();st.view="home";break;
+    case "trocarCargo":db.cfg.cargo=el.dataset.k;db.cfg.bancos=[el.dataset.k];gravar();construir();st.view="home";break;
+    case "bancoSel":{const s=st.bancosSel||(st.bancosSel=new Set());s.has(el.dataset.k)?s.delete(el.dataset.k):s.add(el.dataset.k);break}
+    case "bancosOk":{const s=[...(st.bancosSel||[])].filter(k=>BANCOS[k]);if(!s.length)break;db.cfg.bancos=s;db.cfg.cargo=s[0];st.bancosSel=null;gravar();construir();st.view="home";st.msg="";break}
+    case "bancoTroca":{const k=el.dataset.k,s=new Set(bancosAtivos());if(s.has(k)){if(s.size===1){st.msg="Deixe pelo menos um banco marcado.";break}s.delete(k)}else s.add(k);
+      db.cfg.bancos=Object.keys(BANCOS).filter(b=>s.has(b));db.cfg.cargo=db.cfg.bancos[0];gravar();construir();st.msg="Bancos em uso: "+nomesBancos()+".";break}
+    case "questoes":{st.view="questoes";if(el.dataset.k==="raiz"||!st.qx)st.qx={todos:(st.qx||{}).todos&&el.dataset.k!=="raiz"?true:false};st.msg="";window.scrollTo(0,0);break}
+    case "questoesTodas":st.view="questoes";st.qx={todos:true};st.msg="";window.scrollTo(0,0);break;
+    case "qxEscopo":{const x=qxEst();x.todos=el.dataset.k==="todos";x.disc=null;x.tema=x.top=x.sub=null;break}
+    case "qxIr":{const x=qxEst(),n=el.dataset.n;x[n]=el.dataset.k;x.aberta=null;x.lim=40;window.scrollTo(0,0);break}
+    case "qxVoltar":{const x=qxEst();x.aberta=null;x.lim=40;if(x.busca){x.busca="";delete st.form.qxBusca}else if(x.sub!=null)x.sub=null;else if(x.top!=null)x.top=null;else if(x.tema!=null)x.tema=null;else if(x.disc)x.disc=null;else{st.view="home"}break}
+    case "qxLimpar":{const x=qxEst();x.busca="";delete st.form.qxBusca;break}
+    case "qxMais":qxEst().lim=(qxEst().lim||40)+40;break;
+    case "qxAbrir":{const x=qxEst();x.aberta=x.aberta===el.dataset.id?null:el.dataset.id;break}
+    case "qxGab":{const x=qxEst();x.gab=x.gab===el.dataset.id?null:el.dataset.id;break}
+    case "qxUma":{const q=POR_ID[el.dataset.id];if(q)return iniciar([q],undefined,true,qxCaminho().slice(1).join(" › ")||"Questão");break}
+    case "qxEstudar":{const x=qxEst(),n=el.dataset.n;let l=qxLista();
+      if(n==="revisar")l=l.filter(pred.revisar);
+      else if(n==="busca"){const b=normTxt(x.busca||"");l=l.filter(q=>normTxt([q.cod,q.enun,q.base,q.tema,q.aspecto,q.subtema,fonte(q),q.cargo,DISC[q.disc]].join(" ")).includes(b))}
+      else if(n!=="aqui")l=l.filter(q=>QX_CHAVE[n](q)===el.dataset.k);
+      const rot=qxCaminho().slice(1).concat(n!=="aqui"&&n!=="revisar"&&n!=="busca"?[n==="disc"?DISC[el.dataset.k]:el.dataset.k]:[]).join(" › ")||"Questões";
+      return iniciar(l,undefined,false,rot)}
     case "config":st.view="dados";st.msg="";break;
     case "entrar":st.view="entrar";st.msg="";break;
     case "loginModo":st.loginModo=el.dataset.k;st.msg="";break;
@@ -3529,7 +3635,7 @@ document.addEventListener("click",e=>{
       if(l.length<5){st.msg="São necessárias pelo menos 5 questões de "+DISC[d]+" para o teste.";break}
       st.disc=d;st.sel=new Set();st.filtro="todas";st.qtd="";st.feedback=true;st.umaQ=true;
       return iniciar(l,0,false,"Teste de atenção · "+DISC[d],{atencao:lim,materia:d,ctx:"Teste de atenção: termina após "+lim+" erros seguidos",feedN:0})}
-    case "materias":st.view="materias";st.disc=null;st.tema=null;st.asp=null;st.msg="";break;
+    case "materias":st.view="questoes";st.qx={};st.disc=null;st.tema=null;st.asp=null;st.msg="";break;
     case "rapida":st.view="rapida";st.msg="";break;
     case "caps":st.view="caps";st.msg="";break;
     case "dx":st.view="dx";st.msg="";break;
@@ -3577,7 +3683,7 @@ document.addEventListener("click",e=>{
       st.msg="Lista copiada. Cole na conversa comigo e eu devolvo as correções.";break}
 
     /* edição */
-    case "edit":st.volta=["quiz","relatos","banco","revisar","admin"].includes(st.view)?st.view:"banco";st.editId=el.dataset.id;st.view="edit";st.form={};st.msg="";break;
+    case "edit":st.volta=["quiz","relatos","banco","revisar","admin","questoes"].includes(st.view)?st.view:"banco";st.editId=el.dataset.id;st.view="edit";st.form={};st.msg="";break;
     case "editSalvar":{
       const q=POR_ID[el.dataset.id],f=st.form;
       const alts=(f.eAlts!==undefined?f.eAlts:q.alts.join("\n")).split(/\n/).map(s=>s.trim()).filter(Boolean);
@@ -3705,6 +3811,7 @@ document.addEventListener("change",e=>{
     if(k==="feedN")st.feedN=+t.value;
     if(k==="bancoF")st.bancoF=t.value;
     if(k==="rv")st.rvI=0;
+    if(k==="qx"){const x=qxEst();x.busca=st.form.qxBusca||"";x.lim=40;x.aberta=null}
     if(k.startsWith("pj_")){const p=db.projetos.find(x=>x.id===st.projId);if(p){const c=k.slice(3);if(c==="minDia")p.minDia=Math.max(10,parseInt(t.value,10)||p.minDia);else if(c==="corte")p.corte=parseInt(t.value,10)||0;else if(c==="banca"){p.banca=t.value.trim();_freqBanca={}}else{p.ajustes[c]=c==="retencao"?+t.value:t.value;if(c==="retencao")p.retencao=+t.value}gravar()}}
     render()}});
 /* colar, arrastar e soltar imagens */
