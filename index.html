@@ -48,7 +48,7 @@
   .qxnome b{font-size:15px;line-height:1.3}
   .qxq{border:1px solid var(--bd);border-radius:10px;margin:6px 0;background:var(--card)}
   .qxqhead{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;text-align:left;background:none;border:none;padding:10px;color:var(--txt)}
-  .qxtxt{font-size:14px;line-height:1.4}.qxdet{padding:0 10px 10px}.qxalt{margin:4px 0;border:1px solid var(--bd)}.qxalt.ok{border-color:var(--ok);background:var(--okbg)}
+  .qxtxt{font-size:14px;line-height:1.4}.qxdet{padding:0 10px 10px}.qxalt{margin:4px 0;border:1px solid var(--bd)}.qxalt.ok{border-color:var(--ok);background:var(--okbg)}.qxalt.err{border-color:var(--err);background:var(--errbg)}button.qxalt{display:flex;gap:6px;width:100%;text-align:left;background:none;color:inherit;font:inherit;cursor:pointer}
   .rvfiltros{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 10px;margin-top:6px}
   .rvfiltros label{margin:0}.rvfiltros label:last-child{grid-column:1/-1}.rvfiltros select,.rvfiltros input{width:100%}
   .rvnav{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -315,9 +315,13 @@ const PRE={cm:"CM",ti:"TI",ps:"PS",lg:"LG",fm:"FM",ec:"EC",rx:"RX",tc:"TC",us:"U
 const zeros=()=>Object.fromEntries(Object.keys(DISC).map(k=>[k,0]));
 const TI_IDS=[37,44];                 /* questões do PDF que pertencem a Terapia Intensiva */
 const LIMITE=70;                      /* % abaixo do qual o subtema precisa de reforço */
-const APP_VERSAO="26";
+const APP_VERSAO="30";
 /* o que mudou em cada versão (a primeira é a atual) */
 const APP_NOTAS=[
+  {v:"30",d:"18/11/2026",t:"Tempo de resposta nas telas Questões e Banco (desde a primeira vez que a questão aparece). Modo padronizado: estudo, treino ou prova. Novo botão Diagnóstico inicial em Simulados: 60 questões da área escolhida, em modo prova."},
+  {v:"29",d:"18/11/2026",t:"Respostas de Questões e Banco passam a contar: cada alternativa escolhida vira uma tentativa no histórico, desempenho e revisões, marcada como estudo. A análise continua escondida."},
+  {v:"28",d:"18/11/2026",t:"Questões e Banco: o gabarito só aparece depois que você escolhe uma alternativa. A análise fica escondida por enquanto (será adicionada depois). Essas respostas ainda não entram nas estatísticas."},
+  {v:"27",d:"12/11/2026",t:"Figuras para todos: as imagens enviadas pelo administrador vão para a pasta pública do banco e aparecem em qualquer aparelho. Questões importadas antes passam a achar a figura pelo nome do arquivo."},
   {v:"26",d:"11/11/2026",t:"Bancos de questões: escolha Medicina, Serviço Social ou os dois (primeira tela, Início e Configurações). Nova tela Questões: banco → matéria → tema → tópico → questões, com nomes completos, busca e botão Estudar em cada nível. Temas em sigla viram nome por extenso."},
   {v:"25",d:"09/11/2026",t:"Administração → Revisar questões: filtros por matéria, banca, ano, origem, arquivo, data de adição e situação; gabarito, anulada, dificuldade, complexidade, editar, apagar e publicar em um toque. Questões de revisão geradas por IA entram direto pelo Inserir → JSON ou pelo campo do pacote."},
   {v:"24",d:"08/11/2026",t:"Mapa das matérias: escolha a matéria e veja o mapa por tópico e subtópico. Pacotes de Português, Direito, Informática, Raciocínio Lógico, Ética e Administração Pública e Redação reconhecidos. Todas as questões entram (discursivas só com o texto), com texto-base e figuras do pacote."},
@@ -810,6 +814,8 @@ function construir(){
   QS_TODAS=SEED.concat(db.added).concat(PUBLICAS.filter(q=>!proprias.has(q.id)).map(q=>({...q,pub:true}))).map(q=>{
     const m={...q,...(db.edits[q.id]||{})};
     /* pacotes antigos gravaram o tema em sigla (ex.: CA, ELP); no app ele aparece sempre por extenso */
+    {const nf=f=>(f&&!/^(img:|https?:|data:|blob:)/i.test(f)&&/\.(png|jpe?g|webp|gif)$/i.test(f)&&/[\\/]/.test(f)&&(Array.isArray(m.atomos)||/^(data|saida|entrada)[\\/]/i.test(f)))?"img:"+String(f).split(/[\\/]/).pop().toLowerCase():f;
+      if(m.fig)m.fig=nf(m.fig);if(Array.isArray(m.figs))m.figs=m.figs.map(nf)}
     if(Array.isArray(m.atomos)&&/^[A-Z0-9]{2,8}$/.test(String(m.tema||""))){let tn={};try{tn=(ESTR.temaNomes||{})[m.disc]||{}}catch(e){}const nm=tn[m.tema]||m.aspecto;if(nm){m.temaCod=m.tema;m.tema=nm}}
     /* o código vem da disciplina de origem e nunca muda, mesmo se a questão for reclassificada */
     m.cod=q.cod||PRE[q.disc]+"-"+String(++c[q.disc]).padStart(3,"0");
@@ -910,6 +916,18 @@ const imgDel=k=>imgTx("readwrite",s=>s.delete(k));
 const imgKeys=()=>imgTx("readonly",s=>s.getAllKeys());
 
 const IMGC=new Map();
+/* figuras públicas: pasta "figuras-publicas" do Supabase, leitura aberta, envio só do administrador */
+const FIG_PUB="figuras-publicas";
+function urlFigPub(k){let u="";try{u=SB_URL}catch(e){}return u?u+"/storage/v1/object/public/"+FIG_PUB+"/"+encodeURIComponent(k):""}
+const podePublicarFig=()=>{try{return !!(sb&&usuario&&ehAdmin())}catch(e){return false}};
+async function publicarFigura(k,dados){try{const blob=await (await fetch(dados)).blob();
+  const {error}=await sb.storage.from(FIG_PUB).upload(k,blob,{contentType:blob.type||"image/jpeg",upsert:true,cacheControl:"31536000"});return !error}catch(e){return false}}
+async function publicarFiguras(lista,rotulo){let ok=0,falha=0;
+  for(let i=0;i<lista.length;i++){if(i%5===0){st.msg=`${rotulo||"Enviando figuras"}: ${i} de ${lista.length}…`;render()}
+    (await publicarFigura(lista[i][0],lista[i][1]))?ok++:falha++}
+  return{ok,falha}}
+/* chaves de figura citadas pelas questões */
+function figsCitadas(){const s=new Set();QS_TODAS.forEach(q=>{[q.fig].concat(q.figs||[],Object.values(q.altFigs||{})).forEach(f=>{if(f&&String(f).startsWith("img:"))s.add(String(f).slice(4))})});return s}
 function figTag(fig,cod,extra){
   if(!fig)return"";
   const a=`class="fig" ${extra||""} alt="Figura da questão ${esc(cod||"")}"`;
@@ -919,10 +937,12 @@ function pintarImagens(){
   document.querySelectorAll("img[data-img]").forEach(el=>{
     const k=el.dataset.img;
     if(IMGC.has(k)){el.src=IMGC.get(k);return}
+    const falta=()=>{const d=document.createElement("div");d.className="meta fig-falta";d.textContent="(figura ainda não enviada: "+k+")";el.replaceWith(d)};
     imgGet(k).then(v=>v||baixarFigura(k)).then(v=>{
-      if(v){IMGC.set(k,v);el.src=v}
-      else{const d=document.createElement("div");d.className="meta fig-falta";d.textContent="(figura ainda não enviada: "+k+")";el.replaceWith(d)}
-    }).catch(()=>{})})}
+      if(v){IMGC.set(k,v);el.src=v;return}
+      const u=urlFigPub(k);if(!u){falta();return}
+      const im=new Image();im.onload=()=>{IMGC.set(k,u);el.src=u};im.onerror=falta;im.src=u
+    }).catch(falta)})}
 
 /* figuras na nuvem: bucket privado "figuras", pasta de cada usuário (ver SQL no resumo) */
 const FIG_BUCKET="figuras";
@@ -1555,7 +1575,7 @@ function motorRegistrar(S,i,q,ok,j){
   if(!S.att)S.att=[];
   const k=ideiaDe(q),e=estIdeia(k),agora=Date.now(),p=S.projId?db.projetos.find(x=>x.id===S.projId):null;
   S.snapIdeia=S.snapIdeia||{};S.snapIdeia[i]=JSON.stringify(e);
-  const a={q:q.id,k,sub:subtopicoDe(q),top:topicoDe(q),tm:temaDe(q),d:q.disc,p:S.projId||null,s:S.id,m:S.modo||"treino",
+  const a={q:q.id,k,sub:subtopicoDe(q),top:topicoDe(q),tm:temaDe(q),d:q.disc,p:S.projId||null,s:S.id,m:S.prova?"prova":(S.modo||"treino"),
     ini:agora-(S.tempos[i]||0),fim:agora,fx:faixaDe(agora),alt:LET[j],ok:!!ok,ch:false,cf:null,t1:S.tempos[i]||0,t:S.tempos[i]||0,
     pa:!!S.pausouNaQ,n:e.n||"Aprendiz",df:dificil(k),nv:(ATT.ideia[k]||[]).length<3,dia:hojeISO(),i};
   if(U4()){const pr=PDe(q,agora,p);a.P=Math.round(pr.P*1000)/1000;a.R=Math.round(pr.R*1000)/1000;a.al=/termômetro/.test((S.motivos||{})[q.id]||"")}
@@ -2212,15 +2232,17 @@ function loteDeObjeto(o,nome){if(!o||typeof o!=="object")return null;
   return null}
 function tentarLote(txt,nome){const u=loteDeObjeto(lerJSONouJSONL(txt),nome||"");if(!u)return false;
   const r=importarPacote(u);st.msg=r.resumo+(r.erros.length?" · "+r.erros.slice(0,5).join(" · "):"");return true}
-async function receberPacote(files){const p={};let erros=[],nImg=0;const inteiros=[];
-  for(const f of files){if(/^image\//.test(f.type)||/\.(png|jpe?g|webp|gif)$/i.test(f.name)){try{const k=nomeArq(f.name),v=await reduzir(f);await imgPut(k,v);IMGC.set(k,v);nImg++}catch(e){erros.push(f.name+": imagem ilegível")}continue}
+async function receberPacote(files){const p={};let erros=[],nImg=0;const inteiros=[],paraPub=[];
+  for(const f of files){if(/^image\//.test(f.type)||/\.(png|jpe?g|webp|gif)$/i.test(f.name)){try{const k=nomeArq(f.name),v=await reduzir(f);await imgPut(k,v);IMGC.set(k,v);nImg++;paraPub.push([k,v])}catch(e){erros.push(f.name+": imagem ilegível")}continue}
     const nome=f.name.toLowerCase().replace(/\.jsonl?$/,"");const o=lerJSONouJSONL(await f.text());if(o===undefined){erros.push(f.name+": JSON inválido");continue}
     if(ARQ_PACOTE.includes(nome))p[nome]=o;
     else if(loteDeObjeto(o,f.name))inteiros.push(loteDeObjeto(o,f.name));
     else if(Array.isArray(o)&&o[0]&&o[0].afirmacao)p.atomos=o;
     else if(Array.isArray(o)&&o[0]&&o[0].enunciado&&o[0].atomos)p.questoes=o;
     else erros.push(f.name+": não reconheci (esperava atomos, arvore, questoes, relacoes, resumos, lista_mestra ou agregados)")}
-  const tImg=nImg?nImg+" imagem(ns) guardada(s) neste aparelho":"";
+  let tImg=nImg?nImg+" imagem(ns) guardada(s) neste aparelho":"";
+  if(paraPub.length&&podePublicarFig()){const r=await publicarFiguras(paraPub,"Enviando figuras para o banco público");tImg+=` · ${r.ok} publicada(s) para todos`+(r.falha?` · ${r.falha} não enviada(s)`:"")}
+  else if(paraPub.length&&sb)tImg+=" · para aparecerem para todos, envie entrando como administrador";
   const lotes=inteiros.concat(p.atomos||p.questoes?[p]:[]);
   if(!lotes.length){st.msg=(tImg?[tImg].concat(erros):erros).join(" · ")||"Nenhum arquivo do pacote.";render();return}
   const rs=lotes.map(importarPacote);st.msg=rs.map(r=>r.resumo).concat(tImg?[tImg]:[],erros,[].concat(...rs.map(r=>r.erros)).slice(0,5)).join(" · ");render()}
@@ -2455,10 +2477,10 @@ const ORIGENS={prova:"Questão de prova (banca)",revisao:"Revisão gerada por IA
 const origemDe=q=>q.origemTipo==="revisao"?"revisao":q.seq?(q.banca?"prova":"propria"):q.pub?"publica":"base";
 const dataAdic=q=>q.adic?String(q.adic).slice(0,10):"";
 const diaBR=s=>s?String(s).slice(0,10).split("-").reverse().join("/"):"";
-const RV_SIT=[["nao","Não revisadas"],["sim","Revisadas"],["inc","Incompletas (sem gabarito)"],["anul","Anuladas"],["disc","Discursivas"],["semdif","Sem dificuldade"],["rel","Com problema relatado"],["editada","Editadas"],["naopub","Não publicadas"],["publicada","Publicadas"],["oculta","Ocultas"]];
+const RV_SIT=[["nao","Não revisadas"],["sim","Revisadas"],["inc","Incompletas (sem gabarito)"],["anul","Anuladas"],["disc","Discursivas"],["semdif","Sem dificuldade"],["rel","Com problema relatado"],["editada","Editadas"],["fig","Com figura"],["naopub","Não publicadas"],["publicada","Publicadas"],["oculta","Ocultas"]];
 function rvSitOk(q,s,rev){switch(s){case "nao":return !rev[q.id];case "sim":return !!rev[q.id];case "inc":return faltaDado(q);case "anul":return !!q.anulada;case "disc":return ehDisc(q);
   case "semdif":return !q.dificuldade;case "rel":return relAbertos(q.cod).length>0;case "editada":return !!db.edits[q.id];case "naopub":return !PUBLICAS.some(p=>p.id===q.id);
-  case "publicada":return PUBLICAS.some(p=>p.id===q.id);case "oculta":return !!q.oculta}return true}
+  case "publicada":return PUBLICAS.some(p=>p.id===q.id);case "oculta":return !!q.oculta;case "fig":return !!(q.fig||(q.figs&&q.figs.length)||q.altFigs)}return true}
 function rvLista(){const f=st.form,b=normTxt(f.rvBusca||""),rev=db.revisadas||{};
   return QS_TODAS.filter(q=>(!f.rvDisc||q.disc===f.rvDisc)&&(!f.rvBanca||(q.banca||"—")===f.rvBanca)&&(!f.rvAno||String(q.ano||"—")===f.rvAno)
     &&(!f.rvOrig||origemDe(q)===f.rvOrig)&&(!f.rvLote||(q.lote||"—")===f.rvLote)&&(!f.rvData||(dataAdic(q)||"—")===f.rvData)
@@ -2524,7 +2546,8 @@ function vAdmin(){if(!ehAdmin()){st.view="home";return vHome()}const aba=st.abaA
       ${st.admErrosDe&&d?(()=>{const u=d.find(x=>x.email===st.admErrosDe);const l=(u&&u.progresso&&u.progresso.erros)||[];return `<div class="card"><b>Erros do app de ${esc(st.admErrosDe)}</b>${l.slice().reverse().map(e=>`<div class="lin"><span class="nome"><span>${esc(e.msg)}<br><span class="meta">${new Date(e.ts).toLocaleString("pt-BR")} · tela ${esc(e.view||"")} · v${e.ver||"?"}${e.linha?" · linha "+e.linha:""}</span></span></span></div>`).join("")||'<p class="meta">Nenhum.</p>'}</div>`})():""}`}
   else if(aba==="estrutura"){corpo=`<div class="card"><b>Importar pacote export/&lt;MATERIA&gt;/</b>
       <p class="meta">Selecione de uma vez os arquivos da pasta: atomos.json, arvore.json, questoes.json, relacoes.json, resumos.json, lista_mestra.json e agregados.json (ou um JSON único com essas chaves). Reimportar atualiza pelo id, nunca duplica; aliases migram o histórico. As questões do pacote entram no seu banco; depois publique-as no Banco.</p>
-      <label><span>Arquivos do pacote</span><input type="file" multiple data-pacote="1"></label></div>
+      <label><span>Arquivos do pacote e imagens (selecione também os arquivos das pastas "imagens" do extrator)</span><input type="file" multiple data-pacote="1"></label>
+      ${podePublicarFig()?`<p class="meta">As imagens que você selecionar vão para a pasta pública de figuras e aparecem para todos. ${figsCitadas().size} figura(s) são citadas pelas questões.</p><div class="acoes"><button class="sm" data-act="figsPub">Publicar as figuras já guardadas neste aparelho</button></div>`:""}</div>
       ${Object.keys(ESTR.pacotes).map(d=>{const pc=ESTR.pacotes[d];const st2={};(pc.atomos||[]).forEach(a=>st2[a.status||"?"]=(st2[a.status||"?"]||0)+1);
         return `<div class="card"><b>${esc(DISC[d]||d)}</b> <span class="meta">· ${(pc.atomos||[]).length} átomos (${Object.entries(st2).map(([k,v])=>k+" "+v).join(", ")}) · ${(pc.relacoes||[]).length} relações${pc.arvore?" · árvore":""}${pc.resumos?" · resumos":""}${pc.lista?" · lista mestra":""}${pc.atualizado?" · importado "+new Date(pc.atualizado).toLocaleDateString("pt-BR"):""}</span>
           <div class="acoes"><button class="sm primary" data-act="admPublicarEstr" data-d="${d}">Publicar estrutura para todos</button><button class="sm" data-act="admRemoverEstr" data-d="${d}">Remover deste aparelho</button></div></div>`}).join("")||'<p class="empty">Nenhum pacote importado.</p>'}`}
@@ -2570,6 +2593,11 @@ function acaoEstrutura(a,el){const m=st.mapa||(st.mapa={});
       pedir(`Apagar definitivamente a questão ${q.cod}?`,()=>{const nPub=PUBLICAS.some(p=>p.id===q.id);db.added=db.added.filter(x=>x.id!==q.id);delete db.stats[q.id];delete db.sched[q.id];delete db.edits[q.id];
         db.flags=db.flags.filter(x=>x!==q.id);gravar();construir();st.msg=`${q.cod} apagada.`+(nPub?" Ela continua no banco público até você tocar em \"Tirar do banco público\".":"");render()},"Apagar");return "feito"}
     case "rvDespub":despublicar(el.dataset.id);return "feito";
+    case "figsPub":{if(!podePublicarFig()){st.msg="Entre como administrador para publicar figuras.";return true}
+      (async()=>{const ks=[...figsCitadas()],l=[];for(const k of ks){const v=await imgGet(k).catch(()=>null);if(v)l.push([k,v])}
+        if(!l.length){st.msg=`Nenhuma das ${ks.length} figuras citadas está guardada neste aparelho. Selecione as imagens no campo do pacote.`;render();return}
+        const r=await publicarFiguras(l,"Publicando figuras");st.msg=`${r.ok} figura(s) publicada(s) para todos`+(r.falha?`, ${r.falha} falharam`:"")+`. ${ks.length-l.length} citada(s) ainda não estão neste aparelho.`;render()})();
+      return "feito"}
     case "rvPub":{const q=POR_ID[el.dataset.id];if(q)publicar([q]);return "feito"}
     case "rvPublicarTodas":{const l=rvLista().filter(q=>!faltaDado(q)&&!q.oculta);if(!l.length){st.msg="Nenhuma questão completa nesse recorte.";return true}
       pedir(`Publicar ${l.length} questão(ões) deste recorte no banco público?`,()=>publicar(l),"Publicar");return "feito"}
@@ -2871,7 +2899,7 @@ function vSimulados(){
         <label><span>Modo</span><select data-f="simUma"><option value="0"${s.umaQ?"":" selected"}>Lista corrida</option><option value="1"${s.umaQ?" selected":""}>Uma por vez</option></select></label></div>
       <p class="meta"><b>${n}</b> questão(ões) atendem aos filtros. <button class="sm" data-act="simAtualizar">Atualizar contagem</button></p>
       <div class="acoes"><button class="primary" data-act="simCriar" ${n?"":"disabled"}>Criar e começar</button><button data-act="simCancelar">Cancelar</button></div></div>`}
-  return `<div class="topo">${voltar("menu",0,"Menu")}<h2>Simulados</h2>${s?"<span></span>":'<button class="sm primary" data-act="simNovo">+ Novo simulado</button>'}</div>
+  return `<div class="topo">${voltar("menu",0,"Menu")}<h2>Simulados</h2>${s?"<span></span>":'<button class="sm primary" data-act="simNovo">+ Novo simulado</button><button data-act="simDiag">Diagnóstico inicial da área</button>'}</div>
     ${form}<h3>Anteriores (${db.simulados.length})</h3>${lista||'<p class="meta">Nenhum simulado criado ainda.</p>'}${msgBox()}`}
 
 function vRevisarQ(){
@@ -2948,12 +2976,34 @@ function qxNivel(L){const x=qxEst();if(!x.disc)return "disc";if(x.tema==null)ret
 function qxGrupos(L,nivel){const m={};L.forEach(q=>{const k=QX_CHAVE[nivel](q);(m[k]=m[k]||[]).push(q)});
   return Object.entries(m).sort((a,b)=>a[0]==="Geral"?1:b[0]==="Geral"?-1:a[0].localeCompare(b[0],"pt"))}
 function qxCaminho(){const x=qxEst(),p=[x.todos?"Todos os bancos":nomesBancos()];if(x.disc)p.push(DISC[x.disc]);if(x.tema!=null)p.push(x.tema);if(x.top!=null)p.push(x.top);if(x.sub!=null)p.push(x.sub);return p}
+/* respostas das telas Questões e Banco: cada escolha vira uma tentativa no mesmo registro das sessões (modo estudo) */
+const respAvulsa=id=>{if(st.refazer&&st.refazer[id])return undefined;
+  const a=db.attempts.slice(-5000).reverse().find(x=>x.q===id&&String(x.s||"").startsWith("av"));return a?a.alt:undefined};
+function registrarAvulsa(id,L){const q=POR_ID[id];if(!q||ehDisc(q)||!q.alts||!q.alts.length)return;
+  const j=LET.indexOf(L);if(j<0||j>=q.alts.length)return;
+  if(st.refazer)delete st.refazer[id];
+  const qq={...q,opcoes:q.alts.map((t,i)=>({t,c:LET[i]===q.gab}))};
+  const antes=st.S;const lido=st.abertaEm&&st.abertaEm[id]?Math.max(0,Date.now()-st.abertaEm[id]):0;
+  st.S={id:"av"+Date.now(),lista:[qq],resp:{},esc:{},tempos:{},cur:0,modo:"estudo",prova:false,motor:false,att:[],avisos:[],checkpoints:[],pausasMs:0,snapAntes:{},snapIdeia:{},calib:false,ponto:0,inicio:Date.now()-lido,ult:Date.now()-lido,feedN:0,meta:0,dur:0,encerrada:false,avulsa:true};
+  try{responder(0,j)}finally{st.S=antes}}
+function altsQ(q){
+  const tem=!ehDisc(q)&&!!q.alts&&q.alts.length>0&&!!q.gab;
+  const r=respAvulsa(q.id);
+  st.abertaEm=st.abertaEm||{};if(r===undefined&&!st.abertaEm[q.id])st.abertaEm[q.id]=Date.now();
+  const itens=(q.alts||[]).map((t,i)=>{const L=LET[i];
+    const corpo=`<span class="l">${L})</span><span>${esc(t)}${(q.altFigs||{})[L]?figTag(q.altFigs[L],q.cod):""}</span>`;
+    if(!tem)return `<div class="opt qxalt">${corpo}</div>`;
+    if(r===undefined)return `<button class="opt qxalt" data-act="respQ" data-id="${esc(q.id)}" data-k="${L}">${corpo}</button>`;
+    const cls=L===q.gab?" ok":(L===r?" err":"");
+    return `<div class="opt qxalt${cls}">${corpo}</div>`}).join("");
+  const nota=tem&&r!==undefined?`<div class="meta">${r===q.gab?"Acertou.":"Errou. Você marcou "+r+"; a resposta é "+q.gab+"."}</div>`:"";
+  return itens+nota}
 function qxCartaoQ(q){const x=qxEst(),ab=x.aberta===q.id,id=esc(q.id);
   const info=[fonte(q),ehDisc(q)?"discursiva":"",q.anulada?"anulada":"",q.origemTipo==="revisao"?"revisão (IA)":"",faltaDado(q)?"sem gabarito":""].filter(Boolean).join(" · ");
   const det=ab?`<div class="qxdet">${q.base?`<div class="tbase">${esc(q.base)}</div>`:""}<div class="enun">${esc(q.enun)}</div>${figsTag(q)}
-    ${ehDisc(q)?'<div class="meta">Questão discursiva: sem alternativas.</div>':q.alts.map((t,i)=>`<div class="opt qxalt${x.gab===q.id&&LET[i]===q.gab?" ok":""}"><span class="l">${LET[i]})</span><span>${esc(t)}${(q.altFigs||{})[LET[i]]?figTag(q.altFigs[LET[i]],q.cod):""}</span></div>`).join("")}
-    ${q.explicacao&&(x.gab===q.id||ehDisc(q))?`<details class="disc-an" open><summary>Análise</summary><p>${esc(q.explicacao)}</p></details>`:""}
-    <div class="acoes">${ehDisc(q)?"":`<button class="sm" data-act="qxGab" data-id="${id}">${x.gab===q.id?"Esconder gabarito":"Mostrar gabarito e análise"}</button>`}
+    ${ehDisc(q)?'<div class="meta">Questão discursiva: sem alternativas.</div>':altsQ(q)}
+    ${q.explicacao&&ehDisc(q)?`<details class="disc-an" open><summary>Análise</summary><p>${esc(q.explicacao)}</p></details>`:""}
+    <div class="acoes">${ehDisc(q)||respAvulsa(q.id)===undefined?"":`<button class="sm" data-act="respLimpar" data-id="${id}">Responder de novo</button>`}
       <button class="sm primary" data-act="qxUma" data-id="${id}" ${incompleta(q)&&!ehDisc(q)?"disabled":""}>Estudar esta</button><button class="sm" data-act="edit" data-id="${id}">Editar</button></div></div>`:"";
   return `<div class="qxq${ab?" aberta":""}"><button class="qxqhead" data-act="qxAbrir" data-id="${id}"><span class="meta"><b>${esc(q.cod)}</b>${info?" · "+esc(info):""}</span>
     <span class="qxtxt">${esc(q.enun.length>150&&!ab?q.enun.slice(0,150)+"…":ab?"":q.enun)}</span></button>${det}</div>`}
@@ -3220,7 +3270,7 @@ function vBanco(){
         <span class="meta">${esc(q.tema)} › ${esc(q.subtema)} ${fonteTag(q)}${db.edits[q.id]?' <span class="tag e">editada</span>':""}${nr?` <span class="tag r">${nr}</span>`:""}${q.anulada?' <span class="tag f">anulada</span>':""}${incompleta(q)?' <span class="tag r">'+motivoIncompleta(q)+'</span>':""}</span>
         ${q.pub?'<span class="tag">pública</span>':""}${ehAdmin()&&!faltaDado(q)?(PUB_IDS().has(q.id)?`<button class="sm" data-act="despublicar" data-id="${esc(q.id)}">Despublicar</button>`:`<button class="sm" data-act="publicar" data-id="${esc(q.id)}">Publicar</button>`):""}
         <button class="sm" data-act="bancoAbrir" data-id="${esc(q.id)}">${st.bancoQ===q.id?"Fechar":"Abrir"}</button></div>
-        ${st.bancoQ===q.id?`<div class="card" style="margin:0 0 10px">${q.base?`<div class="tbase">${esc(q.base)}</div>`:""}<div class="enun">${esc(q.enun)}</div>${figsTag(q)}${q.alts.map((t,i)=>`<div class="opt" style="border:1px solid var(--bd);${LET[i]===q.gab?"background:var(--okbg)":""}"><span class="l">${LET[i]})</span><span>${esc(t)}${(q.altFigs||{})[LET[i]]?figTag(q.altFigs[LET[i]],q.cod):""}</span></div>`).join("")}${acoesQ(q)}</div>`:""}`}).join("")
+        ${st.bancoQ===q.id?`<div class="card" style="margin:0 0 10px">${q.base?`<div class="tbase">${esc(q.base)}</div>`:""}<div class="enun">${esc(q.enun)}</div>${figsTag(q)}${altsQ(q)}${acoesQ(q)}</div>`:""}`}).join("")
       ||'<p class="empty">Nenhuma questão encontrada.</p>'}${msgBox()}`}
 
 function vEdit(){
@@ -3411,7 +3461,8 @@ function vDados(){
       <div class="acoes"><button class="primary" data-act="questoesTodas">Abrir o banco com todas as questões (${QS_TODAS.filter(q=>!q.oculta).length})</button><button data-act="banco">Lista com filtros</button></div></div>
     <div class="card"><b>Estrutura de conhecimento</b> <span class="meta">· ${temEstrutura()?ESTR.n+" átomos em "+Object.keys(ESTR.pacotes).map(d=>DISC[d]).join(", "):"nenhum pacote importado"}</span>
       <p class="meta">Importe o pacote export/&lt;MATERIA&gt;/ (atomos, arvore, questoes, relacoes, resumos, lista_mestra, agregados) para ver as afirmações no Mapa e deixar a importância guiar as sessões. Os eventos (respostas por átomo, marcações, leituras, validações) saem em .jsonl para a base recalcular.</p>
-      <label><span>Arquivos do pacote</span><input type="file" multiple data-pacote="1"></label>
+      <label><span>Arquivos do pacote e imagens (selecione também os arquivos das pastas "imagens" do extrator)</span><input type="file" multiple data-pacote="1"></label>
+      ${podePublicarFig()?`<p class="meta">As imagens que você selecionar vão para a pasta pública de figuras e aparecem para todos. ${figsCitadas().size} figura(s) são citadas pelas questões.</p><div class="acoes"><button class="sm" data-act="figsPub">Publicar as figuras já guardadas neste aparelho</button></div>`:""}
       <div class="acoes"><button class="sm" data-act="mapa">Abrir o mapa</button>${temEstrutura()?'<button class="sm" data-act="exportEventos">Exportar eventos (.jsonl)</button>':""}</div></div>
     <div class="card"><h3 style="margin-top:0">Ajustes</h3>
 
@@ -3507,6 +3558,8 @@ document.addEventListener("click",e=>{
     case "qxLimpar":{const x=qxEst();x.busca="";delete st.form.qxBusca;break}
     case "qxMais":qxEst().lim=(qxEst().lim||40)+40;break;
     case "qxAbrir":{const x=qxEst();x.aberta=x.aberta===el.dataset.id?null:el.dataset.id;break}
+    case "respQ":{registrarAvulsa(el.dataset.id,el.dataset.k);break}
+    case "respLimpar":{st.refazer=st.refazer||{};st.refazer[el.dataset.id]=true;if(st.abertaEm)delete st.abertaEm[el.dataset.id];break}
     case "qxGab":{const x=qxEst();x.gab=x.gab===el.dataset.id?null:el.dataset.id;break}
     case "qxUma":{const q=POR_ID[el.dataset.id];if(q)return iniciar([q],undefined,true,qxCaminho().slice(1).join(" › ")||"Questão");break}
     case "qxEstudar":{const x=qxEst(),n=el.dataset.n;let l=qxLista();
@@ -3591,6 +3644,7 @@ document.addEventListener("click",e=>{
     case "confirmarNao":st.confirmar=null;break;
     /* simulados */
     case "simulados":st.view="simulados";st.sim=null;st.msg="";break;
+    case "simDiag":{const d=DISC_VIS();st.sim={nome:"Diagnóstico inicial",cargo:"",discs:new Set(Object.keys(d)),banca:"",ano:"",idioma:"",temas:[],asps:[],assuntos:[],sel:new Set(),exp:new Set(),foco:"",compl:"",dif:"",qtd:60,dur:90,prova:true,umaQ:false};break}
     case "simNovo":st.sim={nome:"",cargo:"",discs:new Set(),banca:"",ano:"",idioma:"",temas:[],asps:[],assuntos:[],sel:new Set(),exp:new Set(),foco:"",compl:"",dif:"",qtd:0,dur:0,prova:false,umaQ:false};break;
     case "simSel":{lerSim();const k=el.dataset.k,s=st.sim.sel;s.has(k)?s.delete(k):s.add(k);break}
     case "simExp":{lerSim();const k=el.dataset.k,s=st.sim.exp;s.has(k)?s.delete(k):s.add(k);break}
